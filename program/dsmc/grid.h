@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 class System;
 class DSMC_IO;
 

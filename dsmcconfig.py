@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 
 class DSMC:
-	def __init__(self, compiler = "icc", dt=0.001, logging_enabled=True):
+	def __init__(self, compiler = "icpc", dt=0.001, logging_enabled=True):
 		"""
 		Initializes an object with parameters.
 		"""
@@ -118,10 +118,11 @@ class DSMC:
 		self.run_command('mkdir statistics')
 		self.run_command('echo ' + str(self.dt) + ' 0 > Tocontinue')
 
-	def compile(self, path = "./program/release", skip_compile = False):
+	def compile(self, path = "./program/dsmc", skip_compile = False):
 		if not skip_compile:
 			current_directory = os.getcwd()
 			os.chdir(path)
+			self.run_command('qmake')
 			self.run_command('make clean')
 			self.run_command('make')
 			os.chdir(current_directory)
