@@ -59,20 +59,16 @@ void StatisticsSampler::sample_permeability() {
     sample_flux();
     double volume_per_molecule = system->volume / system->num_molecules;
     double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(settings->viscosity);
-    // permeability = -flux[settings->gravity_direction]*volume_per_molecule*system->length[settings->gravity_direction]*viscosity_dsmc_units / (2*settings->mass*settings->gravity);
     double volume_flux = flux[settings->gravity_direction]*volume_per_molecule;
     double L = system->length[settings->gravity_direction];
     double mass_density = system->density*settings->mass;
-    double radius = (system->length[0]/2)*0.8;
-    double pi = 3.14159265359;
 
-    double area = pi*radius*radius;
-    double theoretical = radius*radius/8;
-    double length = system->length[settings->gravity_direction] - 2*system->reservoir_size;
+    double area = 1;
+    for(int a=0;a<3;a++) {
+        if(a != settings->gravity_direction) area *= system->length[a];
+    }
 
     permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
-    // cout << "Permeability: " << system->unit_converter->permeability_to_SI(permeability) << " (theoretical: " << system->unit_converter->permeability_to_SI(theoretical) << ")" << endl;
-
 }
 
 void StatisticsSampler::sample() {

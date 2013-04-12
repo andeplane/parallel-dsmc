@@ -14,7 +14,10 @@ program.prepare_new_system()
 
 program.run_dsmc()
 program.reservoir_fraction = 0
+
 program.timesteps = 10000
 program.pressure_A = 200000
+program.pressure_B = 100000
 program.create_config_file()
+
 program.run_dsmc()
