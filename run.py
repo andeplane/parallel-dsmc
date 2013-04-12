@@ -7,7 +7,7 @@ from dsmcconfig import *
 # More parameters in constructor.
 
 program = DSMC()
-dsmc = program.compile(skip_compile=True)
+dsmc = program.compile(skip_compile=False)
 
 program.reset()
 program.prepare_new_system()

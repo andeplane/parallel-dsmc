@@ -46,7 +46,7 @@ mac {
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
-    QMAKE_CXX = icc
+    QMAKE_CXX = icpc
 }
 
 unix:!mac {
@@ -55,7 +55,7 @@ unix:!mac {
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
-    QMAKE_CXX = mpic++
+    QMAKE_CXX = icpc
 }
 
 QMAKE_CXX_RELEASE = $$QMAKE_CXX
@@ -66,3 +66,12 @@ QMAKE_CFLAGS = $$system(mpicc --showme:compile)
 QMAKE_LFLAGS = $$system(mpicxx --showme:link)
 QMAKE_CXXFLAGS += $$system(mpicxx --showme:compile) -DMPICH_IGNORE_CXX_SEEK
 QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
+
+QMAKE_LFLAGS += -ipo -no-prec-div -falign-functions=16 -xCORE-AVX-I
+QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -xCORE-AVX-I
+
+QMAKE_LFLAGS -= -lm
+QMAKE_LFLAGS -= -O2
+QMAKE_LFLAGS += -O3
+QMAKE_CFLAGS_RELEASE -= -fPIE
+QMAKE_CXXFLAGS_RELEASE -= -fPIE

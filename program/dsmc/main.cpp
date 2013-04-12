@@ -14,7 +14,6 @@ using namespace std;
 
 int main(int args, char* argv[]) {
     int num_nodes, myid;
-
     MPI_Init(&args,&argv) ;
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
