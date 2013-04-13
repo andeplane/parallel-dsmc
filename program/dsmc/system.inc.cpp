@@ -25,8 +25,8 @@ void System::initialize(Settings *settings_, int myid_, int num_nodes_) {
 
     temperature      = unit_converter->temperature_from_SI(settings->temperature);;
     wall_temperature = unit_converter->temperature_from_SI(settings->wall_temperature);
-
-    density = settings->density;
+    
+    density = unit_converter->number_density_from_SI(settings->density);
     diam = settings->diam;
     atoms_per_molecule = settings->atoms_per_molecule;
 

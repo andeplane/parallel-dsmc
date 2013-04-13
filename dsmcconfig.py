@@ -22,6 +22,8 @@ class DSMC:
 
 		self.dt = dt
 		self.compiler = compiler
+		self.constants = dict()
+		self.constants['boltzmann'] = 1.3806488e-23
 
 		self.load_previous_state = False
 		self.create_movie = False
@@ -47,7 +49,7 @@ class DSMC:
 		self.world = "../worlds/empty.bin"
 
 		# physical constants, density in N/micrometer^3, length in micrometer, mass in amu, viscosity in Pa*s
-		self.density = 2.4143e7
+		self.density = 2.4143e25
 		self.diam = 3.62e-4
 		self.mass = 39.948
 		self.viscosity = 2.23e-5
@@ -116,7 +118,7 @@ class DSMC:
 		self.run_command('mkdir state_files')
 		self.run_command('mkdir movie_files')
 		self.run_command('mkdir statistics')
-		self.run_command('echo ' + str(self.dt) + ' 0 > Tocontinue')
+		self.run_command('echo 0.0 0 > Tocontinue')
 
 	def compile(self, path = "./program/dsmc", skip_compile = False):
 		if not skip_compile:

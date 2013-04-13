@@ -16,6 +16,7 @@ UnitConverter::UnitConverter()
     visc0 = P0*t0;
     diff0 = L0*L0/t0;
     perm0 = L0*L0;
+    number_density0 = 1.0/(L0*L0*L0);
 }
 
 double UnitConverter::pressure_to_SI(double P) { return P0*P; }
@@ -53,5 +54,8 @@ double UnitConverter::permeability_from_SI(double k) { return k/perm0; }
 
 double UnitConverter::diffusion_to_SI(double d) { return d*diff0; }
 double UnitConverter::diffusion_from_SI(double d) { return d/diff0; }
+
+double UnitConverter::number_density_to_SI(double d) { return d*number_density0; }
+double UnitConverter::number_density_from_SI(double d) { return d/number_density0; }
 
 

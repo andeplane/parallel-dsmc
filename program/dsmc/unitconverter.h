@@ -18,6 +18,7 @@ private:
     double visc0;
     double diff0;
     double perm0;
+    double number_density0;
 
 public:
     UnitConverter();
@@ -57,4 +58,7 @@ public:
 
     double permeability_to_SI(double d);
     double permeability_from_SI(double d);
+
+    double number_density_to_SI(double d);
+    double number_density_from_SI(double d);
 };
