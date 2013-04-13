@@ -225,6 +225,6 @@ void System::calculate_porosity() {
 
 void System::init_randoms() {
     long seed = time(NULL);
-    // seed = 1 + myid;
+    seed = 1 + myid;
     rnd = new Random(-seed);
 }

@@ -10,14 +10,20 @@ program = DSMC()
 dsmc = program.compile(skip_compile=False)
 
 program.reset()
+program.world = "../worlds/box.bin"
 program.prepare_new_system()
 
 program.run_dsmc()
-program.reservoir_fraction = 0
-
+program.reservoir_fraction = 0.6
+program.atoms_per_molecule = 1000
 program.timesteps = 10000
 program.pressure_A = 200000
 program.pressure_B = 100000
+program.create_config_file()
+
+program.run_dsmc()
+
+program.timesteps = 1000000
 program.create_config_file()
 
 program.run_dsmc()

@@ -216,14 +216,17 @@ void System::maintain_pressure_A() {
     double volume_in_reservoir = 0;
     double pressure_in_reservoir = 0;
     double kinetic_energy_in_reservoir = 0;
-
+    double max_ke = 0;
     for(int i=0;i<reservoir_A_cells.size();i++) {
         Cell *cell = reservoir_A_cells[i];
         num_molecules_in_reservoir += cell->num_molecules;
         volume_in_reservoir += cell->volume;
-        kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
+        double ke = cell->calculate_kinetic_energy();
+        if(ke>max_ke) max_ke=ke;
+        kinetic_energy_in_reservoir += ke;
     }
-    double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/num_molecules_in_reservoir;
+
+    double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
 
     double temp_over_volume = 0;
     if(volume_in_reservoir>0) {
@@ -231,14 +234,17 @@ void System::maintain_pressure_A() {
         pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
         double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_A);
         long wanted_num_molecules = wanted_pressure*volume_in_reservoir/temperature_in_reservoir/atoms_per_molecule;
+
         long delta = wanted_num_molecules-num_molecules_in_reservoir;
 
         if(pressure_in_reservoir<wanted_pressure) {
-            for(int i=0;i<abs(delta);i++) {
+            int num_add = abs(delta)*0.1;
+            for(int i=0;i<num_add;i++) {
                 add_molecule_in_pressure_reservoirs(true);
             }
         } else {
-            for(int i=0;i<abs(delta);i++) {
+            int num_remove = abs(delta)*0.1;
+            for(int i=0;i<num_remove;i++) {
                 if(remove_molecule_in_pressure_reservoir(true)) { }
                 else i--;
             }
@@ -269,11 +275,13 @@ void System::maintain_pressure_B() {
         long delta = wanted_num_molecules-num_molecules_in_reservoir;
 
         if(pressure_in_reservoir<wanted_pressure) {
-            for(int i=0;i<abs(delta);i++) {
+            int num_add = abs(delta)*0.1;
+            for(int i=0;i<num_add;i++) {
                 add_molecule_in_pressure_reservoirs(false);
             }
         } else {
-            for(int i=0;i<abs(delta);i++) {
+            int num_remove = abs(delta)*0.1;
+            for(int i=0;i<num_remove;i++) {
                 if(remove_molecule_in_pressure_reservoir(false)) { }
                 else i--;
             }

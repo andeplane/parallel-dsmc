@@ -129,7 +129,7 @@ double Cell::calculate_kinetic_energy() {
         int index = molecules[n];
         kinetic_energy += system->v[3*index+0]*system->v[3*index+0] + system->v[3*index+1]*system->v[3*index+1] + system->v[3*index+2]*system->v[3*index+2];
     }
-    kinetic_energy *= 0.5*system->settings->mass;
+    kinetic_energy *= 0.5*system->settings->mass*system->atoms_per_molecule;
 
     return kinetic_energy;
 }
