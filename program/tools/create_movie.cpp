@@ -9,10 +9,11 @@ double L0 = 1e4;
 
 int main(int args, char *argv[]) {
 	if(args < 2) {
-		cout << "Please specify the number of cpus and timesteps." << endl;
+		cout << "Please specify project folder and timesteps." << endl;
 		return 0;
 	}
-	int cpus = atoi(argv[1]);
+	char *base_name = argv[1];
+	int cpus = 1;
 	int timesteps = atoi(argv[2]);
 	
 	double *positions = new double[3*1000000];
@@ -21,7 +22,8 @@ int main(int args, char *argv[]) {
 	ifstream **movie_files = new ifstream*[cpus];
 	for(int cpu=0;cpu<cpus;cpu++) {
 		char *filename = new char[100];
-		sprintf(filename,"release/state_files/movie%04d.bin",cpu);
+		sprintf(filename,"%s/movie_files/movie%04d.bin",base_name,cpu);
+		cout << "File: " << filename << endl;
 		movie_files[cpu] = new ifstream(filename,ios::in | ios::binary);
 	}
 	cout << cpus << " state files opened." << endl;

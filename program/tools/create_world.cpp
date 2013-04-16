@@ -241,7 +241,7 @@ int main (int args, char *argv[]) {
     }
 
     int idx[3];
-    if(reservoir_size_fraction>0) {
+    if(reservoir_dimension>=0) {
         for(idx[0]=0;idx[0]<N[0];idx[0]++) {
             for(idx[1]=0;idx[1]<N[1];idx[1]++) {
                 for(idx[2]=0;idx[2]<N[2];idx[2]++) {

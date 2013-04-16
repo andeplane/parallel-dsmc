@@ -42,11 +42,6 @@ private:
     void setup_cells();
     void calculate_porosity();
     void update_molecule_cells();
-    void send_molecules_to_slaves();
-    void receive_molecules_from_master();
-    void send_molecules_to_master();
-    void receive_molecules_from_slaves();
-
 public:
     int cell_index_from_position(double *r);
 
@@ -55,6 +50,7 @@ public:
     Grid *world_grid;
     Settings *settings;
     UnitConverter * unit_converter;
+    Random **randoms;
     Random *rnd;
     MoleculeMover *mover;
 
@@ -70,9 +66,7 @@ public:
     unsigned long *molecule_index_in_cell;
     unsigned long *molecule_cell_index;
 
-    int num_nodes;
     int num_molecules;
-    int num_molecules_this_node;
 
     double reservoir_size;
     double grid_origo_x, grid_origo_y, grid_origo_z;
@@ -98,7 +92,7 @@ public:
     int cells_x, cells_y, cells_z;
     int num_cells_vector[3];
 
-    void initialize(Settings *settings_, int myid_, int num_nodes_);
+    void initialize(Settings *settings_, int myid_);
 	void step();
     System() { }
 };

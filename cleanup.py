@@ -2,6 +2,7 @@ import subprocess
 
 subprocess.call('rm run_log.txt', shell = True)
 subprocess.call('rm log', shell = True)
+subprocess.call('rm dsmc.ini', shell = True)
 subprocess.call('rm -rf state_files', shell = True)
 subprocess.call('rm -rf movie_files', shell = True)
 subprocess.call('rm -rf statistics', shell = True)

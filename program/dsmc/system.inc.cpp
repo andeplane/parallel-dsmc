@@ -3,11 +3,11 @@
 #include <dsmctimer.h>
 #include <moleculemover.h>
 #include <settings.h>
+#include <omp.h>
 
-void System::initialize(Settings *settings_, int myid_, int num_nodes_) {
+void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
     settings = settings_;
-    num_nodes = num_nodes_;
     timer = new DSMCTimer();
     timer->start_system_initialize();
     steps = 0;
@@ -44,26 +44,19 @@ void System::initialize(Settings *settings_, int myid_, int num_nodes_) {
     num_cells_vector[2] = cells_z;
     io = new DSMC_IO(this);
 
-    if(myid==0) cout << "Loading world..." << endl;
+    cout << "Loading world..." << endl;
 
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
 
-    if(myid==0) cout << "Creating cells..." << endl;
+    cout << "Creating cells..." << endl;
     setup_cells();
-    if(myid==0) cout << "Calculating porosity..." << endl;
+    cout << "Calculating porosity..." << endl;
     calculate_porosity();
     volume = length[0]*length[1]*length[2]*porosity;
     num_molecules = density*volume/atoms_per_molecule;
 
-    if(myid==0) {
-        cout << "Creating/loading molecules..." << endl;
-        setup_molecules();
-    } else {
-        r = new double[3*MAX_MOLECULE_NUM];
-        v = new double[3*MAX_MOLECULE_NUM];
-        r0 = new double[3*MAX_MOLECULE_NUM];
-    }
-
+    cout << "Creating/loading molecules..." << endl;
+    setup_molecules();
 
     mpi_receive_buffer = new double[9*MAX_MOLECULE_NUM];
 
@@ -71,31 +64,27 @@ void System::initialize(Settings *settings_, int myid_, int num_nodes_) {
     mpv = sqrt(temperature);  // Most probable initial velocity
     dt = settings->dt;
 
-    if(myid==0) {
-        cout << "Updating cell volume..." << endl;
-        update_cell_volume();
-    }
+    cout << "Updating cell volume..." << endl;
+    update_cell_volume();
 
     mover = new MoleculeMover();
     mover->initialize(this);
 
-    if(myid==0) {
-        int number_of_cells = all_cells.size();
-        int number_of_cells_all = cells_x*cells_y*cells_z;
+    int number_of_cells = all_cells.size();
+    int number_of_cells_all = cells_x*cells_y*cells_z;
 
-        printf("done.\n\n");
-        printf("%d molecules\n",num_molecules);
-        printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
-        printf("Porosity: %f\n",porosity);
-        printf("System volume: %f\n",length[0]*length[1]*length[2]);
-        printf("Effective system volume: %f\n",volume);
-        printf("Mean free path: %.4f \n",mfp);
-        printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mfp,length[1]/cells_y/mfp), length[2]/cells_z/mfp));
-        printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-        printf("%d molecules per active cell\n",num_molecules/number_of_cells);
+    printf("done.\n\n");
+    printf("%d molecules\n",num_molecules);
+    printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
+    printf("Porosity: %f\n",porosity);
+    printf("System volume: %f\n",length[0]*length[1]*length[2]);
+    printf("Effective system volume: %f\n",volume);
+    printf("Mean free path: %.4f \n",mfp);
+    printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mfp,length[1]/cells_y/mfp), length[2]/cells_z/mfp));
+    printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
+    printf("%d molecules per active cell\n",num_molecules/number_of_cells);
 
-        printf("dt = %f\n\n",dt);
-    }
+    printf("dt = %f\n\n",dt);
 
     timer->end_system_initialize();
 }
@@ -224,7 +213,11 @@ void System::calculate_porosity() {
 }
 
 void System::init_randoms() {
-    long seed = time(NULL);
-    seed = 1 + myid;
-    rnd = new Random(-seed);
+    randoms = new Random*[settings->threads];
+    for(int i=0;i<settings->threads;i++) {
+        long seed = time(NULL) + i;
+        seed = 1 + i;
+        randoms[i] = new Random(-seed);
+    }
+    rnd = randoms[0];
 }

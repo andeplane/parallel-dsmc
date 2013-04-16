@@ -47,6 +47,7 @@ class DSMC:
 		self.reservoir_fraction = 0
 
 		self.world = "../worlds/empty.bin"
+		self.threads = 1
 
 		# physical constants, density in N/micrometer^3, length in micrometer, mass in amu, viscosity in Pa*s
 		self.density = 2.4143e25
@@ -118,9 +119,9 @@ class DSMC:
 		self.run_command('mkdir state_files')
 		self.run_command('mkdir movie_files')
 		self.run_command('mkdir statistics')
-		self.run_command('echo 0.0 0 > Tocontinue')
+		self.run_command('echo 0.0 0 0 > Tocontinue')
 
-	def compile(self, path = "./program/dsmc", skip_compile = False):
+	def compile(self, path = "./program/dsmc", name="dsmc", skip_compile = False):
 		if not skip_compile:
 			current_directory = os.getcwd()
 			os.chdir(path)
@@ -128,13 +129,14 @@ class DSMC:
 			self.run_command('make clean')
 			self.run_command('make')
 			os.chdir(current_directory)
-
-			self.run_command('mv '+path+'/dsmc ./dsmc')
+			move_command = 'mv '+path+'/dsmc ./%s' % name
+			self.run_command(move_command)
 			
 
-		if not os.path.isfile("./dsmc"):
+		if not os.path.isfile("./"+name):
 			print "Executable ./dsmc is not compiled, aborting!"
-		return './dsmc'
+			exit()
+		return './%s' % name
 
 	def create_config_file(self, config_file='dsmc_original.ini'):
 		"""
@@ -149,6 +151,7 @@ class DSMC:
 		for line in original_file:
 			line = line.replace('__load_previous_state__',str(self.load_previous_state).lower() )
 			line = line.replace('__create_movie__',str(self.create_movie).lower() )
+			line = line.replace('__threads__',str(self.threads) )
 			line = line.replace('__atoms_per_molecule__',str(self.atoms_per_molecule) )
 			line = line.replace('__timesteps__',str(self.timesteps) )
 			line = line.replace('__temperature__',str(self.temperature) )
@@ -180,7 +183,7 @@ class DSMC:
 		original_file.close()
 		output_file.close()
 	
-	def run_dsmc(self):
+	def run(self, executable="dsmc"):
 		"""
 		Runs specified executable, puts data into a folder, named <project_name>-<name>.
 		
@@ -193,7 +196,7 @@ class DSMC:
 
 		self.total_timesteps += self.timesteps
 		if self.test_mode: return
-		executable = "dsmc"
+		
 		if not os.path.isfile(executable):
 			print "Executable "+executable+" is not compiled, aborting!"
 			exit()

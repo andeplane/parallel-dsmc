@@ -22,16 +22,19 @@ int main(int args, char* argv[]) {
     Settings *settings = new Settings("dsmc.ini");
     System system;
 
-    system.initialize(settings, myid,num_nodes);
+    system.initialize(settings, myid);
     
     ifstream to_continue("Tocontinue");
     double t = 0;
     unsigned long steps = 0;
+    unsigned long collisions = 0;
     to_continue >> t;
     to_continue >> steps;
+    to_continue >> collisions;
     to_continue.close();
     system.t = t;
     system.steps = steps;
+    system.collisions = collisions;
 
     StatisticsSampler *sampler;
 
@@ -83,7 +86,7 @@ int main(int args, char* argv[]) {
             cout << system.num_molecules*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
             cout << system.num_molecules*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
             ofstream to_continue_write("Tocontinue");
-            to_continue_write << system.t << " " << system.steps;
+            to_continue_write << system.t << " " << system.steps << " " << system.collisions;
             to_continue_write.close();
         }
 

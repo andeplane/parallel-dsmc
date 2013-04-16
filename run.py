@@ -7,31 +7,29 @@ from dsmcconfig import *
 # More parameters in constructor.
 
 program = DSMC()
-dsmc = program.compile(skip_compile=False)
+dsmc = program.compile(skip_compile=True, name="job1")
 
-for density in [1e25, 1e26, 1e27]:
-    for atoms_per_molecule in [10000,5000,2000,1000,500,250,100]:
-        program.reset()
 
-        program.density = density
-        program.temperature = 300
-        ideal_gas_pressure = program.density*program.constants['boltzmann']*program.temperature;
+program.reset()
 
-        program.world = "../worlds/box.bin"
-        program.prepare_new_system()
+program.threads = 8
+program.reservoir_fraction = 0.2
+program.atoms_per_molecule = 100
 
-        program.run_dsmc()
-        program.reservoir_fraction = 0.6
-        program.atoms_per_molecule = atoms_per_molecule
-        program.timesteps = 10000
-        program.pressure_A = ideal_gas_pressure + 100000
-        program.pressure_B = ideal_gas_pressure
-        program.create_config_file()
+#program.density = 1e25
+program.temperature = 100
+program.cells_x = 20
+program.cells_y = 20
+program.cells_z = 20
 
-        program.run_dsmc()
+ideal_gas_pressure = program.density*program.constants['boltzmann']*program.temperature;
+program.pressure_A = ideal_gas_pressure + 200000
+program.pressure_B = ideal_gas_pressure
+program.world = "../worlds/box.bin"
 
-        program.timesteps = 250000
-        program.create_config_file()
+program.prepare_new_system()
+program.run(dsmc)
 
-        program.run_dsmc()
-        program.save_state("states/%e-%d" % (density,atoms_per_molecule))
+program.timesteps = 5000
+program.create_config_file()
+program.run(dsmc)
