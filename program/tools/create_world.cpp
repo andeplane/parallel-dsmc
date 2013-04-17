@@ -111,7 +111,7 @@ void calculate_tangents(int Nx, int Ny, int Nz, float *tangent1, float *tangent2
 	int idx = 0;
     float norm, dot_product;
     Random *rnd = new Random(-1);
-
+    double max_val = 0;
 	for(int i=0;i<Nx;i++) {
         for(int j=0;j<Ny;j++) {
         	for(int k=0;k<Nz;k++) {
@@ -148,6 +148,12 @@ void calculate_tangents(int Nx, int Ny, int Nz, float *tangent1, float *tangent2
                 	tangent2[3*idx+0] /= norm;
 	                tangent2[3*idx+1] /= norm;
 	                tangent2[3*idx+2] /= norm;
+                    if(rnd->nextDouble() < 0.01) {
+                        cout << "Normal   : " << normal[3*idx + 0] << " " << normal[3*idx + 1] << " " << normal[3*idx + 2] << endl;
+                        cout << "Tangent 1: " << tangent1[3*idx + 0] << " " << tangent1[3*idx + 1] << " " << tangent1[3*idx + 2] << endl;
+                        cout << "Tangent 2: " << tangent2[3*idx + 0] << " " << tangent2[3*idx + 1] << " " << tangent2[3*idx + 2] << endl;
+                    }
+                    // cout << nt1 << " " << nt2 << " " << t1t2 << endl;
                 }
             }
         }

@@ -14,7 +14,10 @@ Cell::Cell(System *_system) {
     pixels = 0;
     num_molecules = 0;
     total_pixels = 0;
-    molecules = new int[MAX_MOLECULE_NUM];
+    int molecules_per_cell = MAX_MOLECULE_NUM / (system->cells_x*system->cells_y*system->cells_z);
+    num_molecules_allocated_memory = 10*molecules_per_cell;
+
+    molecules = new int[num_molecules_allocated_memory];
 }
 
 bool Cell::cmp(Cell *c1, Cell *c2) {
@@ -106,7 +109,15 @@ int Cell::collide(Random *rnd) {
 }
 
 void Cell::add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index) {
-    // molecules.push_back(molecule_index);
+    if(num_molecules+1>num_molecules_allocated_memory) {
+        // We need to reallocate
+        num_molecules_allocated_memory *= 2;
+        int *tmp = new int[num_molecules_allocated_memory];
+        memcpy(tmp,molecules,num_molecules*sizeof(int));
+        delete molecules;
+        molecules = tmp;
+    }
+
     molecules[num_molecules] = molecule_index;
     index_in_cell[molecule_index] = num_molecules;
     cell_index[molecule_index] = index;

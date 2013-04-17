@@ -67,6 +67,7 @@ void System::initialize(Settings *settings_, int myid_) {
     cout << "Updating cell volume..." << endl;
     update_cell_volume();
 
+    cout << "Creating molecule mover..." << endl;
     mover = new MoleculeMover();
     mover->initialize(this);
 
@@ -85,7 +86,7 @@ void System::initialize(Settings *settings_, int myid_) {
     printf("%d molecules per active cell\n",num_molecules/number_of_cells);
 
     printf("dt = %f\n\n",dt);
-
+    cout << endl;
     timer->end_system_initialize();
 }
 
@@ -113,6 +114,8 @@ int System::cell_index_from_position(double *r) {
 }
 
 void System::update_cell_volume() {
+    active_cells.reserve(all_cells.size());
+
     for(int i=0;i<all_cells.size();i++) {
         Cell *cell = all_cells[i];
         cell->vr_max = 3*mpv;
@@ -154,6 +157,7 @@ void System::setup_cells() {
     int num_cells = cells_x*cells_y*cells_z;
     all_cells.reserve(num_cells);
     int idx[3];
+    int count = 0;
 
     for(idx[0]=0;idx[0]<cells_x;idx[0]++) {
         for(idx[1]=0;idx[1]<cells_y;idx[1]++) {

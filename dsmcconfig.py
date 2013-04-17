@@ -79,7 +79,7 @@ class DSMC:
 		if self.test_mode: return
 		self.clean()
 		self.log("Loading state from "+path)
-		self.run_command("cp -r "+path+" ./")
+		self.run_command("cp -r "+path+"/ ./")
 
 	def save_state(self, path):
 		if self.test_mode: return
@@ -103,7 +103,7 @@ class DSMC:
 		if self.test_mode: return
 
 		self.run_command('rm log')
-		self.run_command('rm -rf state_files')
+		self.run_command('rm -rf state_files/*')
 		self.run_command('rm dsmc.ini')
 		self.run_command('rm Tocontinue')
 		

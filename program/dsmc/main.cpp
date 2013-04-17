@@ -66,7 +66,9 @@ int main(int args, char* argv[]) {
             double fraction_sample = system.timer->fraction_sample();
             double fraction_accelerate = system.timer->fraction_accelerate();
             double fraction_pressure = system.timer->fraction_pressure();
-            double fraction_total = fraction_moving + fraction_colliding + fraction_io + fraction_mpi + fraction_sample + fraction_accelerate + fraction_pressure;
+            double fraction_system_initialize = system.timer->fraction_system_initialize();
+
+            double fraction_total = fraction_moving + fraction_colliding + fraction_io + fraction_mpi + fraction_sample + fraction_accelerate + fraction_pressure + fraction_system_initialize;
             double time_total = system.timer->system_initialize + system.timer->moving + system.timer->colliding + system.timer->io + system.timer->mpi + system.timer->sample + system.timer->accelerate + system.timer->pressure;
 
             double total_time = MPI_Wtime() - t_start;

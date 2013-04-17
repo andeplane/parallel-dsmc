@@ -24,6 +24,7 @@ public:
     System *system;
     // vector<int> molecules;
     int *molecules;
+    int num_molecules_allocated_memory;
     int num_molecules;
 
     Cell(System *system);
