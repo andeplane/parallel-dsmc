@@ -3,7 +3,6 @@
 #include <dsmctimer.h>
 #include <moleculemover.h>
 #include <settings.h>
-#include <omp.h>
 
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
@@ -217,11 +216,7 @@ void System::calculate_porosity() {
 }
 
 void System::init_randoms() {
-    randoms = new Random*[settings->threads];
-    for(int i=0;i<settings->threads;i++) {
-        long seed = time(NULL) + i;
-        seed = 1 + i;
-        randoms[i] = new Random(-seed);
-    }
-    rnd = randoms[0];
+    long seed = time(NULL);
+    seed = 1;
+    rnd = new Random(-seed);
 }

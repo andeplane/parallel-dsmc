@@ -50,7 +50,6 @@ public:
     Grid *world_grid;
     Settings *settings;
     UnitConverter * unit_converter;
-    Random **randoms;
     Random *rnd;
     MoleculeMover *mover;
 

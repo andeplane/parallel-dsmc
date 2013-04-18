@@ -11,7 +11,6 @@
 #include <time.h>
 #include <system.inc.cpp>
 #include <dsmctimer.h>
-#include <omp.h>
 
 void System::step() {
     steps += 1;
@@ -24,16 +23,8 @@ void System::step() {
 
 void System::move() {
     timer->start_moving();
-    // cout << myid << " will move " << num_molecules_this_node << " molecules." << endl;
-    #pragma omp parallel num_threads(settings->threads)
-    {
-        int thread_num = omp_get_thread_num();
-        Random *this_rnd = randoms[thread_num];
-
-        #pragma omp for
-        for(int n=0;n<num_molecules;n++) {
-        mover->move_molecule(n,dt,this_rnd,0);
-    }
+    for(int n=0;n<num_molecules;n++) {
+        mover->move_molecule(n,dt,rnd,0);
     }
 
     timer->end_moving();

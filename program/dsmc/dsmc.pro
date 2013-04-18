@@ -43,12 +43,12 @@ mac {
     CONFIG -= app_bundle
     LIBS   += /opt/intel/composer_xe_2013.1.119/compiler/lib/libiomp5.dylib
     INCLUDEPATH +=
-    QMAKE_CXXFLAGS += -openmp
+    QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
     QMAKE_CXX = icpc
 
-    QMAKE_LFLAGS += -xCORE-AVX-I -openmp
+    QMAKE_LFLAGS += -xCORE-AVX-I
     QMAKE_CXXFLAGS_RELEASE += -xCORE-AVX-I
 }
 
