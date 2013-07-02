@@ -44,8 +44,10 @@ private:
     void update_molecule_cells();
     void set_topology();
     void sync_mpi_initialize();
-    void set_initial_positions();
+    void set_initial_positions_and_mark_as_not_moved();
     bool molecule_is_on_this_node(double *r);
+    int neighbor_index_of_molecule(double *r);
+    void mpi_move();
 public:
     int cell_index_from_position(double *r);
 
@@ -70,6 +72,11 @@ public:
     unsigned long *molecule_index_in_cell;
     unsigned long *molecule_cell_index;
 
+    double *tmp_r;
+    double *tmp_v;
+    bool   *tmp_molecule_moved;
+    bool   *molecule_moved;
+
     unsigned long num_molecules_local;
     unsigned long num_molecules_global;
 
@@ -93,10 +100,13 @@ public:
     int num_processors[3];
     int neighbor_nodes[6];
     int num_cells[3];
+    int num_cells_per_node_total;
     int num_cells_total;
     int num_cells_per_node[3];
-    double shift_vector[6][3];
+    int num_moved_molecules_indices[6];
+    int *moved_molecules_indices[6];
     double node_length[3];
+    short my_parity[3];
 
     unsigned long collisions;
     unsigned long num_active_cells;

@@ -12,7 +12,7 @@ dsmc = program.compile(skip_compile=False, name="job1")
 program.reset()
 
 program.reservoir_fraction = 0.2
-program.atoms_per_molecule = 500
+program.atoms_per_molecule = 10000
 
 #program.density = 1e25
 program.temperature = 100
@@ -34,6 +34,6 @@ program.run(dsmc)
 
 #program.create_xyz("./state_files/", xyz_file = "./state.xyz")
 
-program.timesteps = 5000
+program.timesteps = 10000
 program.create_config_file()
 program.run(dsmc)

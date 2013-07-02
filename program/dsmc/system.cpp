@@ -17,8 +17,7 @@
 void System::set_topology() {
     /*----------------------------------------------------------------------
     Defines a logical network topology.  Prepares a neighbor-node ID table,
-    nn, & a shift-vector table, sv, for internode message passing.  Also
-    prepares the node parity table, myparity.
+    nn, Also prepares the node parity table, myparity.
     ----------------------------------------------------------------------*/
     length[0] = settings->Lx;
     length[1] = settings->Ly;
@@ -39,7 +38,8 @@ void System::set_topology() {
     for(int a=0; a<3; a++) cell_length[a] = length[a]/(num_cells[a]);
     for(int a=0; a<3; a++) origo[a] = (double)node_index[a] * node_length[a];
 
-    num_cells_total = num_cells[0]*num_cells[1]*num_cells[2];
+    num_cells_per_node_total = num_cells_per_node[0]*num_cells_per_node[1]*num_cells_per_node[2];
+    num_cells_total = num_cells_per_node_total*num_nodes;
 
     /* Integer vectors to specify the six neighbor nodes */
     int integer_vector[6][3] = {
@@ -55,8 +55,19 @@ void System::set_topology() {
 
         /* Scalar neighbor ID, nn */
         neighbor_nodes[n] = k1[0]*num_processors[1]*num_processors[2]+k1[1]*num_processors[2]+k1[2];
-        /* Shift vector, sv */
-        for (int a=0; a<3; a++) shift_vector[n][a] = node_length[a]*integer_vector[n][a];
+        num_moved_molecules_indices[n] = 0;
+        moved_molecules_indices[n] = new int[MAX_MOLECULE_NUM];
+    }
+
+    /* Set up the node parity table, myparity */
+    for (int a=0; a<3; a++) {
+        if (num_processors[a] == 1) {
+            my_parity[a] = 2;
+        } else if (node_index[a]%2 == 0) {
+            my_parity[a] = 0;
+        } else {
+            my_parity[a] = 1;
+        }
     }
 }
 
@@ -118,9 +129,10 @@ void System::initialize(Settings *settings_, int myid_) {
     mover = new MoleculeMover();
     mover->initialize(this);
 
+    sync_mpi_initialize();
+
     mfp = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules_global*atoms_per_molecule);
 
-    sync_mpi_initialize();
     if(myid==0) {
         printf("done.\n\n");
         printf("%ld molecules\n",num_molecules_global);
@@ -139,12 +151,10 @@ void System::initialize(Settings *settings_, int myid_) {
 
     timer->end_system_initialize();
 }
-int collis_lols = 0;
 
 inline void System::find_position(double *r) {
     bool did_collide = true;
     while(did_collide) {
-        collis_lols++;
         r[0] = origo[0] + node_length[0]*rnd->nextDouble();
         r[1] = origo[1] + node_length[1]*rnd->nextDouble();
         r[2] = origo[2] + node_length[2]*rnd->nextDouble();
@@ -176,11 +186,13 @@ void System::update_cell_volume() {
     }
 }
 
-void System::set_initial_positions() {
+void System::set_initial_positions_and_mark_as_not_moved() {
     for(unsigned long n=0; n<num_molecules_local; n++) {
         for(int a=0; a<3; a++) {
             r0[3*n+a] = r[3*n+a] + origo[a]; // Initial position
         }
+
+        molecule_moved[n] = false;
     }
 }
 
@@ -188,13 +200,17 @@ void System::setup_molecules() {
     r  = new double[3*MAX_MOLECULE_NUM];
     v  = new double[3*MAX_MOLECULE_NUM];
     r0 = new double[3*MAX_MOLECULE_NUM];
-
     molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
     molecule_cell_index    = new unsigned long[MAX_MOLECULE_NUM];
 
+    tmp_r = new double[3*MAX_MOLECULE_NUM];
+    tmp_v = new double[3*MAX_MOLECULE_NUM];
+    tmp_molecule_moved = new bool[MAX_MOLECULE_NUM];
+    molecule_moved     = new bool[MAX_MOLECULE_NUM];
+
     if(settings->load_previous_state) {
         io->load_state_from_file_binary();
-        set_initial_positions();
+        set_initial_positions_and_mark_as_not_moved();
         return;
     }
 
@@ -206,7 +222,7 @@ void System::setup_molecules() {
         v[3*n+2] = rnd->nextGauss()*sqrt_temp_over_mass;
         find_position(&r[3*n]);
 
-        set_initial_positions();
+        set_initial_positions_and_mark_as_not_moved();
         Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
         cell->add_molecule(n,this->molecule_index_in_cell,this->molecule_cell_index);
     }
@@ -214,7 +230,7 @@ void System::setup_molecules() {
 }
 
 void System::setup_cells() {
-    all_cells.reserve(num_cells_total);
+    all_cells.reserve(num_cells_per_node_total);
     int idx[3];
 
     for(idx[0]=0;idx[0]<num_cells_per_node[0];idx[0]++) {
@@ -282,24 +298,179 @@ void System::init_randoms() {
 }
 
 void System::step() {
-    // steps += 1;
-    // t += dt;
-    // accelerate();
-    // move();
+    steps += 1;
+    t += dt;
+    accelerate();
+    move();
+    mpi_move();
+    if(steps % 100 == 0 && myid==0) cout << steps << endl;
     // collide();
     // if(settings->maintain_pressure) maintain_pressure();
+}
+
+int System::neighbor_index_of_molecule(double *r) {
+    if(r[0] - origo[0] < 0) return 0;
+    if(r[0] - origo[0] > node_length[0]) return 1;
+
+    if(r[1] - origo[1] < 0) return 2;
+    if(r[1] - origo[1] > node_length[1]) return 3;
+
+    if(r[2] - origo[2] < 0) return 4;
+    if(r[2] - origo[2] > node_length[2]) return 5;
+
+    return -1;
+}
+
+void System::mpi_move() {
+    /* Strategy:
+     * Loop through the 3 dimensions and lower/higher (left/right, back/front, down/up)
+     */
+
+    timer->start_mpi();
+    MPI_Status status;
+    int num_new_molecules = 0;
+    for(int dimension = 0; dimension<3; dimension++) {
+        for(int higher = 0; higher<=1; higher++) {
+            MPI_Barrier(MPI_COMM_WORLD);
+            int local_node_id = 2*dimension + higher;
+            int node_id = neighbor_nodes[local_node_id];
+            int num_send = num_moved_molecules_indices[local_node_id];
+            int num_receive;
+
+            /* Message buffering */
+            for (int i=0; i<num_send; i++) {
+                /* Shift the coordinate origin */
+                mpi_send_buffer[6*i    + 0] = r[3*moved_molecules_indices[local_node_id][i] + 0];
+                mpi_send_buffer[6*i    + 1] = r[3*moved_molecules_indices[local_node_id][i] + 1];
+                mpi_send_buffer[6*i    + 2] = r[3*moved_molecules_indices[local_node_id][i] + 2];
+                mpi_send_buffer[6*i+ 3 + 0] = v[3*moved_molecules_indices[local_node_id][i] + 0];
+                mpi_send_buffer[6*i+ 3 + 1] = v[3*moved_molecules_indices[local_node_id][i] + 1];
+                mpi_send_buffer[6*i+ 3 + 2] = v[3*moved_molecules_indices[local_node_id][i] + 2];
+            }
+
+            for(int n=0; n<num_new_molecules; n++) {
+                if(tmp_molecule_moved[n]) continue;
+
+                int new_neighbor_index = neighbor_index_of_molecule(&tmp_r[3*n]);
+                if(new_neighbor_index >= 0 && neighbor_nodes[new_neighbor_index] != myid) {
+                    mpi_send_buffer[6*num_send    + 0] = tmp_r[3*n + 0];
+                    mpi_send_buffer[6*num_send    + 1] = tmp_r[3*n + 1];
+                    mpi_send_buffer[6*num_send    + 2] = tmp_r[3*n + 2];
+                    mpi_send_buffer[6*num_send+ 3 + 0] = tmp_v[3*n + 0];
+                    mpi_send_buffer[6*num_send+ 3 + 1] = tmp_v[3*n + 1];
+                    mpi_send_buffer[6*num_send+ 3 + 2] = tmp_v[3*n + 2];
+                    tmp_molecule_moved[n] = true;
+                    num_send++;
+                }
+            }
+
+            /* Even node: send & recv*/
+            /* Odd node: recv & send */
+            if (my_parity[dimension] == 0) {
+                MPI_Send(&num_send,1,MPI_INT,node_id,110,MPI_COMM_WORLD);
+                MPI_Recv(&num_receive,1,MPI_INT,MPI_ANY_SOURCE,110,MPI_COMM_WORLD,&status);
+            }
+            else if (my_parity[dimension] == 1) {
+                MPI_Recv(&num_receive,1,MPI_INT,MPI_ANY_SOURCE,110, MPI_COMM_WORLD,&status);
+                MPI_Send(&num_send,1,MPI_INT,node_id,110,MPI_COMM_WORLD);
+            }
+            else num_receive = num_send;
+
+            /* Even node: send & recv, if not empty */
+            /* Odd node: recv & send, if not empty */
+            if (my_parity[dimension] == 0) {
+                if(num_send>0) MPI_Send(mpi_send_buffer,6*num_send,MPI_DOUBLE,node_id,120,MPI_COMM_WORLD);
+                if(num_receive>0) MPI_Recv(mpi_receive_buffer,6*num_receive,MPI_DOUBLE,MPI_ANY_SOURCE,120,MPI_COMM_WORLD,&status);
+            }
+            else if (my_parity[dimension] == 1) {
+                if(num_receive>0) MPI_Recv(mpi_receive_buffer,6*num_receive,MPI_DOUBLE,MPI_ANY_SOURCE,120,MPI_COMM_WORLD,&status);
+                if(num_send>0) MPI_Send(mpi_send_buffer,6*num_send,MPI_DOUBLE,node_id,120,MPI_COMM_WORLD);
+            }
+            /* Single layer: Exchange information with myself */
+            else memcpy(mpi_receive_buffer, mpi_send_buffer, 6*num_receive*sizeof(double));
+
+            /* Message storing */
+            for (int i=0; i<num_receive; i++) {
+                tmp_r[3*num_new_molecules + 0] = mpi_receive_buffer[6*i   + 0];
+                tmp_r[3*num_new_molecules + 1] = mpi_receive_buffer[6*i   + 1];
+                tmp_r[3*num_new_molecules + 2] = mpi_receive_buffer[6*i   + 2];
+
+                tmp_v[3*num_new_molecules + 0] = mpi_receive_buffer[6*i   + 3];
+                tmp_v[3*num_new_molecules + 1] = mpi_receive_buffer[6*i   + 4];
+                tmp_v[3*num_new_molecules + 2] = mpi_receive_buffer[6*i   + 5];
+                tmp_molecule_moved[num_new_molecules] = false;
+
+                num_new_molecules++;
+            }
+        }
+    }
+
+    int num_remaining_molecules = 0;
+    for(unsigned long n=0; n<num_molecules_local; n++) {
+        if(!molecule_moved[n]) {
+            r [3*num_remaining_molecules + 0] = r [3*n + 0];
+            r [3*num_remaining_molecules + 1] = r [3*n + 1];
+            r [3*num_remaining_molecules + 2] = r [3*n + 2];
+            v [3*num_remaining_molecules + 0] = v [3*n + 0];
+            v [3*num_remaining_molecules + 1] = v [3*n + 1];
+            v [3*num_remaining_molecules + 2] = v [3*n + 2];
+            molecule_moved[num_remaining_molecules] = false;
+            num_remaining_molecules++;
+        }
+    }
+
+    for(int n=0; n<num_new_molecules; n++) {
+        if(tmp_molecule_moved[n]) continue;
+
+//        int cell_index_new = cell_index_from_position(&tmp_r[3*n]);
+//        Cell *new_cell = all_cells[cell_index_new];
+//        new_cell->add_molecule(num_remaining_molecules, molecule_index_in_cell, molecule_cell_index);
+
+        r [3*num_remaining_molecules + 0] = tmp_r [3*n + 0];
+        r [3*num_remaining_molecules + 1] = tmp_r [3*n + 1];
+        r [3*num_remaining_molecules + 2] = tmp_r [3*n + 2];
+        v [3*num_remaining_molecules + 0] = tmp_v [3*n + 0];
+        v [3*num_remaining_molecules + 1] = tmp_v [3*n + 1];
+        v [3*num_remaining_molecules + 2] = tmp_v [3*n + 2];
+        molecule_moved[num_remaining_molecules] = false;
+        num_remaining_molecules++;
+    }
+
+    for(int a=0; a<6; a++) num_moved_molecules_indices[a] = 0;
+    num_molecules_local = num_remaining_molecules;
+
+    timer->end_mpi();
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void System::move() {
     timer->start_moving();
     for(unsigned long n=0;n<num_molecules_local;n++) {
         mover->move_molecule(n,dt,rnd,0);
+
+        int new_neighbor_index = neighbor_index_of_molecule(&r[3*n]);
+        if(new_neighbor_index >= 0 && neighbor_nodes[new_neighbor_index] != myid) {
+            // Remove molecule from old cell
+//            int cell_index_old = molecule_cell_index[n];
+//            Cell *old_cell = all_cells[cell_index_old];
+//            old_cell->remove_molecule(n,molecule_index_in_cell);
+
+            moved_molecules_indices[new_neighbor_index][ num_moved_molecules_indices[new_neighbor_index]++ ] = n;
+            molecule_moved[n] = true;
+        } else {
+//            int cell_index_new = cell_index_from_position(&r[3*n]);
+//            int cell_index_old = molecule_cell_index[n];
+
+//            Cell *new_cell = all_cells[cell_index_new];
+//            Cell *old_cell = all_cells[cell_index_old];
+
+//            if(cell_index_new != cell_index_old) {
+//                // We changed cell
+//                old_cell->remove_molecule(n,molecule_index_in_cell);
+//                new_cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
+//            }
+        }
     }
-
-    timer->end_moving();
-
-    timer->start_moving();
-    if(myid==0) update_molecule_cells();
     timer->end_moving();
 }
 

@@ -58,7 +58,6 @@ int main(int args, char* argv[]) {
         }
         system.io->save_state_to_file_binary();
         system.io->finalize();
-
     } else {
         for(int i=0;i<settings->timesteps;i++) {
             system.step();

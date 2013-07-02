@@ -106,6 +106,7 @@ void DSMC_IO::load_state_from_file_binary() {
     file.close();
 
     for(int n=0;n<N;n++) {
+        // cout << n << endl;
         double *r = &system->r[3*n];
         double *v = &system->v[3*n];
 
@@ -116,8 +117,8 @@ void DSMC_IO::load_state_from_file_binary() {
         v[1] = tmp_data[6*n+4];
         v[2] = tmp_data[6*n+5];
 
-        Cell *cell = system->all_cells[system->cell_index_from_position(r)];
-        cell->add_molecule(n,system->molecule_index_in_cell,system->molecule_cell_index);
+//        Cell *cell = system->all_cells[system->cell_index_from_position(r)];
+//        cell->add_molecule(n,system->molecule_index_in_cell,system->molecule_cell_index);
     }
 
     system->num_molecules_local = N;
