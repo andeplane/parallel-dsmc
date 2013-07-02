@@ -60,9 +60,13 @@ class DSMC:
 		self.Ly  = 1
 		self.Lz  = 1
 
-		self.cells_x = 10
-		self.cells_y = 10
-		self.cells_z = 10
+		self.nodes_x  = 1
+		self.nodes_y  = 1
+		self.nodes_z  = 1
+
+		self.cells_per_node_x = 10
+		self.cells_per_node_y = 10
+		self.cells_per_node_z = 10
 		
 		self.test_mode = False
 		self.logging_enabled = logging_enabled
@@ -86,6 +90,12 @@ class DSMC:
 		self.log("Saving state to "+str(path))
 		self.run_command("mkdir -p "+path)
 		self.run_command("cp -r log state_files statistics run_log.txt dsmc.ini Tocontinue "+path)
+
+	def create_xyz(self, path, xyz_file = "./state.xyz"):
+		if self.test_mode: return
+		self.run_command(self.compiler + " program/tools/create_xyz.cpp -o ./create_xyz")
+		num_nodes = self.nodes_x*self.nodes_y*self.nodes_z
+		self.run_command("./create_xyz "+str(num_nodes))
 
 	def run_command(self, cmd):
 		"""
@@ -174,9 +184,12 @@ class DSMC:
 			line = line.replace('__Lx__', str(self.Lx) )
 			line = line.replace('__Ly__', str(self.Ly) )
 			line = line.replace('__Lz__', str(self.Lz) )
-			line = line.replace('__cells_x__', str(self.cells_x) )
-			line = line.replace('__cells_y__', str(self.cells_y) )
-			line = line.replace('__cells_z__', str(self.cells_z) )
+			line = line.replace('__cells_per_node_x__', str(self.cells_per_node_x) )
+			line = line.replace('__cells_per_node_y__', str(self.cells_per_node_y) )
+			line = line.replace('__cells_per_node_z__', str(self.cells_per_node_z) )
+			line = line.replace('__nodes_x__', str(self.nodes_x) )
+			line = line.replace('__nodes_y__', str(self.nodes_y) )
+			line = line.replace('__nodes_z__', str(self.nodes_z) )
 			
 			output_file.writelines(line)
 
@@ -203,7 +216,8 @@ class DSMC:
 		
 		self.log("Running executable "+executable)
 		now = datetime.now()
-		self.run_command("./"+executable+" | tee log")
+		num_nodes = self.nodes_x*self.nodes_y*self.nodes_z
+		self.run_command("mpirun -n "+str(num_nodes)+" "+executable+" | tee log")
 		t1 = (datetime.now() - now).seconds
 		steps_per_second = self.timesteps / max(t1,1)
 

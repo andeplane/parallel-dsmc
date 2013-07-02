@@ -9,7 +9,7 @@ double L0 = 1e4;
 
 int main(int args, char *argv[]) {
 	if(args < 2) {
-		cout << "Please specify the number of cpus and timesteps." << endl;
+		cout << "Please specify the number of cpus." << endl;
 		return 0;
 	}
 	int cpus = atoi(argv[1]);
@@ -20,7 +20,7 @@ int main(int args, char *argv[]) {
 	ifstream **state_files = new ifstream*[cpus];
 	for(int cpu=0;cpu<cpus;cpu++) {
 		char *filename = new char[100];
-		sprintf(filename,"release/state_files/state%04d.bin",cpu);
+		sprintf(filename,"state_files/state%04d.bin",cpu);
 		state_files[cpu] = new ifstream(filename,ios::in | ios::binary);
 	}
 	cout << cpus << " state files opened." << endl;
@@ -38,7 +38,7 @@ int main(int args, char *argv[]) {
 	file << "sup" << endl;
 	for(int n=0;n<num_molecules;n++) {
     	// We return height - r(1) because system is inverted
-    	file << "H " << L0*molecule_data[9*n+0] << " " << L0*molecule_data[9*n+1] << " " << L0*molecule_data[9*n+2] << endl;
+    	file << "Si " << L0*molecule_data[9*n+0] << " " << L0*molecule_data[9*n+1] << " " << L0*molecule_data[9*n+2] << " " << n << endl;
     }
 
     cout << "Created XYZ-file with " << num_molecules << " molecules." << endl;

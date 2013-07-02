@@ -7,20 +7,22 @@ from dsmcconfig import *
 # More parameters in constructor.
 
 program = DSMC()
-dsmc = program.compile(skip_compile=True, name="job1")
-
+dsmc = program.compile(skip_compile=False, name="job1")
 
 program.reset()
 
-program.threads = 8
 program.reservoir_fraction = 0.2
-program.atoms_per_molecule = 100
+program.atoms_per_molecule = 500
 
 #program.density = 1e25
 program.temperature = 100
-program.cells_x = 20
-program.cells_y = 20
-program.cells_z = 20
+
+program.nodes_x = 2
+program.nodes_y = 2
+program.nodes_z = 2
+program.cells_per_node_x = 10
+program.cells_per_node_y = 10
+program.cells_per_node_z = 10
 
 ideal_gas_pressure = program.density*program.constants['boltzmann']*program.temperature;
 program.pressure_A = ideal_gas_pressure + 200000
@@ -29,6 +31,8 @@ program.world = "../worlds/box.bin"
 
 program.prepare_new_system()
 program.run(dsmc)
+
+#program.create_xyz("./state_files/", xyz_file = "./state.xyz")
 
 program.timesteps = 5000
 program.create_config_file()

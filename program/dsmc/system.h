@@ -42,6 +42,10 @@ private:
     void setup_cells();
     void calculate_porosity();
     void update_molecule_cells();
+    void set_topology();
+    void sync_mpi_initialize();
+    void set_initial_positions();
+    bool molecule_is_on_this_node(double *r);
 public:
     int cell_index_from_position(double *r);
 
@@ -59,16 +63,19 @@ public:
     vector<Cell*> reservoir_B_cells;
 
     double *mpi_receive_buffer;
+    double *mpi_send_buffer;
     double *r;
     double *v;
     double *r0;
     unsigned long *molecule_index_in_cell;
     unsigned long *molecule_cell_index;
 
-    int num_molecules;
+    unsigned long num_molecules_local;
+    unsigned long num_molecules_global;
 
     double reservoir_size;
     double grid_origo_x, grid_origo_y, grid_origo_z;
+    double origo[3];
     double length[3];
     double half_length[3];
     double atoms_per_molecule;
@@ -79,17 +86,23 @@ public:
     double temperature;
     double diam, density;
     double wall_temperature;
-    double cell_length_x;
-    double cell_length_y;
-    double cell_length_z;
-    double porosity;
+    double porosity, porosity_global;
     double volume;
+    double cell_length[3];
+    int node_index[3];
+    int num_processors[3];
+    int neighbor_nodes[6];
+    int num_cells[3];
+    int num_cells_total;
+    int num_cells_per_node[3];
+    double shift_vector[6][3];
+    double node_length[3];
 
     unsigned long collisions;
+    unsigned long num_active_cells;
 	int steps;
     int myid;
-    int cells_x, cells_y, cells_z;
-    int num_cells_vector[3];
+    int num_nodes;
 
     void initialize(Settings *settings_, int myid_);
 	void step();

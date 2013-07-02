@@ -17,5 +17,5 @@ public:
     void move_molecules(double dt, Random *rnd);
     void move_molecule(const int &idx);
     inline void do_move(double *r, double *v, double *r0, const double &dt);
-    void move_molecule(int &idx, double dt, Random *rnd, int depth);
+    void move_molecule(unsigned long &idx, double dt, Random *rnd, int depth);
 };

@@ -13,17 +13,25 @@
 using namespace std;
 
 int main(int args, char* argv[]) {
-    int num_nodes, myid;
+    int num_nodes_mpi, myid;
     MPI_Init(&args,&argv) ;
-    MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_nodes_mpi);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     double t_start = MPI_Wtime();
 
     Settings *settings = new Settings("dsmc.ini");
+
+    int num_nodes = settings->nodes_x*settings->nodes_y*settings->nodes_z;
+    if(num_nodes_mpi != num_nodes) {
+        if(myid==0) cout << "Wrong number of processors. " << endl << "Config files says " << num_nodes << ". MPI started with " << num_nodes_mpi << "." << endl;
+        MPI_Finalize();
+        return(0);
+    }
+
     System system;
 
     system.initialize(settings, myid);
-    
+
     ifstream to_continue("Tocontinue");
     double t = 0;
     unsigned long steps = 0;
@@ -83,10 +91,11 @@ int main(int args, char* argv[]) {
                  << "      Disk IO           : " << system.timer->io << " s ( " << 100*fraction_io << "% )" <<  endl
                  << "      System initialize : " << system.timer->system_initialize << " s ( " << 100*system_initialize_percentage << "% )" <<  endl
                  << "      MPI communication : " << system.timer->mpi << " s ( " << 100*fraction_mpi << "% )" <<  endl << endl
-                 << "      TOTAL             : " << time_total << " s ( " << 100*fraction_total << "% )" <<  endl;
+                 << "      TOTAL             : " << time_total << " s ( " << 100*fraction_total << "% )" <<  endl
+                 << "      CPU HOURS         : " << time_total*num_nodes/3600 <<  endl;
             cout << endl << settings->timesteps / total_time << " timesteps / second. " << endl;
-            cout << system.num_molecules*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
-            cout << system.num_molecules*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
+            cout << system.num_molecules_global*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
+            cout << system.num_molecules_global*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
             ofstream to_continue_write("Tocontinue");
             to_continue_write << system.t << " " << system.steps << " " << system.collisions;
             to_continue_write.close();

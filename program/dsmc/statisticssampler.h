@@ -9,13 +9,13 @@ class Settings;
 class StatisticsSampler {
 
 private:
-	System *system;
-    Settings *settings;
-    long temperature_sampled_at;
-    long kinetic_energy_sampled_at;
-    long velocity_distribution_sampled_at;
-    long flux_sampled_at;
-    long permeability_sampled_at;
+    System *system;
+//    Settings *settings;
+//    long temperature_sampled_at;
+//    long kinetic_energy_sampled_at;
+//    long velocity_distribution_sampled_at;
+//    long flux_sampled_at;
+//    long permeability_sampled_at;
 
 public:
     StatisticsSampler(System *system);

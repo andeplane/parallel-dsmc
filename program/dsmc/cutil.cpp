@@ -37,7 +37,7 @@ string CUtil::toString(double d, string param) {
   char buffer[200];
 #ifdef __WIN32
   sprintf_s(buffer,sizeof(buffer),param.c_str(),(float)d);
-#elseif
+#else
   sprintf(buffer,param.c_str(),(float)d);
 #endif
   return string(buffer);

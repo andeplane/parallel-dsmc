@@ -14,7 +14,7 @@ Cell::Cell(System *_system) {
     pixels = 0;
     num_molecules = 0;
     total_pixels = 0;
-    int molecules_per_cell = MAX_MOLECULE_NUM / (system->cells_x*system->cells_y*system->cells_z);
+    int molecules_per_cell = MAX_MOLECULE_NUM / system->num_cells_total;
     num_molecules_allocated_memory = 10*molecules_per_cell;
 
     molecules = new int[num_molecules_allocated_memory];
@@ -32,7 +32,7 @@ void Cell::update_volume() {
     }
 
     // Update the effective cell volume. A cell may contain 50% of solid material
-    volume = system->volume/(system->cells_x*system->cells_y*system->cells_z)*(float)pixels/total_pixels;
+    volume = system->volume/system->num_cells_total*(float)pixels/total_pixels;
     collision_coefficient = 0.5*system->atoms_per_molecule*M_PI*system->diam*system->diam*system->dt/volume;
 }
 

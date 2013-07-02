@@ -15,7 +15,6 @@ SOURCES += main.cpp \
     random.cpp \
     grid.cpp \
     cutil.cpp \
-    system.inc.cpp \
     unitconverter.cpp \
     settings.cpp \
     dsmc_io.cpp \
@@ -41,15 +40,15 @@ OTHER_FILES += \
 
 mac {
     CONFIG -= app_bundle
-    LIBS   += /opt/intel/composer_xe_2013.1.119/compiler/lib/libiomp5.dylib
+    LIBS   +=
     INCLUDEPATH +=
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
-    QMAKE_CXX = icpc
+    QMAKE_CXX = mpic++
 
-    QMAKE_LFLAGS += -xCORE-AVX-I
-    QMAKE_CXXFLAGS_RELEASE += -xCORE-AVX-I
+    #QMAKE_LFLAGS += -xCORE-AVX-I
+    #QMAKE_CXXFLAGS_RELEASE += -xCORE-AVX-I
 }
 
 unix:!mac {
@@ -70,11 +69,11 @@ QMAKE_LFLAGS = $$system(mpicxx --showme:link)
 QMAKE_CXXFLAGS += $$system(mpicxx --showme:compile) -DMPICH_IGNORE_CXX_SEEK
 QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
 
-QMAKE_LFLAGS += -ipo -no-prec-div -falign-functions=16
-QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16
+#QMAKE_LFLAGS += -ipo -no-prec-div -falign-functions=16
+#QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16
 
 QMAKE_LFLAGS -= -lm
-QMAKE_LFLAGS -= -O2
-QMAKE_LFLAGS += -O3
+#QMAKE_LFLAGS -= -O2
+#QMAKE_LFLAGS += -O3
 QMAKE_CFLAGS_RELEASE -= -fPIE
 QMAKE_CXXFLAGS_RELEASE -= -fPIE
