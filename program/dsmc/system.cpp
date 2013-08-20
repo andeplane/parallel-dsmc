@@ -33,7 +33,7 @@ void System::set_topology() {
     num_cells_per_node[1] = settings->cells_per_node_y;
     num_cells_per_node[2] = settings->cells_per_node_z;
 
-    for(int a=0; a<3; a++) node_length[a] = length[a] / num_processors[0];
+    for(int a=0; a<3; a++) node_length[a] = length[a] / num_processors[a];
     for(int a=0; a<3; a++) num_cells[a] = num_cells_per_node[a]*num_processors[a];
     for(int a=0; a<3; a++) cell_length[a] = length[a]/(num_cells[a]);
     for(int a=0; a<3; a++) origo[a] = (double)node_index[a] * node_length[a];
@@ -138,6 +138,7 @@ void System::initialize(Settings *settings_, int myid_) {
         printf("%ld molecules\n",num_molecules_global);
         printf("%ld (%ld inactive) cells\n",num_active_cells,num_cells_total - num_active_cells);
         printf("Porosity: %f\n",porosity);
+        printf("System size: %fx%fx%f um\n",length[0],length[1],length[2]);
         printf("System volume: %f\n",length[0]*length[1]*length[2]);
         printf("Effective system volume: %f\n",volume);
         printf("Mean free path: %.4f \n",mfp);
@@ -215,17 +216,18 @@ void System::setup_molecules() {
     }
 
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
-
     for(unsigned long n=0;n<num_molecules_local;n++) {
         v[3*n+0] = rnd->nextGauss()*sqrt_temp_over_mass;
         v[3*n+1] = rnd->nextGauss()*sqrt_temp_over_mass;
         v[3*n+2] = rnd->nextGauss()*sqrt_temp_over_mass;
         find_position(&r[3*n]);
 
-        set_initial_positions_and_mark_as_not_moved();
-        Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
-        cell->add_molecule(n,this->molecule_index_in_cell,this->molecule_cell_index);
+        int cell_index = cell_index_from_position(&r[3*n]);
+        Cell *cell = all_cells[cell_index];
+        cell->add_molecule(n, molecule_index_in_cell, molecule_cell_index);
     }
+
+    set_initial_positions_and_mark_as_not_moved();
     io->save_state_to_file_binary();
 }
 
@@ -304,7 +306,7 @@ void System::step() {
     move();
     mpi_move();
     if(steps % 100 == 0 && myid==0) cout << steps << endl;
-    // collide();
+    collide();
     // if(settings->maintain_pressure) maintain_pressure();
 }
 
@@ -405,7 +407,7 @@ void System::mpi_move() {
         }
     }
 
-    int num_remaining_molecules = 0;
+    unsigned long num_remaining_molecules = 0;
     for(unsigned long n=0; n<num_molecules_local; n++) {
         if(!molecule_moved[n]) {
             r [3*num_remaining_molecules + 0] = r [3*n + 0];
@@ -415,17 +417,20 @@ void System::mpi_move() {
             v [3*num_remaining_molecules + 1] = v [3*n + 1];
             v [3*num_remaining_molecules + 2] = v [3*n + 2];
             molecule_moved[num_remaining_molecules] = false;
+
+            if(n != num_remaining_molecules) {
+                int cell_index = molecule_cell_index[n];
+                Cell *cell = all_cells[cell_index];
+                cell->remove_molecule(n, molecule_index_in_cell);
+                cell->add_molecule(num_remaining_molecules,molecule_index_in_cell,molecule_cell_index);
+            }
+
             num_remaining_molecules++;
         }
     }
 
     for(int n=0; n<num_new_molecules; n++) {
         if(tmp_molecule_moved[n]) continue;
-
-//        int cell_index_new = cell_index_from_position(&tmp_r[3*n]);
-//        Cell *new_cell = all_cells[cell_index_new];
-//        new_cell->add_molecule(num_remaining_molecules, molecule_index_in_cell, molecule_cell_index);
-
         r [3*num_remaining_molecules + 0] = tmp_r [3*n + 0];
         r [3*num_remaining_molecules + 1] = tmp_r [3*n + 1];
         r [3*num_remaining_molecules + 2] = tmp_r [3*n + 2];
@@ -433,6 +438,10 @@ void System::mpi_move() {
         v [3*num_remaining_molecules + 1] = tmp_v [3*n + 1];
         v [3*num_remaining_molecules + 2] = tmp_v [3*n + 2];
         molecule_moved[num_remaining_molecules] = false;
+        int cell_index = 0; //cell_index_from_position(&tmp_r[3*n]);
+        Cell *cell = all_cells[cell_index];
+        cell->add_molecule(num_remaining_molecules, molecule_index_in_cell, molecule_cell_index);
+
         num_remaining_molecules++;
     }
 
@@ -440,35 +449,34 @@ void System::mpi_move() {
     num_molecules_local = num_remaining_molecules;
 
     timer->end_mpi();
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void System::move() {
     timer->start_moving();
     for(unsigned long n=0;n<num_molecules_local;n++) {
         mover->move_molecule(n,dt,rnd,0);
-
         int new_neighbor_index = neighbor_index_of_molecule(&r[3*n]);
+        // Check if the molecule moved to another node
         if(new_neighbor_index >= 0 && neighbor_nodes[new_neighbor_index] != myid) {
             // Remove molecule from old cell
-//            int cell_index_old = molecule_cell_index[n];
-//            Cell *old_cell = all_cells[cell_index_old];
-//            old_cell->remove_molecule(n,molecule_index_in_cell);
+            int cell_index_old = molecule_cell_index[n];
+            Cell *old_cell = all_cells[cell_index_old];
+            old_cell->remove_molecule(n, molecule_index_in_cell);
 
             moved_molecules_indices[new_neighbor_index][ num_moved_molecules_indices[new_neighbor_index]++ ] = n;
             molecule_moved[n] = true;
         } else {
-//            int cell_index_new = cell_index_from_position(&r[3*n]);
-//            int cell_index_old = molecule_cell_index[n];
+            int cell_index_new = cell_index_from_position(&r[3*n]);
+            int cell_index_old = molecule_cell_index[n];
 
-//            Cell *new_cell = all_cells[cell_index_new];
-//            Cell *old_cell = all_cells[cell_index_old];
+            if(cell_index_new != cell_index_old) {
+                // We changed cell
+                Cell *new_cell = all_cells[cell_index_new];
+                Cell *old_cell = all_cells[cell_index_old];
 
-//            if(cell_index_new != cell_index_old) {
-//                // We changed cell
-//                old_cell->remove_molecule(n,molecule_index_in_cell);
-//                new_cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
-//            }
+                old_cell->remove_molecule(n,molecule_index_in_cell);
+                new_cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
+            }
         }
     }
     timer->end_moving();

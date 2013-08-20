@@ -136,7 +136,7 @@ class DSMC:
 			current_directory = os.getcwd()
 			os.chdir(path)
 			self.run_command('qmake')
-			self.run_command('make clean')
+			#self.run_command('make clean')
 			self.run_command('make')
 			os.chdir(current_directory)
 			move_command = 'mv '+path+'/dsmc ./%s' % name

@@ -14,8 +14,8 @@ Cell::Cell(System *_system) {
     pixels = 0;
     num_molecules = 0;
     total_pixels = 0;
-    int molecules_per_cell = MAX_MOLECULE_NUM / system->num_cells_total;
-    num_molecules_allocated_memory = 10*molecules_per_cell;
+    unsigned long molecules_per_cell = MAX_MOLECULE_NUM / system->num_cells_total;
+    num_molecules_allocated_memory = 100*molecules_per_cell;
 
     molecules = new int[num_molecules_allocated_memory];
 }
@@ -108,7 +108,7 @@ int Cell::collide(Random *rnd) {
 	return collisions;
 }
 
-void Cell::add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index) {
+void Cell::add_molecule(const unsigned long &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index) {
     if(num_molecules+1>num_molecules_allocated_memory) {
         // We need to reallocate
         num_molecules_allocated_memory *= 2;
@@ -124,7 +124,7 @@ void Cell::add_molecule(const int &molecule_index, unsigned long *index_in_cell,
     num_molecules++;
 }
 
-void Cell::remove_molecule(const int &molecule_index, unsigned long *index_in_cell) {
+void Cell::remove_molecule(const unsigned long &molecule_index, unsigned long *index_in_cell) {
     if(num_molecules>1) {
         // Move the last molecule over here
         molecules[ index_in_cell[molecule_index] ] = molecules[num_molecules-1];
