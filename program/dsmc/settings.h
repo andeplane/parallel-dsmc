@@ -15,9 +15,11 @@ public:
     int atoms_per_molecule;
     int movie_molecules;
     int timesteps;
-    int cells_per_node_x, cells_per_node_y, cells_per_node_z;
+    int cells_x;
+    int cells_y;
+    int cells_z;
     int gravity_direction;
-    int nodes_x, nodes_y, nodes_z;
+    int threads;
     double viscosity;
     double mass;
     double temperature;
@@ -25,8 +27,11 @@ public:
     double gravity;
     double density;
     double diam;
-    double Lx, Ly, Lz;
+    double Lx;
+    double Ly;
+    double Lz;
     double reservoir_fraction;
-    double pressure_A, pressure_B;
+    double pressure_A;
+    double pressure_B;
     double dt;
 };

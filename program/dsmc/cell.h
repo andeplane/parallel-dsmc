@@ -34,8 +34,8 @@ public:
     int collide(Random *rnd);
     inline void collide_molecules(double *v0, double *v1, const double &v_rel, Random *rnd);
     void update_volume();
-    void add_molecule(const unsigned long &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index);
-    void remove_molecule(const unsigned long &molecule_index, unsigned long *index_in_cell);
+    void add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index);
+    void remove_molecule(const int &molecule_index, unsigned long *index_in_cell);
 
     double calculate_kinetic_energy();
     static bool cmp(Cell *c1, Cell *c2);

@@ -23,7 +23,7 @@ void MoleculeMover::initialize(System *system_) {
 }
 
 void MoleculeMover::move_molecules(double dt, Random *rnd) {
-    for(unsigned long n=0;n<system->num_molecules_local;n++) {
+    for(int n=0;n<system->num_molecules;n++) {
         move_molecule(n,dt,rnd,0);
     }
 }
@@ -51,7 +51,7 @@ inline int get_index_of_voxel(double *r, const double &nx_div_lx,const double &n
     return i + j*Nx + k*NyNx;
 }
 
-void MoleculeMover::move_molecule(unsigned long &molecule_index, double dt, Random *rnd, int depth) {
+void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
     double tau = dt;
 
     double *r = &system->r[3*molecule_index];

@@ -118,7 +118,7 @@ double DSMCTimer::fraction_pressure() {
     return pressure/(t1-t0);
 }
 
-void DSMCTimer::gather_all_nodes() {
+void DSMCTimer::gather_all_nodes(System *system) {
     colliding_global = 0;
     moving_global = 0;
     mpi_global = 0;
