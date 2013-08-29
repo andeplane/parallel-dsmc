@@ -7,7 +7,7 @@ from dsmcconfig import *
 # More parameters in constructor.
 
 program = DSMC()
-dsmc = program.compile(skip_compile=True, name="job1")
+dsmc = program.compile(skip_compile=False, name="job1")
 
 
 program.reset()
