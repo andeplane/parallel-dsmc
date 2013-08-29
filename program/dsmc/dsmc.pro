@@ -23,7 +23,8 @@ SOURCES += main.cpp \
     moleculemover.cpp \
     colliderbase.cpp \
     colliderspecular.cpp \
-    colliderthermal.cpp
+    colliderthermal.cpp \
+    collidercercignanilampis.cpp
 
 HEADERS += \
     system.h \
@@ -40,7 +41,8 @@ HEADERS += \
     moleculemover.h \
     colliderbase.h \
     colliderspecular.h \
-    colliderthermal.h
+    colliderthermal.h \
+    collidercercignanilampis.h
 
 
 OTHER_FILES += \
