@@ -6,6 +6,8 @@
 #include <colliderbase.h>
 #include <colliderspecular.h>
 #include <colliderthermal.h>
+#include <collidercercignanilampis.h>
+#include <collidermaxwell.h>
 
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
@@ -71,7 +73,17 @@ void System::initialize(Settings *settings_, int myid_) {
 
     cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
-    ColliderBase *surface_collider = new ColliderThermal(sqrt_wall_temp_over_mass);
+    ColliderBase *surface_collider;
+    if(settings->surface_interaction_model.compare("thermal") == 0) {
+        surface_collider = new ColliderThermal(sqrt_wall_temp_over_mass);
+    } else if(settings->surface_interaction_model.compare("specular") == 0) {
+        surface_collider = new ColliderSpecular();
+    } else if(settings->surface_interaction_model.compare("cercignani_lampis") == 0) {
+        surface_collider = new ColliderCercignaniLampis(sqrt_wall_temp_over_mass);
+    } else if(settings->surface_interaction_model.compare("maxwell") == 0) {
+        surface_collider = new ColliderMaxwell(sqrt_wall_temp_over_mass);
+    }
+
 
     cout << "Creating molecule mover..." << endl;
     mover = new MoleculeMover();
@@ -86,6 +98,7 @@ void System::initialize(Settings *settings_, int myid_) {
     printf("Porosity: %f\n",porosity);
     printf("System volume: %f\n",length[0]*length[1]*length[2]);
     printf("Effective system volume: %f\n",volume);
+    printf("Surface interaction model: %s\n",settings->surface_interaction_model.c_str());
     printf("Mean free path: %.4f \n",mfp);
     printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mfp,length[1]/cells_y/mfp), length[2]/cells_z/mfp));
     printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);

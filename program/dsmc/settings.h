@@ -34,4 +34,5 @@ public:
     double pressure_A;
     double pressure_B;
     double dt;
+    string surface_interaction_model;
 };

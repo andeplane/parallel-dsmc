@@ -26,6 +26,7 @@ ideal_gas_pressure = program.density*program.constants['boltzmann']*program.temp
 program.pressure_A = ideal_gas_pressure + 200000
 program.pressure_B = ideal_gas_pressure
 program.world = "../worlds/box.bin"
+program.surface_interaction = "thermal"
 
 program.prepare_new_system()
 program.run(dsmc)

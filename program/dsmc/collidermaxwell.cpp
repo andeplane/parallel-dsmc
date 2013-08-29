@@ -1,12 +1,13 @@
-#include "collidercercignanilampis.h"
-#include <random.h>
+#include "collidermaxwell.h"
 #include <math.h>
-ColliderCercignaniLampis::ColliderCercignaniLampis(double sqrt_wall_temp_over_mass_)
+#include <random.h>
+
+ColliderMaxwell::ColliderMaxwell(double sqrt_wall_temp_over_mass_)
 {
     sqrt_wall_temp_over_mass = sqrt_wall_temp_over_mass_;
 }
 
-void ColliderCercignaniLampis::collide(Random *rnd, double *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2)
+void ColliderMaxwell::collide(Random *rnd, double *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2)
 {
     double v_normal   = sqrt_wall_temp_over_mass*sqrt(-2*log(rnd->nextDouble()));
     double v_tangent1 = sqrt_wall_temp_over_mass*rnd->nextGauss();

@@ -1,6 +1,5 @@
 #pragma once
 #include <colliderbase.h>
-class Random;
 
 class ColliderSpecular : public ColliderBase
 {
