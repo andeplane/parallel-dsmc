@@ -175,7 +175,7 @@ void StatisticsSampler::sample_velocity_distribution() {
     memset((void*)count,0,num_bins*sizeof(int));
     memset((void*)vel,0,num_bins*sizeof(double));
 
-    for(unsigned int i=0;i<system->num_molecules;i++) {
+    for(unsigned int i=0; i<system->num_molecules; i++) {
         // if(system->r[3*i+2] > system->length[2]*settings->reservoir_fraction/2 && system->r[3*i+2] < system->length[2]*(1-settings->reservoir_fraction/2)) {
             int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
             int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;

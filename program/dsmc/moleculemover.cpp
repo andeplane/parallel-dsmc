@@ -5,6 +5,8 @@
 #include <random.h>
 #include <grid.h>
 #include <settings.h>
+#include <colliderbase.h>
+
 MoleculeMover::MoleculeMover()
 {
 
@@ -12,7 +14,8 @@ MoleculeMover::MoleculeMover()
 
 double sqrt_wall_temp_over_mass = 0;
 
-void MoleculeMover::initialize(System *system_) {
+void MoleculeMover::initialize(System *system_, ColliderBase *surface_collider_) {
+    surface_collider = surface_collider_;
     system = system_;
     voxels = system->world_grid->voxels;
     grid = system->world_grid;
@@ -111,28 +114,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
             }
         }
 
-        double v_normal   = sqrt_wall_temp_over_mass*sqrt(-2*log(rnd->nextDouble()));
-        double v_tangent1 = sqrt_wall_temp_over_mass*rnd->nextGauss();
-        double v_tangent2 = sqrt_wall_temp_over_mass*rnd->nextGauss();
-
-        // Normal vector
-        float n_x = grid->normals[3*idx + 0];
-        float n_y = grid->normals[3*idx + 1];
-        float n_z = grid->normals[3*idx + 2];
-
-        // Tangent vector 1
-        float t1_x = grid->tangents1[3*idx + 0];
-        float t1_y = grid->tangents1[3*idx + 1];
-        float t1_z = grid->tangents1[3*idx + 2];
-
-        // Tangent vector 2
-        float t2_x = grid->tangents2[3*idx + 0];
-        float t2_y = grid->tangents2[3*idx + 1];
-        float t2_z = grid->tangents2[3*idx + 2];
-
-        v[0] = v_normal*n_x + v_tangent1*t1_x + v_tangent2*t2_x;
-        v[1] = v_normal*n_y + v_tangent1*t1_y + v_tangent2*t2_y;
-        v[2] = v_normal*n_z + v_tangent1*t1_z + v_tangent2*t2_z;
+        surface_collider->collide(rnd, v, &grid->normals[3*idx], &grid->tangents1[3*idx], &grid->tangents2[3*idx]);
     }
     else dt = 0;
 

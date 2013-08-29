@@ -3,6 +3,9 @@
 #include <dsmctimer.h>
 #include <moleculemover.h>
 #include <settings.h>
+#include <colliderbase.h>
+#include <colliderspecular.h>
+#include <colliderthermal.h>
 
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
@@ -66,9 +69,13 @@ void System::initialize(Settings *settings_, int myid_) {
     cout << "Updating cell volume..." << endl;
     update_cell_volume();
 
+    cout << "Creating surface collider..." << endl;
+    double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
+    ColliderBase *surface_collider = new ColliderThermal(sqrt_wall_temp_over_mass);
+
     cout << "Creating molecule mover..." << endl;
     mover = new MoleculeMover();
-    mover->initialize(this);
+    mover->initialize(this, surface_collider);
 
     int number_of_cells = all_cells.size();
     int number_of_cells_all = cells_x*cells_y*cells_z;

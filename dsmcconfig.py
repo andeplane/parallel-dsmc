@@ -26,7 +26,7 @@ class DSMC:
 		self.constants['boltzmann'] = 1.3806488e-23
 
 		self.load_previous_state = False
-		self.create_movie = False
+		self.create_movie_files = False
 
 		self.atoms_per_molecule = 1000
 		self.timesteps = 10000
@@ -150,7 +150,7 @@ class DSMC:
 
 		for line in original_file:
 			line = line.replace('__load_previous_state__',str(self.load_previous_state).lower() )
-			line = line.replace('__create_movie__',str(self.create_movie).lower() )
+			line = line.replace('__create_movie__',str(self.create_movie_files).lower() )
 			line = line.replace('__threads__',str(self.threads) )
 			line = line.replace('__atoms_per_molecule__',str(self.atoms_per_molecule) )
 			line = line.replace('__timesteps__',str(self.timesteps) )
@@ -214,3 +214,7 @@ class DSMC:
 		self.load_previous_state = False
 		self.create_config_file()
 		self.load_previous_state = True
+
+	def create_movie(self, frames):
+		self.run_command("%s -O3 program/tools/create_movie.cpp -o create_movie" % self.compiler)
+		self.run_command("./create_movie ./ %d" % (frames) )

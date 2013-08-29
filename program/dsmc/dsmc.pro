@@ -20,7 +20,10 @@ SOURCES += main.cpp \
     settings.cpp \
     dsmc_io.cpp \
     dsmctimer.cpp \
-    moleculemover.cpp
+    moleculemover.cpp \
+    colliderbase.cpp \
+    colliderspecular.cpp \
+    colliderthermal.cpp
 
 HEADERS += \
     system.h \
@@ -34,14 +37,18 @@ HEADERS += \
     settings.h \
     dsmc_io.h \
     dsmctimer.h \
-    moleculemover.h
+    moleculemover.h \
+    colliderbase.h \
+    colliderspecular.h \
+    colliderthermal.h
+
 
 OTHER_FILES += \
     ../dsmc.ini
 
 mac {
     CONFIG -= app_bundle
-    LIBS   += /opt/intel/composer_xe_2013.1.119/compiler/lib/libiomp5.dylib
+    LIBS   +=
     INCLUDEPATH +=
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
