@@ -20,7 +20,6 @@ void System::initialize(Settings *settings_, int myid_) {
 
     init_randoms();
     unit_converter = new UnitConverter();
-
     length[0] = settings->Lx;
     length[1] = settings->Ly;
     length[2] = settings->Lz;
@@ -79,11 +78,10 @@ void System::initialize(Settings *settings_, int myid_) {
     } else if(settings->surface_interaction_model.compare("specular") == 0) {
         surface_collider = new ColliderSpecular();
     } else if(settings->surface_interaction_model.compare("cercignani_lampis") == 0) {
-        surface_collider = new ColliderCercignaniLampis(sqrt_wall_temp_over_mass);
+        surface_collider = new ColliderCercignaniLampis(sqrt_wall_temp_over_mass, this);
     } else if(settings->surface_interaction_model.compare("maxwell") == 0) {
         surface_collider = new ColliderMaxwell(sqrt_wall_temp_over_mass);
     }
-
 
     cout << "Creating molecule mover..." << endl;
     mover = new MoleculeMover();
@@ -112,9 +110,9 @@ void System::initialize(Settings *settings_, int myid_) {
 inline void System::find_position(double *r) {
     bool did_collide = true;
     while(did_collide) {
-        r[0] = length[0]*rnd->nextDouble();
-        r[1] = length[1]*rnd->nextDouble();
-        r[2] = length[2]*rnd->nextDouble();
+        r[0] = length[0]*rnd->next_double();
+        r[1] = length[1]*rnd->next_double();
+        r[2] = length[2]*rnd->next_double();
 
         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
     }
@@ -160,9 +158,9 @@ void System::setup_molecules() {
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
 
     for(int n=0;n<num_molecules;n++) {
-        v[3*n+0] = rnd->nextGauss()*sqrt_temp_over_mass;
-        v[3*n+1] = rnd->nextGauss()*sqrt_temp_over_mass;
-        v[3*n+2] = rnd->nextGauss()*sqrt_temp_over_mass;
+        v[3*n+0] = rnd->next_gauss()*sqrt_temp_over_mass;
+        v[3*n+1] = rnd->next_gauss()*sqrt_temp_over_mass;
+        v[3*n+2] = rnd->next_gauss()*sqrt_temp_over_mass;
         find_position(&r[3*n]);
         r0[3*n+0] = r[3*n+0];
         r0[3*n+1] = r[3*n+1];
@@ -238,5 +236,5 @@ void System::calculate_porosity() {
 void System::init_randoms() {
     long seed = time(NULL);
     seed = 1;
-    rnd = new Random(-seed);
+    rnd = new Random(-seed, settings->alpha_n, settings->alpha_t);
 }

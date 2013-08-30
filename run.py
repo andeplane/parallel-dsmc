@@ -9,24 +9,22 @@ from dsmcconfig import *
 program = DSMC()
 dsmc = program.compile(skip_compile=False, name="job1")
 
-
 program.reset()
-
-program.threads = 8
 program.reservoir_fraction = 0.2
-program.atoms_per_molecule = 100
+program.atoms_per_molecule = 1000
 
 #program.density = 1e25
+program.wall_temperature = 100
 program.temperature = 100
 program.cells_x = 20
 program.cells_y = 20
 program.cells_z = 20
 
 ideal_gas_pressure = program.density*program.constants['boltzmann']*program.temperature;
-program.pressure_A = ideal_gas_pressure + 200000
+program.pressure_A = ideal_gas_pressure
 program.pressure_B = ideal_gas_pressure
 program.world = "../worlds/box.bin"
-program.surface_interaction = "thermal"
+#program.surface_interaction = "cercignani_lampis"
 
 program.prepare_new_system()
 program.run(dsmc)

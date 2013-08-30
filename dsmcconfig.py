@@ -28,6 +28,8 @@ class DSMC:
 		self.load_previous_state = False
 		self.create_movie_files = False
 		self.surface_interaction = "thermal"
+		self.alpha_t = 0.8
+		self.alpha_n = 0.5
 
 		self.atoms_per_molecule = 1000
 		self.timesteps = 10000
@@ -155,6 +157,9 @@ class DSMC:
 			line = line.replace('__threads__',str(self.threads) )
 			line = line.replace('__atoms_per_molecule__',str(self.atoms_per_molecule) )
 			line = line.replace('__timesteps__',str(self.timesteps) )
+			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )
+			line = line.replace('__alpha_n__',str(self.alpha_n) )
+			line = line.replace('__alpha_t__',str(self.alpha_t) )
 			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )
 			line = line.replace('__temperature__',str(self.temperature) )
 			line = line.replace('__wall_temperature__',str(self.wall_temperature) )

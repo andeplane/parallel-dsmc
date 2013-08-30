@@ -11,12 +11,21 @@
 #define RNMX (1.0-EPS)
 
 class Random {
+private:
+    inline double bessel_i0(double x);
 public:
-	long     iy;
-	long     iv[NTAB];
-	long     idum[1];
+    long     iy;
+    long     iv[NTAB];
+    long     idum[1];
+    double alpha_n;
+    double alpha_t;
+    double sqrt_one_minus_alpha;
+    double sqrt_one_minus_alpha_over_alpha;
+    double sqrt_alpha_over_two;
+    long   cercignani_lampis_normal_component_trials;
 
-	Random(long seed);
-	double nextDouble();
-    double nextGauss();
+    Random(long seed, double alpha_n_, double alpha_t_);
+    double next_double();
+    double next_gauss();
+    double next_cercignani_lampis_normal_component(double v_norm_in, double factor, double max_v_out);
 };

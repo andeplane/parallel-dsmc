@@ -26,7 +26,7 @@ void System::move() {
     for(int n=0;n<num_molecules;n++) {
         mover->move_molecule(n,dt,rnd,0);
     }
-
+    exit(0);
     timer->end_moving();
 
     timer->start_moving();
@@ -63,11 +63,11 @@ void System::accelerate() {
 void System::find_position_in_reservoirs(double *r, bool find_position_in_A) {
     bool did_collide = true;
     while(did_collide) {
-        r[0] = length[0]*rnd->nextDouble();
-        r[1] = length[1]*rnd->nextDouble();
-        r[2] = length[2]*rnd->nextDouble();
-        if(find_position_in_A)  r[settings->gravity_direction] = reservoir_size*rnd->nextDouble();
-        else r[settings->gravity_direction] = (length[settings->gravity_direction] - reservoir_size) + reservoir_size*rnd->nextDouble();
+        r[0] = length[0]*rnd->next_double();
+        r[1] = length[1]*rnd->next_double();
+        r[2] = length[2]*rnd->next_double();
+        if(find_position_in_A)  r[settings->gravity_direction] = reservoir_size*rnd->next_double();
+        else r[settings->gravity_direction] = (length[settings->gravity_direction] - reservoir_size) + reservoir_size*rnd->next_double();
 
         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
     }
@@ -76,9 +76,9 @@ void System::find_position_in_reservoirs(double *r, bool find_position_in_A) {
 void System::add_molecule_in_pressure_reservoirs(bool add_in_A) {
     int n = num_molecules;
 
-    v[3*n+0] = rnd->nextGauss()*sqrt(temperature/settings->mass);
-    v[3*n+1] = rnd->nextGauss()*sqrt(temperature/settings->mass);
-    v[3*n+2] = rnd->nextGauss()*sqrt(temperature/settings->mass);
+    v[3*n+0] = rnd->next_gauss()*sqrt(temperature/settings->mass);
+    v[3*n+1] = rnd->next_gauss()*sqrt(temperature/settings->mass);
+    v[3*n+2] = rnd->next_gauss()*sqrt(temperature/settings->mass);
 
     find_position_in_reservoirs(&r[3*n],add_in_A);
     r0[3*n+0] = r[3*n+0];
@@ -93,12 +93,12 @@ void System::add_molecule_in_pressure_reservoirs(bool add_in_A) {
 bool System::remove_molecule_in_pressure_reservoir(bool remove_from_A) {
     Cell *cell = NULL;
 
-    if(remove_from_A) cell = reservoir_A_cells[ reservoir_A_cells.size()*rnd->nextDouble() ];
-    else cell = reservoir_B_cells[ reservoir_B_cells.size()*rnd->nextDouble() ];
+    if(remove_from_A) cell = reservoir_A_cells[ reservoir_A_cells.size()*rnd->next_double() ];
+    else cell = reservoir_B_cells[ reservoir_B_cells.size()*rnd->next_double() ];
 
     if(cell->num_molecules>0) {
         // Remove this random molecule
-        int this_molecule_index_in_cell = cell->num_molecules*rnd->nextDouble();
+        int this_molecule_index_in_cell = cell->num_molecules*rnd->next_double();
         int molecule_index = cell->molecules[this_molecule_index_in_cell];
         cell->remove_molecule(molecule_index,molecule_index_in_cell);
 

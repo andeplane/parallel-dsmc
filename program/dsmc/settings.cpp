@@ -33,7 +33,8 @@ Settings::Settings(string filename) {
     pressure_B = ini_file.getdouble("pressure_B");
 
     surface_interaction_model = ini_file.getstring("surface_interaction_model");
-
+    alpha_n = ini_file.getdouble("alpha_n");
+    alpha_t = ini_file.getdouble("alpha_t");
     dt = ini_file.getdouble("dt");
 
 }

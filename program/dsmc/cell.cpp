@@ -49,9 +49,9 @@ void Cell::collide_molecules(double *v0, double *v1, const double &v_rel, Random
     double vcmy  = 0.5*(v0[1] + v1[1]);
     double vcmz  = 0.5*(v0[2] + v1[2]);
 
-    double cos_th = 1.0 - 2.0*rnd->nextDouble();      // Cosine and sine of
+    double cos_th = 1.0 - 2.0*rnd->next_double();      // Cosine and sine of
     double sin_th = sqrt(1.0 - cos_th*cos_th);        // collision angle theta
-    double phi = 2*M_PI*rnd->nextDouble();
+    double phi = 2*M_PI*rnd->next_double();
 
     double vrelx = v_rel*cos_th;                   // Compute post-collision relative velocity
     double vrely = v_rel*sin_th*cos(phi);
@@ -79,8 +79,8 @@ int Cell::collide(Random *rnd) {
 
     for(int isel=0; isel<collision_pairs; isel++ ) {
 		//* Pick two particles at random out of this cell
-        int ip0 = (int)(rnd->nextDouble()*num_molecules);
-        int ip1 = ((int)(ip0+1+rnd->nextDouble()*(num_molecules-1))) % num_molecules;
+        int ip0 = (int)(rnd->next_double()*num_molecules);
+        int ip1 = ((int)(ip0+1+rnd->next_double()*(num_molecules-1))) % num_molecules;
 
         ip0 = molecules[ip0];
         ip1 = molecules[ip1];
@@ -95,7 +95,7 @@ int Cell::collide(Random *rnd) {
         }
 
 		//* Accept or reject candidate pair according to relative speed
-        if( v_rel > rnd->nextDouble()*vr_max ) {
+        if( v_rel > rnd->next_double()*vr_max ) {
 			//* If pair accepted, select post-collision velocities
 
 			collisions++;
