@@ -68,7 +68,6 @@ double Random::next_double()
 double Random::next_cercignani_lampis_normal_component(double v_norm_in, double factor, double max_v_out) {
     max_v_out /= factor;
     v_norm_in /= factor;
-    cout << v_norm_in << endl;
     double std_dev = sqrt_alpha_over_two;
     double mu = sqrt_one_minus_alpha*v_norm_in;
     while(true) {
