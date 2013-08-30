@@ -26,7 +26,6 @@ void System::move() {
     for(int n=0;n<num_molecules;n++) {
         mover->move_molecule(n,dt,rnd,0);
     }
-    exit(0);
     timer->end_moving();
 
     timer->start_moving();
