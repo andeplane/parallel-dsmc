@@ -23,6 +23,7 @@ public:
     double sqrt_one_minus_alpha_over_alpha;
     double sqrt_alpha_over_two;
     long   cercignani_lampis_normal_component_trials;
+    long   max_num_trials;
 
     Random(long seed, double alpha_n_, double alpha_t_);
     double next_double();

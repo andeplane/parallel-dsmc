@@ -14,6 +14,8 @@ Random::Random(long seed, double alpha_n_, double alpha_t_) {
    sqrt_alpha_over_two = sqrt(alpha_n/2);
    iy = 0;
    cercignani_lampis_normal_component_trials = 0;
+   max_num_trials = 0;
+
 }
 
 double Random::next_gauss() {
@@ -70,7 +72,12 @@ double Random::next_cercignani_lampis_normal_component(double v_norm_in, double 
     v_norm_in /= factor;
     double std_dev = sqrt_alpha_over_two;
     double mu = sqrt_one_minus_alpha*v_norm_in;
+    long trials = 0;
     while(true) {
+      if(++trials > max_num_trials) {
+          max_num_trials = trials;
+          cout << "New max num trials: " << max_num_trials << endl;
+      }
       cercignani_lampis_normal_component_trials++;
 
       double v_out = std_dev*next_gauss() + mu;
