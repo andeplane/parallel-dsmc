@@ -26,8 +26,8 @@ void StatisticsSampler::sample() {
     double t_in_nano_seconds = system->unit_converter->time_to_SI(system->t)*1e9;
 
     // sample_velocity_distribution_cylinder();
-    // sample_velocity_distribution_box();
-    sample_velocity_distribution();
+    sample_velocity_distribution_box();
+    // sample_velocity_distribution();
     sample_temperature();
 
     if(system->myid == 0) {
@@ -131,7 +131,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
 }
 
 void StatisticsSampler::sample_velocity_distribution_box() {
-    int N = 100;
+    int N = this->system->settings->velocity_bins;
 
     double *v_of_y = new double[N];
     int *v_of_y_count = new int[N];
@@ -142,6 +142,7 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     double box_end = system->length[2]-system->reservoir_size;
 
     for(int i=0;i<system->num_molecules;i++) {
+        // Skip molecules that are in the reservoir
         if(system->r[3*i+2] < box_origo || system->r[3*i+2] > box_end) continue;
 
         double y = system->r[3*i+1];

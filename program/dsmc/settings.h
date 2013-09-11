@@ -19,7 +19,7 @@ public:
     int cells_y;
     int cells_z;
     int gravity_direction;
-    int threads;
+    int velocity_bins;
     double viscosity;
     double mass;
     double temperature;

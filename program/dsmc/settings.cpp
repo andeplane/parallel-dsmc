@@ -11,7 +11,7 @@ Settings::Settings(string filename) {
     atoms_per_molecule = ini_file.getint("atoms_per_molecule");
     timesteps = ini_file.getint("timesteps");
     movie_molecules = ini_file.getint("movie_molecules");
-    threads = ini_file.getint("threads");
+    velocity_bins = ini_file.getint("velocity_bins");
 
     cells_x = ini_file.getint("cells_x");
     cells_y = ini_file.getint("cells_y");

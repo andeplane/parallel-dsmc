@@ -7,11 +7,11 @@ from dsmcconfig import *
 # More parameters in constructor.
 
 program = DSMC()
-dsmc = program.compile(skip_compile=False, name="job1")
+dsmc = program.compile(skip_compile=True, name="job1")
 
 program.reset()
 program.reservoir_fraction = 0.2
-program.atoms_per_molecule = 500
+program.atoms_per_molecule = 50000
 
 #program.density = 1e25
 program.wall_temperature = 100
@@ -30,7 +30,7 @@ program.world = "../worlds/box.bin"
 program.prepare_new_system()
 program.run(dsmc)
 
-program.timesteps = 20000
+program.timesteps = 300000
 program.create_config_file()
 program.run(dsmc)
 

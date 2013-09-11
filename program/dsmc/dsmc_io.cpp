@@ -148,7 +148,8 @@ void DSMC_IO::finalize() {
     fclose(permeability_file);
 }
 
-void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
+void DSMC_IO::
+read_grid_matrix(string filename, Grid *grid) {
     ifstream file (filename.c_str(), ios::in | ios::binary);
     if(!file.is_open()) {
         cout << "Error, could not open file " << filename << endl;

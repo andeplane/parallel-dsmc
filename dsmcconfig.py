@@ -37,6 +37,7 @@ class DSMC:
 		self.wall_temperature = 300
 
 		self.statistics_interval = 100
+		self.velocity_bins = 100
 		self.movie_every_n_frame = 1
 		self.movie_molecules = 10000
 
@@ -160,6 +161,7 @@ class DSMC:
 			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )
 			line = line.replace('__alpha_n__',str(self.alpha_n) )
 			line = line.replace('__alpha_t__',str(self.alpha_t) )
+			line = line.replace('__velocity_bins__', str(self.velocity_bins))
 			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )
 			line = line.replace('__temperature__',str(self.temperature) )
 			line = line.replace('__wall_temperature__',str(self.wall_temperature) )

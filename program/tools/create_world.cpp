@@ -98,10 +98,6 @@ void calculate_normals(int Nx, int Ny, int Nz, float *normal, unsigned char *M) 
                 	// Single point or single pixel-plane, should not be a wall
                 	M[idx] = 0;
                 }
-
-                // if(norm>0 && k==10) {
-                //     cout << "n(" << i << "," << j << ",0)=(" << normal[3*idx+0] << "," << normal[3*idx+1] << "," << normal[3*idx+2] << ")." << "     M=" << int(M[idx]) << endl;
-                // }
             }
         }
     }
@@ -148,12 +144,6 @@ void calculate_tangents(int Nx, int Ny, int Nz, float *tangent1, float *tangent2
                 	tangent2[3*idx+0] /= norm;
 	                tangent2[3*idx+1] /= norm;
 	                tangent2[3*idx+2] /= norm;
-                    if(rnd->nextDouble() < 0.01) {
-                        cout << "Normal   : " << normal[3*idx + 0] << " " << normal[3*idx + 1] << " " << normal[3*idx + 2] << endl;
-                        cout << "Tangent 1: " << tangent1[3*idx + 0] << " " << tangent1[3*idx + 1] << " " << tangent1[3*idx + 2] << endl;
-                        cout << "Tangent 2: " << tangent2[3*idx + 0] << " " << tangent2[3*idx + 1] << " " << tangent2[3*idx + 2] << endl;
-                    }
-                    // cout << nt1 << " " << nt2 << " " << t1t2 << endl;
                 }
             }
         }
@@ -172,10 +162,6 @@ void calculate_inner_points(int Nx, int Ny, int Nz, float *normal, unsigned char
                 if(M[idx] > 0 && norm>0) {
                 	M[idx] = 2;
                 }
-
-                // printf("M(%d,%d,%d) = %d\n",i,j,k,M[idx]);
-                // printf("N(%d,%d,%d) = (%f,%f,%f)\n",i,j,k,normal[3*idx+0],normal[3*idx+1],normal[3*idx+2]);
-                // cout << norm << endl << endl;
             }
         }
     }
@@ -213,7 +199,6 @@ int main (int args, char *argv[]) {
 	file.read (reinterpret_cast<char*>(&N0[0]), sizeof(unsigned char));
 	file.read (reinterpret_cast<char*>(&N0[1]), sizeof(unsigned char));
 	file.read (reinterpret_cast<char*>(&N0[2]), sizeof(unsigned char));
-	cout << "Matrix is " << int(N0[0]) << "x" << int(N0[1]) << "x" << int(N0[2]) << endl;
 	int points = N0[0]*N0[1]*N0[2];
 
     N[0] = N0[0];
