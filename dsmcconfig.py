@@ -53,7 +53,7 @@ class DSMC:
 		self.world = "../worlds/empty.bin"
 		self.threads = 1
 
-		# physical constants, density in N/micrometer^3, length in micrometer, mass in amu, viscosity in Pa*s
+		# physical constants, density in N/m^3, length in micrometer, mass in amu, viscosity in Pa*s
 		self.density = 2.4143e25
 		self.diam = 3.62e-4
 		self.mass = 39.948
@@ -125,12 +125,12 @@ class DSMC:
 		self.run_command('mkdir statistics')
 		self.run_command('echo 0.0 0 0 > Tocontinue')
 
-	def compile(self, path = "./program/dsmc", name="dsmc", skip_compile = False):
+	def compile(self, path = "./program/dsmc", name="dsmc", skip_compile = False, clean = False):
 		if not skip_compile:
 			current_directory = os.getcwd()
 			os.chdir(path)
 			self.run_command('qmake')
-			self.run_command('make clean')
+			if clean: self.run_command('make clean')
 			self.run_command('make')
 			os.chdir(current_directory)
 			move_command = 'mv '+path+'/dsmc ./%s' % name

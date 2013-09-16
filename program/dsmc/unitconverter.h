@@ -15,6 +15,7 @@ private:
     double T0;
     double P0;
     double v0;
+    double a0;
     double visc0;
     double diff0;
     double perm0;
@@ -49,6 +50,9 @@ public:
 
     double velocity_to_SI(double v);
     double velocity_from_SI(double v);
+
+    double acceleration_to_SI(double a);
+    double acceleration_from_SI(double a);
 
     double viscosity_to_SI(double v);
     double viscosity_from_SI(double v);

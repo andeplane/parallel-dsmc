@@ -14,6 +14,8 @@ Cell::Cell(System *_system) {
     pixels = 0;
     num_molecules = 0;
     total_pixels = 0;
+    collision_rest = 0;
+
     int molecules_per_cell = MAX_MOLECULE_NUM / (system->cells_x*system->cells_y*system->cells_z);
     num_molecules_allocated_memory = 10*molecules_per_cell;
 
@@ -38,8 +40,11 @@ void Cell::update_volume() {
 
 unsigned long Cell::prepare() {
     //* Determine number of candidate collision pairs to be selected in this cell
-    double select = collision_coefficient*num_molecules*(num_molecules-1)*vr_max;
+    //* Add the rest from previous timestep
+    double select = collision_coefficient*num_molecules*(num_molecules-1)*vr_max + collision_rest;
+    
     collision_pairs = round(select);      // Number of pairs to be selected
+    collision_rest = select - collision_pairs;
 
     return collision_pairs;
 }

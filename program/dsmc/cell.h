@@ -14,6 +14,7 @@ public:
     int total_pixels;
     int index;
     int collision_pairs;
+    double collision_rest;
     bool is_reservoir;
 
     double x0, y0, z0;

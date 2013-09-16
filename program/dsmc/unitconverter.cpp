@@ -13,6 +13,7 @@ UnitConverter::UnitConverter()
     T0 = E0/kb;
     P0 = m0/(t0*t0*L0);
     v0 = L0/t0;
+    a0 = v0/t0;
     visc0 = P0*t0;
     diff0 = L0*L0/t0;
     perm0 = L0*L0;
@@ -45,6 +46,9 @@ double UnitConverter::time_from_SI(double t) { return t/t0; }
 
 double UnitConverter::velocity_to_SI(double v) { return v*v0; }
 double UnitConverter::velocity_from_SI(double v) { return v/v0; }
+
+double UnitConverter::acceleration_to_SI(double a) { return a*a0; }
+double UnitConverter::acceleration_from_SI(double a) { return a/a0; }
 
 double UnitConverter::viscosity_to_SI(double v) { return v*visc0; }
 double UnitConverter::viscosity_from_SI(double v) { return v/visc0; }

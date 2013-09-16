@@ -85,8 +85,8 @@ int main(int args, char* argv[]) {
                  << "      MPI communication : " << system.timer->mpi << " s ( " << 100*fraction_mpi << "% )" <<  endl << endl
                  << "      TOTAL             : " << time_total << " s ( " << 100*fraction_total << "% )" <<  endl;
             cout << endl << settings->timesteps / total_time << " timesteps / second. " << endl;
-            cout << system.num_molecules*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
-            cout << system.num_molecules*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
+            cout << (double)system.num_molecules*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
+            cout << (double)system.num_molecules*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
             ofstream to_continue_write("Tocontinue");
             to_continue_write << system.t << " " << system.steps << " " << system.collisions;
             to_continue_write.close();
