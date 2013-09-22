@@ -28,9 +28,10 @@ void System::initialize(Settings *settings_, int myid_) {
 
     temperature      = unit_converter->temperature_from_SI(settings->temperature);;
     wall_temperature = unit_converter->temperature_from_SI(settings->wall_temperature);
-    
+    mpv = sqrt(temperature);  // Most probable initial velocity
     density = unit_converter->number_density_from_SI(settings->density);
     diam = settings->diam;
+    dt = settings->dt;
     atoms_per_molecule = settings->atoms_per_molecule;
 
     if(myid==0) cout << "Initializing system..." << endl;
@@ -51,10 +52,17 @@ void System::initialize(Settings *settings_, int myid_) {
 
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
 
+    // First create all the cells
     cout << "Creating cells..." << endl;
     setup_cells();
+    // Calculate porosity based on the world grid
     cout << "Calculating porosity..." << endl;
     calculate_porosity();
+    // Calculate cell volume 
+    volume = length[0]*length[1]*length[2];
+    cout << "Updating cell volume..." << endl;
+    update_cell_volume();
+    // Update system volume with the correct porosity
     volume = length[0]*length[1]*length[2]*porosity;
     num_molecules = density*volume/atoms_per_molecule;
 
@@ -64,12 +72,7 @@ void System::initialize(Settings *settings_, int myid_) {
     mpi_receive_buffer = new double[9*MAX_MOLECULE_NUM];
 
     mfp = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules*atoms_per_molecule);
-    mpv = sqrt(temperature);  // Most probable initial velocity
-    dt = settings->dt;
-
-    cout << "Updating cell volume..." << endl;
-    update_cell_volume();
-
+    
     cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
     ColliderBase *surface_collider;
@@ -235,6 +238,6 @@ void System::calculate_porosity() {
 
 void System::init_randoms() {
     long seed = time(NULL);
-    seed = 1;
+    seed = 2;
     rnd = new Random(-seed, settings->alpha_n, settings->alpha_t);
 }

@@ -140,6 +140,29 @@ void System::update_molecule_cells() {
 }
 
 void System::maintain_pressure() {
+    // long num_molecules_in_reservoir = 0;
+    // double volume_in_reservoir = 0;
+    // double pressure_in_reservoir = 0;
+    // double kinetic_energy_in_reservoir = 0;
+
+    // for(int i=0;i<all_cells.size();i++) {
+    //     Cell *cell = all_cells[i];
+    //     num_molecules_in_reservoir += cell->num_molecules;
+    //     volume_in_reservoir += cell->volume;
+    //     kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
+    // }
+
+    // double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
+    // cout << "Temperature: " << unit_converter->temperature_to_SI(temperature_in_reservoir) << endl;
+    // cout << "Volume: " << volume_in_reservoir << endl;
+    // cout << "Num molecules: " << num_molecules_in_reservoir << endl;
+    // double temp_over_volume = 0;
+    
+    // temp_over_volume = temperature_in_reservoir/volume_in_reservoir;
+    // pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
+    // cout << "Pressure: " << unit_converter->pressure_to_SI(pressure_in_reservoir) << endl;
+    // exit(0);
+
     timer->start_pressure();
     maintain_pressure_A();
     maintain_pressure_B();
@@ -159,8 +182,7 @@ void System::maintain_pressure_A() {
         kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
     }
 
-    double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
-
+    double temperature_in_reservoir = 2.0/3.0*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
     double temp_over_volume = 0;
     if(volume_in_reservoir>0) {
         temp_over_volume = temperature_in_reservoir/volume_in_reservoir;
@@ -197,7 +219,7 @@ void System::maintain_pressure_B() {
         volume_in_reservoir += cell->volume;
         kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
     }
-    double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/num_molecules_in_reservoir;
+    double temperature_in_reservoir = 2.0/3.0*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
 
     double temp_over_volume = 0;
     if(volume_in_reservoir>0) {

@@ -140,10 +140,15 @@ void StatisticsSampler::sample_velocity_distribution_box() {
 
     double box_origo = system->reservoir_size;
     double box_end = system->length[2]-system->reservoir_size;
+    
+    double system_length_z = system->length[2];
+    double system_center_z = system->length[2] / 2.0;
+    double lower_z = system_center_z - 0.1*system_length_z;
+    double upper_z = system_center_z + 0.1*system_length_z;
 
     for(int i=0;i<system->num_molecules;i++) {
         // Skip molecules that are in the reservoir
-        if(system->r[3*i+2] < box_origo || system->r[3*i+2] > box_end) continue;
+        if(system->r[3*i+2] < lower_z || system->r[3*i+2] > upper_z) continue;
 
         double y = system->r[3*i+1];
         int v_of_y_index = N*(y/system->length[1]);

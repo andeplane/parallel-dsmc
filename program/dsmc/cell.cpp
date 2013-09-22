@@ -27,7 +27,7 @@ bool Cell::cmp(Cell *c1, Cell *c2) {
 }
 
 void Cell::update_volume() {
-    if(total_pixels==0) {
+    if(pixels==0) {
         volume = 0;
         collision_coefficient = 0;
         return;
