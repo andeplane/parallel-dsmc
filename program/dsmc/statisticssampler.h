@@ -30,6 +30,6 @@ public:
 
     double kinetic_energy;
     double temperature;
-    double flux[3];
+    double flux;
     double permeability;
 };

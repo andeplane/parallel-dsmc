@@ -241,3 +241,12 @@ void System::init_randoms() {
     seed = 2;
     rnd = new Random(-seed, settings->alpha_n, settings->alpha_t);
 }
+
+void System::count_reservoir_particles() {
+    reservoir_b_particle_count = 0;
+
+    for(int i=0;i<reservoir_B_cells.size();i++) {
+        Cell *cell = reservoir_B_cells[i];
+        reservoir_b_particle_count += cell->num_molecules;
+    }
+}

@@ -18,7 +18,7 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     flux_sampled_at = -1;
     permeability_sampled_at = -1;
     permeability = 0;
-    flux[0] = 0; flux[1] = 0; flux[2] = 0;
+    flux = 0;
 }
 
 void StatisticsSampler::sample() {
@@ -29,12 +29,19 @@ void StatisticsSampler::sample() {
     sample_velocity_distribution_box();
     // sample_velocity_distribution();
     sample_temperature();
+    sample_permeability();
 
     if(system->myid == 0) {
         double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules*system->atoms_per_molecule);
 
         fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
-        fprintf(system->io->flux_file, "%f %f %f %f\n",t_in_nano_seconds, flux[0], flux[1], flux[2]);
+
+        if(settings->maintain_pressure) {
+            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->flux_count);
+        } else {
+            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->gravity_direction]);
+        }
+
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
         cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<  "   Molecules: " << system->num_molecules << endl;
@@ -65,10 +72,13 @@ void StatisticsSampler::sample_temperature() {
 void StatisticsSampler::sample_flux() {
     if(system->steps == flux_sampled_at) return;
     flux_sampled_at = system->steps;
+    // Either, the gas is pressure driven or gravity driven. We measure flux different in these two cases.
+    if(settings->maintain_pressure) {
+        flux = system->flux_count / system->t;
+    } else {
+        flux = system->mover->count_periodic[settings->gravity_direction] / system->t;
+    }
 
-    flux[0] = system->mover->count_periodic[0] / system->t;
-    flux[1] = system->mover->count_periodic[1] / system->t;
-    flux[2] = system->mover->count_periodic[2] / system->t;
 }
 
 void StatisticsSampler::sample_permeability() {
@@ -79,7 +89,7 @@ void StatisticsSampler::sample_permeability() {
     sample_flux();
     double volume_per_molecule = system->volume / system->num_molecules;
     double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(settings->viscosity);
-    double volume_flux = flux[settings->gravity_direction]*volume_per_molecule;
+    double volume_flux = flux*volume_per_molecule;
     double L = system->length[settings->gravity_direction];
     double mass_density = system->density*settings->mass;
 
@@ -87,8 +97,20 @@ void StatisticsSampler::sample_permeability() {
     for(int a=0;a<3;a++) {
         if(a != settings->gravity_direction) area *= system->length[a];
     }
+    double pressure_in_reservoir_a = system->unit_converter->pressure_from_SI(settings->pressure_A);
+    double pressure_in_reservoir_b = system->unit_converter->pressure_from_SI(settings->pressure_B);
 
-    permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
+
+    if(settings->maintain_pressure) {
+        // Expression from Darcy's law of gases
+        permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
+    } else {
+        permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
+    }
+
+    cout << "Permeability: " << permeability << endl;
+    cout << "Permeability (SI): " << system->unit_converter->permeability_to_SI(permeability) << endl;
+
 }
 
 void StatisticsSampler::sample_velocity_distribution_cylinder() {

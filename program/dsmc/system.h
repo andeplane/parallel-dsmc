@@ -42,6 +42,7 @@ private:
     void setup_cells();
     void calculate_porosity();
     void update_molecule_cells();
+    void count_reservoir_particles();
 public:
     int cell_index_from_position(double *r);
 
@@ -90,6 +91,8 @@ public:
     int myid;
     int cells_x, cells_y, cells_z;
     int num_cells_vector[3];
+    long reservoir_b_particle_count;
+    long flux_count;
 
     void initialize(Settings *settings_, int myid_);
 	void step();

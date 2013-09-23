@@ -1,6 +1,7 @@
 from dsmcconfig import *
 from dsmcplotting import *
 from dsmc_unit_converter import *
+
 from math import sqrt
 
 program = DSMC()
@@ -9,9 +10,9 @@ uc = DSMC_unit_converter(program)
 
 program.reset()
 
-program.gravity = 0.1
+program.gravity = 0.0
 program.gravity_direction = 2
-program.reservoir_fraction = 0
+program.reservoir_fraction = 0.2
 program.atoms_per_molecule = 50
 program.Lx = 0.2
 program.Ly = 0.2
@@ -20,17 +21,24 @@ program.Lz = 1.0
 actual_ly = program.Ly*0.8 # The rest is upper and lower wall
 
 program.density = uc.density_from_knudsen_number(knudsen_number=0.1, length=actual_ly)
+
 program.temperature = 300
 program.cells_x = 12
 program.cells_y = 12
 program.cells_z = 60
 
-program.maintain_pressure = False
+tube_length = program.Lz*(1.0 - program.reservoir_fraction)
+
+pressure_difference = uc.gravity_to_pressure_difference(g=0.01, length=tube_length)
+program.maintain_pressure = True
 ideal_gas_pressure = program.density*program.constants['boltzmann']*program.temperature;
-program.pressure_A = ideal_gas_pressure
+program.pressure_A = ideal_gas_pressure + pressure_difference
 program.pressure_B = ideal_gas_pressure
 
-program.world = "../worlds/box_no_reservoir.bin"
+print "P_A = ", program.pressure_A
+print "P_B = ", program.pressure_B
+
+program.world = "../worlds/box_fraction_0.2.bin"
 program.statistics_interval = 1000
 program.velocity_bins = 80
 
@@ -45,7 +53,7 @@ if True:
 
 	program.load_state(path="states/00_thermalized")
 	program.statistics_interval = 10
-	program.timesteps = 20000
+	program.timesteps = 100000
 
 	program.create_config_file()
 	program.run(dsmc)

@@ -140,29 +140,6 @@ void System::update_molecule_cells() {
 }
 
 void System::maintain_pressure() {
-    // long num_molecules_in_reservoir = 0;
-    // double volume_in_reservoir = 0;
-    // double pressure_in_reservoir = 0;
-    // double kinetic_energy_in_reservoir = 0;
-
-    // for(int i=0;i<all_cells.size();i++) {
-    //     Cell *cell = all_cells[i];
-    //     num_molecules_in_reservoir += cell->num_molecules;
-    //     volume_in_reservoir += cell->volume;
-    //     kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
-    // }
-
-    // double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
-    // cout << "Temperature: " << unit_converter->temperature_to_SI(temperature_in_reservoir) << endl;
-    // cout << "Volume: " << volume_in_reservoir << endl;
-    // cout << "Num molecules: " << num_molecules_in_reservoir << endl;
-    // double temp_over_volume = 0;
-    
-    // temp_over_volume = temperature_in_reservoir/volume_in_reservoir;
-    // pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
-    // cout << "Pressure: " << unit_converter->pressure_to_SI(pressure_in_reservoir) << endl;
-    // exit(0);
-
     timer->start_pressure();
     maintain_pressure_A();
     maintain_pressure_B();
@@ -227,19 +204,33 @@ void System::maintain_pressure_B() {
         pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
         double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_B);
         long wanted_num_molecules = wanted_pressure*volume_in_reservoir/temperature_in_reservoir/atoms_per_molecule;
+        // Delta is the actual delta number of particles, but in order to smooth out the particle adding, we only fix 10% each timestep
         long delta = wanted_num_molecules-num_molecules_in_reservoir;
 
+        int delta_num_particles = 0;
+        int num_removed_particles = 0;
         if(pressure_in_reservoir<wanted_pressure) {
             int num_add = abs(delta)*0.1;
+            // Added particles did not go through boundary
+            delta_num_particles = num_add;
             for(int i=0;i<num_add;i++) {
                 add_molecule_in_pressure_reservoirs(false);
             }
         } else {
-            int num_remove = abs(delta)*0.1;
-            for(int i=0;i<num_remove;i++) {
+            num_removed_particles = abs(delta)*0.1;
+            // Removed particles might have gone through boundary
+            delta_num_particles = -num_removed_particles ;
+            for(int i=0;i<num_removed_particles;i++) {
                 if(remove_molecule_in_pressure_reservoir(false)) { }
                 else i--;
             }
         }
+
+        int current_number_of_particles = num_molecules_in_reservoir - delta_num_particles;
+        int change_in_particle_count_since_last_measurement = current_number_of_particles - reservoir_b_particle_count;
+
+        // Removed particles are seen as moved to another part of the reservoir, they should still be counted as in the reservoir.
+        flux_count += change_in_particle_count_since_last_measurement + num_removed_particles;
+        reservoir_b_particle_count = current_number_of_particles;
     }
 }
