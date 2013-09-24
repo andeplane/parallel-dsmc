@@ -2,6 +2,12 @@
 
 #include <cinifile.h>
 
+typedef enum {
+    velocity_profile_box = 0,
+    velocity_profile_cylinder = 1,
+    velocity_profile_other = 2
+} velocity_profile;
+
 class Settings
 {
 public:
@@ -20,6 +26,7 @@ public:
     int cells_z;
     int gravity_direction;
     int velocity_bins;
+
     double viscosity;
     double mass;
     double temperature;
@@ -34,6 +41,8 @@ public:
     double pressure_A;
     double pressure_B;
     double dt;
+    string velocity_profile_type;
     string surface_interaction_model;
     double alpha_n, alpha_t;
+
 };

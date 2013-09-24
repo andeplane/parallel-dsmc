@@ -8,20 +8,29 @@ using namespace std;
 double L0 = 1e4;
 
 int main(int args, char *argv[]) {
-	if(args < 2) {
-		cout << "Please specify the number of cpus and timesteps." << endl;
+	if(args < 4) {
+		cout << "Please specify the number of cpus, state folder and output filename." << endl;
 		return 0;
 	}
 	int cpus = atoi(argv[1]);
-	
+	string state_folder = argv[2];
+	string output_filename = argv[3];
+
 	double *molecule_data = new double[9*1000000];
-	ofstream file ("state.xyz", ios::out);
-	
+	ofstream file (output_filename.c_str(), ios::out);
+
 	ifstream **state_files = new ifstream*[cpus];
 	for(int cpu=0;cpu<cpus;cpu++) {
 		char *filename = new char[100];
-		sprintf(filename,"release/state_files/state%04d.bin",cpu);
+		sprintf(filename,"%s/state%04d.bin",state_folder.c_str(), cpu);
 		state_files[cpu] = new ifstream(filename,ios::in | ios::binary);
+		if (state_files[cpu]->is_open()){
+	        std::cout << "Reading file " << filename << "\n";
+	    }
+	    else {    
+	        std::cout << "Failed to open file " << filename << ". Aborting." << std::endl;
+	        exit(1);
+	    }
 	}
 	cout << cpus << " state files opened." << endl;
 	

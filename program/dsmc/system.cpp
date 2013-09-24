@@ -127,6 +127,9 @@ void System::update_molecule_cells() {
     for(int n=0;n<num_molecules;n++) {
         int cell_index_new = cell_index_from_position(&r[3*n]);
         int cell_index_old = molecule_cell_index[n];
+//        cout << "New cell index: " << cell_index_new << endl;
+//        cout << "Old cell index: " << cell_index_old << endl;
+//        cout << "Position: " << r[3*n + 0] << " " << r[3*n + 1] << " " << r[3*n + 2] << endl;
 
         Cell *new_cell = all_cells[cell_index_new];
         Cell *old_cell = all_cells[cell_index_old];

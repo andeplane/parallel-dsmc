@@ -25,9 +25,13 @@ void StatisticsSampler::sample() {
     if(settings->statistics_interval && system->steps % settings->statistics_interval != 0) return;
     double t_in_nano_seconds = system->unit_converter->time_to_SI(system->t)*1e9;
 
-    // sample_velocity_distribution_cylinder();
-    sample_velocity_distribution_box();
-    // sample_velocity_distribution();
+    if(settings->velocity_profile_type.compare("other") == 0) {
+        sample_velocity_distribution();
+    } else if(settings->velocity_profile_type.compare("cylinder") == 0) {
+        sample_velocity_distribution_cylinder();
+    } else if(settings->velocity_profile_type.compare("box") == 0) {
+        sample_velocity_distribution_box();
+    }
     sample_temperature();
     sample_permeability();
 
@@ -107,16 +111,13 @@ void StatisticsSampler::sample_permeability() {
     } else {
         permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
     }
-
-    cout << "Permeability: " << permeability << endl;
-    cout << "Permeability (SI): " << system->unit_converter->permeability_to_SI(permeability) << endl;
-
 }
 
 void StatisticsSampler::sample_velocity_distribution_cylinder() {
-    int N = 100;
+    int N = this->system->settings->velocity_bins;
     double center_x = system->length[0]/2;
     double center_y = system->length[1]/2;
+
     double *v_of_r = new double[N];
     int *v_of_r_count = new int[N];
     memset(v_of_r,0,N*sizeof(double));
@@ -126,15 +127,21 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
     double box_end = system->length[2]-system->reservoir_size;
     double dr_max = sqrt(system->length[0]*system->length[0]+system->length[1]*system->length[1]);
 
+    double system_length_z = system->length[2];
+    double system_center_z = system->length[2] / 2.0;
+    double lower_z = system_center_z - 0.2*system_length_z;
+    double upper_z = system_center_z + 0.2*system_length_z;
 
     for(int i=0;i<system->num_molecules;i++) {
-        if(system->r[3*i+2] < box_origo || system->r[3*i+2] > box_end) continue;
+        // Only sample statistics from the middle of the tube to get rid of reservoir effects
+        if(system->r[3*i+2] < lower_z || system->r[3*i+2] > upper_z) continue;
 
         double dx = system->r[3*i+0] - center_x;
         double dy = system->r[3*i+1] - center_y;
         double dr = sqrt(dx*dx + dy*dy);
         int v_of_r_index = N*dr/dr_max;
         if(v_of_r_index>=N) continue;
+        
         double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
         double vz = system->v[3*i+2];
 
@@ -169,7 +176,7 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     double upper_z = system_center_z + 0.1*system_length_z;
 
     for(int i=0;i<system->num_molecules;i++) {
-        // Skip molecules that are in the reservoir
+        // Only sample statistics from the middle of the system to get rid of reservoir effects
         if(system->r[3*i+2] < lower_z || system->r[3*i+2] > upper_z) continue;
 
         double y = system->r[3*i+1];

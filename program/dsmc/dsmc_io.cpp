@@ -68,7 +68,6 @@ void DSMC_IO::save_state_to_file_binary() {
 
     int count = 0;
     for(unsigned int n=0;n<system->num_molecules;n++) {
-
         tmp_data[count++] = system->r[3*n+0];
         tmp_data[count++] = system->r[3*n+1];
         tmp_data[count++] = system->r[3*n+2];
