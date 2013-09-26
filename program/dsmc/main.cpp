@@ -9,6 +9,8 @@
 #include <dsmc_io.h>
 #include <mpi.h>
 #include <dsmctimer.h>
+#include <colliderbase.h>
+#include <moleculemover.h>
 
 using namespace std;
 
@@ -49,7 +51,9 @@ int main(int args, char* argv[]) {
             system.timer->end_sample();
         }
         system.io->save_state_to_file_binary();
+        sampler->finalize();
         system.io->finalize();
+        cout << "Num wall collisions = " << system.mover->surface_collider->num_collisions << endl;
 
     } else {
         for(int i=0;i<settings->timesteps;i++) {

@@ -8,6 +8,12 @@
 #include <mpi.h>
 #include <settings.h>
 #include <moleculemover.h>
+#include <colliderbase.h>
+
+int num_bins_per_dimension = 31;
+int num_bins = num_bins_per_dimension*num_bins_per_dimension;
+double *vel;
+int *count_;
 
 StatisticsSampler::StatisticsSampler(System *system_) {
     system = system_;
@@ -19,6 +25,14 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     permeability_sampled_at = -1;
     permeability = 0;
     flux = 0;
+
+    num_bins_per_dimension = settings->velocity_bins;
+    num_bins = num_bins_per_dimension*num_bins_per_dimension;
+    vel = new double[num_bins];
+    count_ = new int[num_bins];
+
+    memset((void*)count_,0,num_bins*sizeof(int));
+    memset((void*)vel,0,num_bins*sizeof(double));
 }
 
 void StatisticsSampler::sample() {
@@ -48,7 +62,7 @@ void StatisticsSampler::sample() {
 
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<  "   Molecules: " << system->num_molecules << endl;
+        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions <<  "   Molecules: " << system->num_molecules << endl;
     }
 }
 
@@ -134,7 +148,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
 
     for(int i=0;i<system->num_molecules;i++) {
         // Only sample statistics from the middle of the tube to get rid of reservoir effects
-        if(system->r[3*i+2] < lower_z || system->r[3*i+2] > upper_z) continue;
+        // if(system->r[3*i+2] < lower_z || system->r[3*i+2] > upper_z) continue;
 
         double dx = system->r[3*i+0] - center_x;
         double dy = system->r[3*i+1] - center_y;
@@ -152,6 +166,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
     for(int i=0;i<N;i++) {
         if(v_of_r_count[i]>0) v_of_r[i] /= v_of_r_count[i];
         fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(v_of_r[i]));
+        // fprintf(system->io->velocity_file,"%d ", v_of_r_count[i]);
     }
     fprintf(system->io->velocity_file,"\n");
     delete v_of_r;
@@ -203,13 +218,6 @@ void StatisticsSampler::sample_velocity_distribution() {
     if(system->steps == velocity_distribution_sampled_at) return;
     velocity_distribution_sampled_at = system->steps;
 
-    int num_bins_per_dimension = 50;
-    int num_bins = num_bins_per_dimension*num_bins_per_dimension;
-    double *vel = new double[num_bins];
-    int *count = new int[num_bins];
-    memset((void*)count,0,num_bins*sizeof(int));
-    memset((void*)vel,0,num_bins*sizeof(double));
-
     for(unsigned int i=0; i<system->num_molecules; i++) {
         // if(system->r[3*i+2] > system->length[2]*settings->reservoir_fraction/2 && system->r[3*i+2] < system->length[2]*(1-settings->reservoir_fraction/2)) {
             int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
@@ -217,25 +225,34 @@ void StatisticsSampler::sample_velocity_distribution() {
             int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
 
             // int index = bin_x*num_bins_per_dimension + bin_y;
-            int index = bin_z*num_bins_per_dimension + bin_y;
+            int index = bin_x*num_bins_per_dimension + bin_y;
             // int index = bin_y;
 
             // vel[3*index+0] += system->v[3*i+0];
             // vel[3*index+1] += system->v[3*i+1];
             vel[index] += system->v[3*i+2];
-            count[index]++;
+            count_[index]++;
         // }
     }
+    
+    
 
+    // delete vel;
+    // delete count;
+}
+
+void StatisticsSampler::finalize() {
     for(int i=0;i<num_bins;i++) {
-        if(count[i]>0) vel[i] /= count[i];
+        if(count_[i]>0) vel[i] /= count_[i];
 
         fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
     }
     fprintf(system->io->velocity_file,"\n");
 
-    delete vel;
-    delete count;
+    fclose(system->io->energy_file);
+    fclose(system->io->velocity_file);
+    fclose(system->io->flux_file);
+    fclose(system->io->permeability_file);
 }
 
 /*

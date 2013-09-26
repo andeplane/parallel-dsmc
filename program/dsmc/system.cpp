@@ -24,6 +24,8 @@ void System::step() {
 void System::move() {
     timer->start_moving();
     for(int n=0;n<num_molecules;n++) {
+        double v0 = v[3*n+2];
+        // mover->move_molecule_cylinder(n,dt,rnd,0);
         mover->move_molecule(n,dt,rnd,0);
     }
     timer->end_moving();

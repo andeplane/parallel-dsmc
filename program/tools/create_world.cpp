@@ -59,9 +59,17 @@ void calculate_normals(int Nx, int Ny, int Nz, float *normal, unsigned char *M) 
     float norm;
     bool at_least_one_wall_neighbor;
     bool all_neighbors_are_walls;
+    long num_voxels = Nx*Ny*Nz;
+    long voxel_counter = 0;
     for(int i=0;i<Nx;i++) {
         for(int j=0;j<Ny;j++) {
             for(int k=0;k<Nz;k++) {
+                if(voxel_counter % 10000 == 0) {
+                    double percentage = (double)voxel_counter/num_voxels*100.0;
+                    cout << voxel_counter << "/" << num_voxels << " (" << percentage << "%)" << endl;
+                }
+                voxel_counter++;
+                
             	at_least_one_wall_neighbor = false;
             	all_neighbors_are_walls = true;
 
@@ -81,12 +89,33 @@ void calculate_normals(int Nx, int Ny, int Nz, float *normal, unsigned char *M) 
                         		all_neighbors_are_walls = false;
                         	}
 
-                        	normal[3*idx+0] -= M[idx2]*di;
-                        	normal[3*idx+1] -= M[idx2]*dj;
-                        	normal[3*idx+2] -= M[idx2]*dk;
+                            normal[3*idx+0] -= M[idx2]*di;
+                            normal[3*idx+1] -= M[idx2]*dj;
+                            normal[3*idx+2] -= M[idx2]*dk;
                         }
                     }
                 }
+
+                double norm_squared = normal[3*idx+0]*normal[3*idx+0] + normal[3*idx+1]*normal[3*idx+1] + normal[3*idx+2]*normal[3*idx+2];
+
+                if(norm_squared > 0) {
+                    normal[3*idx+0] = 0;
+                    normal[3*idx+1] = 0;
+                    normal[3*idx+2] = 0;
+
+                    for(int di=-1;di<=1;di++) {
+                        for(int dj=-1;dj<=1;dj++) {
+                            for(int dk=-1;dk<=1;dk++) {
+                                idx2 = ((i+di+Nx)%Nx) + ((j+dj+Ny)%Ny)*Nx+ ((k+dk+Nz)%Nz)*Nx*Ny;
+
+                                normal[3*idx+0] -= M[idx2]*di;
+                                normal[3*idx+1] -= M[idx2]*dj;
+                                normal[3*idx+2] -= M[idx2]*dk;
+                            }
+                        }
+                    }
+                }
+                
 
                 norm = sqrt(normal[3*idx+0]*normal[3*idx+0] + normal[3*idx+1]*normal[3*idx+1] + normal[3*idx+2]*normal[3*idx+2]);
                 
@@ -186,8 +215,8 @@ int main (int args, char *argv[]) {
 		return 0;
 	}
 
-    unsigned char N0[3];
-    unsigned char N[3];
+    unsigned int N0[3];
+    unsigned int N[3];
 
 	char *infile = argv[1];
 	char *outfile = argv[2];
@@ -196,9 +225,9 @@ int main (int args, char *argv[]) {
     int reservoir_size = 0;
 
 	ifstream file (infile, ios::in | ios::binary);
-	file.read (reinterpret_cast<char*>(&N0[0]), sizeof(unsigned char));
-	file.read (reinterpret_cast<char*>(&N0[1]), sizeof(unsigned char));
-	file.read (reinterpret_cast<char*>(&N0[2]), sizeof(unsigned char));
+	file.read (reinterpret_cast<char*>(&N0[0]), sizeof(unsigned int));
+	file.read (reinterpret_cast<char*>(&N0[1]), sizeof(unsigned int));
+	file.read (reinterpret_cast<char*>(&N0[2]), sizeof(unsigned int));
 	int points = N0[0]*N0[1]*N0[2];
 
     N[0] = N0[0];

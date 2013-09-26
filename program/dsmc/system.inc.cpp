@@ -117,13 +117,13 @@ inline void System::find_position(double *r) {
         r[1] = length[1]*rnd->next_double();
         r[2] = length[2]*rnd->next_double();
 
-        // did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
-        double cylinder_center_x = length[0]*0.5;
-        double cylinder_center_y = length[1]*0.5;
-        double dx = r[0] - cylinder_center_x;
-        double dy = r[1] - cylinder_center_y;
-        double dr2 = dx*dx + dy*dy;
-        did_collide = dr2 >= CYLINDER_RADIUS_SQUARED*0.9;
+        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+        // double cylinder_center_x = length[0]*0.5;
+        // double cylinder_center_y = length[1]*0.5;
+        // double dx = r[0] - cylinder_center_x;
+        // double dy = r[1] - cylinder_center_y;
+        // double dr2 = dx*dx + dy*dy;
+        // did_collide = dr2 >= CYLINDER_RADIUS_SQUARED*0.9;
     }
 }
 
@@ -152,7 +152,7 @@ void System::update_cell_volume() {
 
 void System::setup_molecules() {
     r = new double[3*MAX_MOLECULE_NUM];
-
+    
     molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
     molecule_cell_index    = new unsigned long[MAX_MOLECULE_NUM];
 

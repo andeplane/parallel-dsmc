@@ -40,7 +40,7 @@ void DSMC_IO::save_state_to_movie_file() {
             data[count++] = system->r[3*n+2];
         }
 
-        count /= 3; // This should represent the number of particles
+        count /= 4; // This should represent the number of particles
 
         movie_file->write (reinterpret_cast<char*>(&settings->movie_molecules), sizeof(int));
         movie_file->write (reinterpret_cast<char*>(data), 3*settings->movie_molecules*sizeof(double));
@@ -67,6 +67,7 @@ void DSMC_IO::save_state_to_file_binary() {
     double *tmp_data = new double[9*N];
 
     int count = 0;
+
     for(unsigned int n=0;n<system->num_molecules;n++) {
         tmp_data[count++] = system->r[3*n+0];
         tmp_data[count++] = system->r[3*n+1];
