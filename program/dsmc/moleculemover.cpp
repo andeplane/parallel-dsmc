@@ -31,7 +31,9 @@ void MoleculeMover::move_molecules(double dt, Random *rnd) {
     }
 }
 
-void MoleculeMover::do_move(double *r, double *v, double *r0, const double &dt) {
+int idx = 0;
+
+void MoleculeMover::do_move(double *r, double *v, double *r0, double dt) {
     r[0] += v[0]*dt;
     r[1] += v[1]*dt;
     r[2] += v[2]*dt;
@@ -56,6 +58,67 @@ inline int get_index_of_voxel(double *r, const double &nx_div_lx,const double &n
 
 int sign(double a) {
     return (a<0) ? -1 : 1;
+}
+
+void MoleculeMover::move_molecule_box(int &molecule_index, double dt, Random *rnd, int depth) {
+    double tau = dt;
+    
+    double *r = &system->r[3*molecule_index];
+    double *r0 = &system->r0[3*molecule_index];
+    double *v = &system->v[3*molecule_index];
+    
+    do_move(r,v,r0, tau);
+    double y = r[1];
+    
+    double system_center_x = system->length[0]*0.5;
+    double system_center_y = system->length[1]*0.5;
+
+    double upper_wall = system->length[1]*0.6;
+    double lower_wall = system->length[1]*0.4;
+
+    int collided = 0;
+    if(r[1] >= upper_wall) collided = 1;
+    if(r[1] <= lower_wall) collided = 2;
+    double dy = 0;
+
+    if(collided > 0) {
+        // We collided, move back
+        do_move(r,v,r0, -tau);
+        // Calculate distance to the wall
+        if(collided == 1) {
+            // We will collide in the positive direction
+            dy = upper_wall - r[1] - 1e-5;
+        } else {
+            dy = lower_wall - r[1] + 1e-5;
+        }
+
+        double time_until_collision = dy / v[1];
+        do_move(r,v,r0,time_until_collision);
+        dt -= time_until_collision;
+
+        float normal[3];
+        normal[0] = 0;
+        normal[1] = (collided == 1) ? -1 : 1;
+        normal[2] = 0;
+
+        float tangent1[3];
+        tangent1[0] = 0;
+        tangent1[1] = 0;
+        tangent1[2] = 1;
+
+        float tangent2[3];
+        
+        tangent2[0] = 1;
+        tangent2[1] = 0;
+        tangent2[2] = 0;
+
+        surface_collider->collide(rnd, v, &normal[0], &tangent1[0], &tangent2[0]);
+    } else dt = 0;
+
+    if(dt > 1e-5 && depth < 10) {
+        move_molecule_box(molecule_index,dt,rnd,depth+1);
+    }
+
 }
 
 void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Random *rnd, int depth) {
@@ -86,7 +149,7 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
         double c = -CYLINDER_RADIUS_SQUARED + dx*dx + dy*dy;
         tau = (-b + sqrt(b*b - 4*a*c))/(2*a);
         if(tau < 0) tau = (-b - sqrt(b*b - 4*a*c))/(2*a);
-        tau *= 0.99;
+        tau -= 1e-5;
 
         do_move(r,v,r0,tau);
         dt -= tau;
