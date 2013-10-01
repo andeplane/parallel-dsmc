@@ -28,7 +28,6 @@ Settings::Settings(string filename) {
     Lx = ini_file.getdouble("Lx");
     Ly = ini_file.getdouble("Ly");
     Lz = ini_file.getdouble("Lz");
-    reservoir_fraction = ini_file.getdouble("reservoir_fraction");
     pressure_A = ini_file.getdouble("pressure_A");
     pressure_B = ini_file.getdouble("pressure_B");
 

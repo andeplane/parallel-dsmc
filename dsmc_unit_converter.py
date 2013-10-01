@@ -99,10 +99,10 @@ class DSMC_unit_converter:
 	def number_density_from_si(self, d):
 		return d/self.number_density0
 
-	def gravity_to_pressure_difference(self, g, density, length):
+	def gravity_to_pressure_difference(self, g, length):
 		''' Converts gravity driven force to equivalent pressure difference
 		'''
-		return self.acceleration_to_si(g)*density*self.length_to_si(length)
+		return self.acceleration_to_si(g)*self.dsmc.density*self.mass_to_si(self.dsmc.mass)*self.length_to_si(length)
 
 	def density_from_knudsen_number(self, knudsen_number, length):
 		''' Calculates required density to get a specific Knudsen number through

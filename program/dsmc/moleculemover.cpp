@@ -104,6 +104,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         }
         else {
             int count = 0;
+            dt -= tau;
             while(*grid->get_voxel(r)>=voxel_type_wall) {
                 dt += 0.1*tau;
                 do_move(r,v,r0,-0.1*tau);

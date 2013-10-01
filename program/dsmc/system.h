@@ -32,10 +32,15 @@ private:
     void maintain_pressure_A();
     void maintain_pressure_B();
     void maintain_pressure();
-    bool remove_molecule_in_pressure_reservoir(bool remove_from_source);
     void find_position_in_reservoirs(double *r, bool find_position_in_source);
-    void add_molecule_in_pressure_reservoirs(bool add_in_source);
+    void add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules);
+    void remove_molecules_in_inlet_reservoir(Cell *cell, const int &delta_num_molecules);
+    void add_molecules_in_outlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules);
+    void remove_molecules_in_outlet_reservoir(Cell *cell, const int &delta_num_molecules);
+    void add_molecule_to_cell(Cell *cell, const int &molecule_index);
+    void remove_molecule_from_system(const long &molecule_index);
     inline void find_position(double *r);
+    inline void find_position_in_cell(Cell *cell, double *r);
     inline int cell_index_from_ijk(const int &i, const int &j, const int &k);
     void update_cell_volume();
     void setup_molecules();
@@ -67,7 +72,6 @@ public:
 
     int num_molecules;
 
-    double reservoir_size;
     double grid_origo_x, grid_origo_y, grid_origo_z;
     double length[3];
     double half_length[3];

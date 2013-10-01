@@ -21,9 +21,11 @@ public:
     double Lx, Ly, Lz;
 	double vr_max;
     double collision_coefficient;
+    double origin[3];
+    int index_vector[3];
+    vector<double> average_velocity;
 
     System *system;
-    // vector<int> molecules;
     int *molecules;
     int num_molecules_allocated_memory;
     int num_molecules;
@@ -37,6 +39,7 @@ public:
     void update_volume();
     void add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index);
     void remove_molecule(const int &molecule_index, unsigned long *index_in_cell);
+    vector<double> &update_average_velocity();
 
     double calculate_kinetic_energy();
     static bool cmp(Cell *c1, Cell *c2);

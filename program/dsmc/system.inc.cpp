@@ -8,6 +8,7 @@
 #include <colliderthermal.h>
 #include <collidercercignanilampis.h>
 #include <collidermaxwell.h>
+#include <cell.h>
 
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
@@ -23,8 +24,6 @@ void System::initialize(Settings *settings_, int myid_) {
     length[0] = settings->Lx;
     length[1] = settings->Ly;
     length[2] = settings->Lz;
-
-    reservoir_size = length[settings->gravity_direction]*settings->reservoir_fraction/2;
 
     temperature      = unit_converter->temperature_from_SI(settings->temperature);;
     wall_temperature = unit_converter->temperature_from_SI(settings->wall_temperature);
@@ -121,6 +120,17 @@ inline void System::find_position(double *r) {
     }
 }
 
+inline void System::find_position_in_cell(Cell *cell, double *r) {
+    bool did_collide = true;
+    while(did_collide) {
+        r[0] = cell->origin[0] + cell->Lx*rnd->next_double();
+        r[1] = cell->origin[1] + cell->Ly*rnd->next_double();
+        r[2] = cell->origin[2] + cell->Lz*rnd->next_double();
+
+        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+    }
+}
+
 inline int System::cell_index_from_ijk(const int &i, const int &j, const int &k) {
     return i*cells_y*cells_z + j*cells_z + k;
 }
@@ -177,7 +187,6 @@ void System::setup_cells() {
     int num_cells = cells_x*cells_y*cells_z;
     all_cells.reserve(num_cells);
     int idx[3];
-    int count = 0;
 
     for(idx[0]=0;idx[0]<cells_x;idx[0]++) {
         for(idx[1]=0;idx[1]<cells_y;idx[1]++) {
@@ -186,13 +195,17 @@ void System::setup_cells() {
 
                 cell->index = cell_index_from_ijk(idx[0],idx[1],idx[2]);
                 cell->vr_max = 3*mpv;
+                cell->Lx = cell_length_x; cell->Ly = cell_length_y; cell->Lz = cell_length_z;
+                cell->origin[0] = idx[0]*cell_length_x; cell->origin[1] = idx[1]*cell_length_y; cell->origin[2] = idx[2]*cell_length_z;
+                cell->index_vector[0] = idx[0]; cell->index_vector[1] = idx[1]; cell->index_vector[2] = idx[2];
                 all_cells.push_back(cell);
                 cell->is_reservoir = false;
-
-                if( (double)idx[settings->gravity_direction]/num_cells_vector[settings->gravity_direction] < settings->reservoir_fraction/2) {
+                if(idx[settings->gravity_direction] == 0) {
+                    // "Left" most cell matrix is the A reservoir
                     reservoir_A_cells.push_back(cell);
                     cell->is_reservoir = true;
-                } else if( (double)idx[settings->gravity_direction]/num_cells_vector[settings->gravity_direction] > (1-settings->reservoir_fraction/2)) {
+                } else if(idx[settings->gravity_direction] == num_cells_vector[settings->gravity_direction] - 1) {
+                    // "Right" most cell matrix is the B reservoir
                     reservoir_B_cells.push_back(cell);
                     cell->is_reservoir = true;
                 }

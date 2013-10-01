@@ -37,7 +37,10 @@ void StatisticsSampler::sample() {
         fprintf(system->io->flux_file, "%f %f %f %f\n",t_in_nano_seconds, flux[0], flux[1], flux[2]);
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<  "   Molecules: " << system->num_molecules << endl;
+        double pressure = system->num_molecules*system->atoms_per_molecule / system->volume * temperature;
+        // cout << "Pressure: " << unit_converter->pressure_to_SI(pressure) << endl;
+
+        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<  "   Molecules: " << system->num_molecules << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) << endl ;
     }
 }
 
@@ -100,14 +103,9 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
     memset(v_of_r,0,N*sizeof(double));
     memset(v_of_r_count,0,N*sizeof(int));
 
-    double box_origo = system->reservoir_size;
-    double box_end = system->length[2]-system->reservoir_size;
     double dr_max = sqrt(system->length[0]*system->length[0]+system->length[1]*system->length[1]);
 
-
     for(int i=0;i<system->num_molecules;i++) {
-        if(system->r[3*i+2] < box_origo || system->r[3*i+2] > box_end) continue;
-
         double dx = system->r[3*i+0] - center_x;
         double dy = system->r[3*i+1] - center_y;
         double dr = sqrt(dx*dx + dy*dy);
@@ -138,17 +136,8 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     memset(v_of_y,0,N*sizeof(double));
     memset(v_of_y_count,0,N*sizeof(int));
 
-    double box_origo = system->reservoir_size;
-    double box_end = system->length[2]-system->reservoir_size;
-    
-    double system_length_z = system->length[2];
-    double system_center_z = system->length[2] / 2.0;
-    double lower_z = system_center_z - 0.1*system_length_z;
-    double upper_z = system_center_z + 0.1*system_length_z;
-
     for(int i=0;i<system->num_molecules;i++) {
         // Skip molecules that are in the reservoir
-        if(system->r[3*i+2] < lower_z || system->r[3*i+2] > upper_z) continue;
 
         double y = system->r[3*i+1];
         int v_of_y_index = N*(y/system->length[1]);
@@ -182,20 +171,18 @@ void StatisticsSampler::sample_velocity_distribution() {
     memset((void*)vel,0,num_bins*sizeof(double));
 
     for(unsigned int i=0; i<system->num_molecules; i++) {
-        // if(system->r[3*i+2] > system->length[2]*settings->reservoir_fraction/2 && system->r[3*i+2] < system->length[2]*(1-settings->reservoir_fraction/2)) {
-            int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
-            int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;
-            int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
+        int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
+        int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;
+        int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
 
-            // int index = bin_x*num_bins_per_dimension + bin_y;
-            int index = bin_z*num_bins_per_dimension + bin_y;
-            // int index = bin_y;
+        // int index = bin_x*num_bins_per_dimension + bin_y;
+        int index = bin_z*num_bins_per_dimension + bin_y;
+        // int index = bin_y;
 
-            // vel[3*index+0] += system->v[3*i+0];
-            // vel[3*index+1] += system->v[3*i+1];
-            vel[index] += system->v[3*i+2];
-            count[index]++;
-        // }
+        // vel[3*index+0] += system->v[3*i+0];
+        // vel[3*index+1] += system->v[3*i+1];
+        vel[index] += system->v[3*i+2];
+        count[index]++;
     }
 
     for(int i=0;i<num_bins;i++) {

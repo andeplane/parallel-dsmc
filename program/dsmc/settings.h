@@ -30,7 +30,6 @@ public:
     double Lx;
     double Ly;
     double Lz;
-    double reservoir_fraction;
     double pressure_A;
     double pressure_B;
     double dt;

@@ -59,70 +59,6 @@ void System::accelerate() {
     timer->end_accelerate();
 }
 
-void System::find_position_in_reservoirs(double *r, bool find_position_in_A) {
-    bool did_collide = true;
-    while(did_collide) {
-        r[0] = length[0]*rnd->next_double();
-        r[1] = length[1]*rnd->next_double();
-        r[2] = length[2]*rnd->next_double();
-        if(find_position_in_A)  r[settings->gravity_direction] = reservoir_size*rnd->next_double();
-        else r[settings->gravity_direction] = (length[settings->gravity_direction] - reservoir_size) + reservoir_size*rnd->next_double();
-
-        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
-    }
-}
-
-void System::add_molecule_in_pressure_reservoirs(bool add_in_A) {
-    int n = num_molecules;
-
-    v[3*n+0] = rnd->next_gauss()*sqrt(temperature/settings->mass);
-    v[3*n+1] = rnd->next_gauss()*sqrt(temperature/settings->mass);
-    v[3*n+2] = rnd->next_gauss()*sqrt(temperature/settings->mass);
-
-    find_position_in_reservoirs(&r[3*n],add_in_A);
-    r0[3*n+0] = r[3*n+0];
-    r0[3*n+1] = r[3*n+1];
-    r0[3*n+2] = r[3*n+2];
-
-    Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
-    cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
-    num_molecules++;
-}
-
-bool System::remove_molecule_in_pressure_reservoir(bool remove_from_A) {
-    Cell *cell = NULL;
-
-    if(remove_from_A) cell = reservoir_A_cells[ reservoir_A_cells.size()*rnd->next_double() ];
-    else cell = reservoir_B_cells[ reservoir_B_cells.size()*rnd->next_double() ];
-
-    if(cell->num_molecules>0) {
-        // Remove this random molecule
-        int this_molecule_index_in_cell = cell->num_molecules*rnd->next_double();
-        int molecule_index = cell->molecules[this_molecule_index_in_cell];
-        cell->remove_molecule(molecule_index,molecule_index_in_cell);
-
-        // Move the last molecule into that memory location
-        int last_molecule_index = num_molecules-1;
-
-        while(last_molecule_index==molecule_index) {
-            last_molecule_index--;
-        }
-
-        int last_molecule_cell_index = molecule_cell_index[last_molecule_index];
-        int last_molecule_index_in_cell = molecule_index_in_cell[last_molecule_index];
-        memcpy(&r[3*molecule_index],&r[3*last_molecule_index],3*sizeof(double));
-        memcpy(&v[3*molecule_index],&v[3*last_molecule_index],3*sizeof(double));
-        memcpy(&r0[3*molecule_index],&r0[3*last_molecule_index],3*sizeof(double));
-
-        cell = all_cells[last_molecule_cell_index];
-        molecule_cell_index[molecule_index] = last_molecule_cell_index;
-        molecule_index_in_cell[molecule_index] = last_molecule_index_in_cell;
-        cell->molecules[last_molecule_index_in_cell] = molecule_index;
-        num_molecules--;
-        return true;
-    } else return false;
-}
-
 void System::update_molecule_cells() {
     for(int n=0;n<num_molecules;n++) {
         int cell_index_new = cell_index_from_position(&r[3*n]);
@@ -139,107 +75,170 @@ void System::update_molecule_cells() {
     }
 }
 
-void System::maintain_pressure() {
-    // long num_molecules_in_reservoir = 0;
-    // double volume_in_reservoir = 0;
-    // double pressure_in_reservoir = 0;
-    // double kinetic_energy_in_reservoir = 0;
+void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
+    cell->add_molecule(molecule_index,molecule_index_in_cell,molecule_cell_index);
+    num_molecules++;
+}
 
-    // for(int i=0;i<all_cells.size();i++) {
-    //     Cell *cell = all_cells[i];
-    //     num_molecules_in_reservoir += cell->num_molecules;
-    //     volume_in_reservoir += cell->volume;
-    //     kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
-    // }
+void System::remove_molecule_from_system(const long &molecule_index) {
+    long cell_index = molecule_cell_index[molecule_index];
+    Cell *cell = all_cells[cell_index];
+    cell->remove_molecule(molecule_index,molecule_index_in_cell);
 
-    // double temperature_in_reservoir = 2.0/3*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
-    // cout << "Temperature: " << unit_converter->temperature_to_SI(temperature_in_reservoir) << endl;
-    // cout << "Volume: " << volume_in_reservoir << endl;
-    // cout << "Num molecules: " << num_molecules_in_reservoir << endl;
-    // double temp_over_volume = 0;
-    
-    // temp_over_volume = temperature_in_reservoir/volume_in_reservoir;
-    // pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
-    // cout << "Pressure: " << unit_converter->pressure_to_SI(pressure_in_reservoir) << endl;
-    // exit(0);
+    // Move the last molecule into that memory location
+    int last_molecule_index = num_molecules-1;
 
-    timer->start_pressure();
-    maintain_pressure_A();
-    maintain_pressure_B();
-    timer->end_pressure();
+    while(last_molecule_index==molecule_index) {
+        last_molecule_index--;
+    }
+
+    int last_molecule_cell_index = molecule_cell_index[last_molecule_index];
+    int last_molecule_index_in_cell = molecule_index_in_cell[last_molecule_index];
+    memcpy(&r[3*molecule_index],&r[3*last_molecule_index],3*sizeof(double));
+    memcpy(&v[3*molecule_index],&v[3*last_molecule_index],3*sizeof(double));
+    memcpy(&r0[3*molecule_index],&r0[3*last_molecule_index],3*sizeof(double));
+
+    cell = all_cells[last_molecule_cell_index];
+    molecule_cell_index[molecule_index] = last_molecule_cell_index;
+    molecule_index_in_cell[molecule_index] = last_molecule_index_in_cell;
+    cell->molecules[last_molecule_index_in_cell] = molecule_index;
+    num_molecules--;
+}
+
+void System::add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules) {
+    int neighbor_cell_index_vector[3];
+    neighbor_cell_index_vector[0] = cell->index_vector[0];
+    neighbor_cell_index_vector[1] = cell->index_vector[1];
+    neighbor_cell_index_vector[2] = cell->index_vector[2];
+    neighbor_cell_index_vector[settings->gravity_direction] += 1; // We want the next cell in flow direction
+    int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
+    vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
+
+    for(int i=0; i<delta_num_molecules; i++) {
+        int molecule_index = num_molecules;
+
+        v[3*molecule_index+0] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[0];
+        v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
+        v[3*molecule_index+2] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[2];
+        find_position_in_cell(cell, &r[3*molecule_index]);
+        r0[3*molecule_index+0] = r[3*molecule_index+0];
+        r0[3*molecule_index+1] = r[3*molecule_index+1];
+        r0[3*molecule_index+2] = r[3*molecule_index+2];
+
+        add_molecule_to_cell(cell, molecule_index);
+    }
+}
+
+void System::remove_molecules_in_inlet_reservoir(Cell *cell, const int &delta_num_molecules) {
+    // delta_num_molecules is a negative number
+    for(int i=0; i<abs(delta_num_molecules); i++) {
+        int this_molecule_index_in_cell = cell->num_molecules*rnd->next_double();
+        long molecule_index = cell->molecules[this_molecule_index_in_cell];
+        remove_molecule_from_system(molecule_index);
+    }
+}
+
+void System::add_molecules_in_outlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules) {
+    int neighbor_cell_index_vector[3];
+    neighbor_cell_index_vector[0] = cell->index_vector[0];
+    neighbor_cell_index_vector[1] = cell->index_vector[1];
+    neighbor_cell_index_vector[2] = cell->index_vector[2];
+    neighbor_cell_index_vector[settings->gravity_direction] -= 1; // We want the previous cell in flow direction
+    int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
+    vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
+
+    for(int i=0; i<delta_num_molecules; i++) {
+        int molecule_index = num_molecules;
+
+        v[3*molecule_index+0] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[0];
+        v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
+        v[3*molecule_index+2] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[2];
+        find_position_in_cell(cell, &r[3*molecule_index]);
+        r0[3*molecule_index+0] = r[3*molecule_index+0];
+        r0[3*molecule_index+1] = r[3*molecule_index+1];
+        r0[3*molecule_index+2] = r[3*molecule_index+2];
+
+        add_molecule_to_cell(cell, molecule_index);
+    }
+}
+
+void System::remove_molecules_in_outlet_reservoir(Cell *cell, const int &delta_num_molecules) {
+    // delta_num_molecules is a negative number
+    for(int i=0; i<abs(delta_num_molecules); i++) {
+        int this_molecule_index_in_cell = cell->num_molecules*rnd->next_double();
+        long molecule_index = cell->molecules[this_molecule_index_in_cell];
+        remove_molecule_from_system(molecule_index);
+    }
 }
 
 void System::maintain_pressure_A() {
-    long num_molecules_in_reservoir = 0;
-    double volume_in_reservoir = 0;
-    double pressure_in_reservoir = 0;
-    double kinetic_energy_in_reservoir = 0;
+    /*
+     * Strategy: Keep the number of molecules in a cell equal to that of the neighbor cell towards the center of the system
+     *           If adding any new molecules, let the velocity be equal to the average in the neighbor cell plus a MB-distribution.
+     */
+
+    double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_A);
+    double wanted_density = wanted_pressure / temperature;
+
+    double velocity_std_dev = sqrt(wanted_pressure/density); // Shouldn't this density be the wanted density?
+    velocity_std_dev = sqrt(temperature/settings->mass);
 
     for(int i=0;i<reservoir_A_cells.size();i++) {
         Cell *cell = reservoir_A_cells[i];
-        num_molecules_in_reservoir += cell->num_molecules;
-        volume_in_reservoir += cell->volume;
-        kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
-    }
+        int num_molecules_in_reservoir = cell->num_molecules;
+        int wanted_num_molecules_in_reservoir = wanted_density*cell->volume / atoms_per_molecule;
+        int delta_num_molecules = wanted_num_molecules_in_reservoir - num_molecules_in_reservoir;
+        // cout << "I want " << wanted_num_molecules_in_reservoir << " molecules, and I have " << num_molecules_in_reservoir << endl;
 
-    double temperature_in_reservoir = 2.0/3.0*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
-    double temp_over_volume = 0;
-    if(volume_in_reservoir>0) {
-        temp_over_volume = temperature_in_reservoir/volume_in_reservoir;
-        pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
-        double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_A);
-        long wanted_num_molecules = wanted_pressure*volume_in_reservoir/temperature_in_reservoir/atoms_per_molecule;
-
-        long delta = wanted_num_molecules-num_molecules_in_reservoir;
-
-        if(pressure_in_reservoir<wanted_pressure) {
-            int num_add = abs(delta)*0.1;
-            for(int i=0;i<num_add;i++) {
-                add_molecule_in_pressure_reservoirs(true);
-            }
-        } else {
-            int num_remove = abs(delta)*0.1;
-            for(int i=0;i<num_remove;i++) {
-                if(remove_molecule_in_pressure_reservoir(true)) { }
-                else i--;
-            }
+        if(delta_num_molecules > 0) {
+            add_molecules_in_inlet_reservoir(cell, velocity_std_dev, delta_num_molecules);
+        } else if(delta_num_molecules < 0) {
+            remove_molecules_in_inlet_reservoir(cell, delta_num_molecules);
         }
     }
 }
 
 void System::maintain_pressure_B() {
-    long num_molecules_in_reservoir = 0;
-    double volume_in_reservoir = 0;
-    double pressure_in_reservoir = 0;
-    double kinetic_energy_in_reservoir = 0;
+    /*
+     * Strategy: Keep the number of molecules in a cell equal to that of the neighbor cell towards the center of the system
+     *           If adding any new molecules, let the velocity be equal to the average in the neighbor cell plus a MB-distribution.
+     */
+    // cout << "Maintaining pressure in B" << endl;
+
+    double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_B);
+    double velocity_std_dev = sqrt(wanted_pressure/density); // Shouldn't this density be the wanted density?
+    velocity_std_dev = sqrt(temperature/settings->mass);
 
     for(int i=0;i<reservoir_B_cells.size();i++) {
         Cell *cell = reservoir_B_cells[i];
-        num_molecules_in_reservoir += cell->num_molecules;
-        volume_in_reservoir += cell->volume;
-        kinetic_energy_in_reservoir += cell->calculate_kinetic_energy();
-    }
-    double temperature_in_reservoir = 2.0/3.0*kinetic_energy_in_reservoir/(num_molecules_in_reservoir*atoms_per_molecule);
 
-    double temp_over_volume = 0;
-    if(volume_in_reservoir>0) {
-        temp_over_volume = temperature_in_reservoir/volume_in_reservoir;
-        pressure_in_reservoir = atoms_per_molecule*num_molecules_in_reservoir*temp_over_volume;
-        double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_B);
-        long wanted_num_molecules = wanted_pressure*volume_in_reservoir/temperature_in_reservoir/atoms_per_molecule;
-        long delta = wanted_num_molecules-num_molecules_in_reservoir;
+        // Find neighbor cell
+        int neighbor_cell_index_vector[3];
+        neighbor_cell_index_vector[0] = cell->index_vector[0];
+        neighbor_cell_index_vector[1] = cell->index_vector[1];
+        neighbor_cell_index_vector[2] = cell->index_vector[2];
+        neighbor_cell_index_vector[settings->gravity_direction] -= 1; // We want the previous cell in flow direction
+        int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
+        Cell *neighbor_cell = all_cells[neighbor_cell_index];
 
-        if(pressure_in_reservoir<wanted_pressure) {
-            int num_add = abs(delta)*0.1;
-            for(int i=0;i<num_add;i++) {
-                add_molecule_in_pressure_reservoirs(false);
-            }
-        } else {
-            int num_remove = abs(delta)*0.1;
-            for(int i=0;i<num_remove;i++) {
-                if(remove_molecule_in_pressure_reservoir(false)) { }
-                else i--;
-            }
+        int num_molecules_in_reservoir = cell->num_molecules;
+        int num_molecules_in_neighbor_cell = neighbor_cell->num_molecules;
+        // cout << "Neighbor cell has " << num_molecules_in_neighbor_cell << " molecules, and I have " << num_molecules_in_reservoir << endl;
+
+        int wanted_num_molecules_in_reservoir = num_molecules_in_neighbor_cell;
+        int delta_num_molecules = wanted_num_molecules_in_reservoir - num_molecules_in_reservoir;
+
+        if(delta_num_molecules > 0) {
+            add_molecules_in_outlet_reservoir(cell, velocity_std_dev, delta_num_molecules);
+        } else if(delta_num_molecules < 0) {
+            remove_molecules_in_outlet_reservoir(cell, delta_num_molecules);
         }
     }
+}
+
+void System::maintain_pressure() {
+    timer->start_pressure();
+    maintain_pressure_A();
+    // maintain_pressure_B();
+    timer->end_pressure();
 }

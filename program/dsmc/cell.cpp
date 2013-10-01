@@ -15,6 +15,7 @@ Cell::Cell(System *_system) {
     num_molecules = 0;
     total_pixels = 0;
     collision_rest = 0;
+    average_velocity.resize(3,0);
 
     int molecules_per_cell = MAX_MOLECULE_NUM / (system->cells_x*system->cells_y*system->cells_z);
     num_molecules_allocated_memory = 10*molecules_per_cell;
@@ -148,4 +149,27 @@ double Cell::calculate_kinetic_energy() {
     kinetic_energy *= 0.5*system->settings->mass*system->atoms_per_molecule;
 
     return kinetic_energy;
+}
+
+vector<double>& Cell::update_average_velocity() {
+    vector<double> new_average_velocity(3,0);
+
+    for(int n=0; n<num_molecules; n++) {
+        int index = molecules[n];
+        new_average_velocity[0] += system->v[3*index+0];
+        new_average_velocity[1] += system->v[3*index+1];
+        new_average_velocity[2] += system->v[3*index+2];
+    }
+
+    if(num_molecules > 0) {
+        new_average_velocity[0] /= num_molecules;
+        new_average_velocity[1] /= num_molecules;
+        new_average_velocity[2] /= num_molecules;
+    }
+
+    average_velocity[0] = 0.9*average_velocity[0] + 0.1*new_average_velocity[0];
+    average_velocity[1] = 0.9*average_velocity[1] + 0.1*new_average_velocity[1];
+    average_velocity[2] = 0.9*average_velocity[2] + 0.1*new_average_velocity[2];
+
+    return average_velocity;
 }
