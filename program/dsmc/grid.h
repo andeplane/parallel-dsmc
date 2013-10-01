@@ -20,6 +20,7 @@ public:
     int Nz;
     int points;
 
+    vector<double> voxel_size;
     System *system;
     unsigned char *voxels;
     float *normals;
@@ -31,5 +32,6 @@ public:
     unsigned char *get_voxel(const double &x, const double &y, const double &z);
     unsigned char *get_voxel(double *r);
     int get_index_of_voxel(double *r);
+    double get_time_until_collision(double *r, double *v);
     void read_matrix(string filename, DSMC_IO *io);
 };

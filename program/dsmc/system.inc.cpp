@@ -23,6 +23,9 @@ void System::initialize(Settings *settings_, int myid_) {
     length[0] = settings->Lx;
     length[1] = settings->Ly;
     length[2] = settings->Lz;
+    one_over_length[0] = 1.0/length[0];
+    one_over_length[1] = 1.0/length[1];
+    one_over_length[2] = 1.0/length[2];
 
     reservoir_size = length[settings->gravity_direction]*settings->reservoir_fraction/2;
 
@@ -117,7 +120,8 @@ inline void System::find_position(double *r) {
         r[1] = length[1]*rnd->next_double();
         r[2] = length[2]*rnd->next_double();
 
-        // did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+
         // double cylinder_center_x = length[0]*0.5;
         // double cylinder_center_y = length[1]*0.5;
         // double dx = r[0] - cylinder_center_x;
@@ -125,13 +129,13 @@ inline void System::find_position(double *r) {
         // double dr2 = dx*dx + dy*dy;
         // did_collide = dr2 >= CYLINDER_RADIUS_SQUARED*0.9;
 
-        double system_center_x = length[0]*0.5;
-        double system_center_y = length[1]*0.5;
+//        double system_center_x = length[0]*0.5;
+//        double system_center_y = length[1]*0.5;
 
-        double dx = r[0] - system_center_x; // Moved origin to center of circle
-        double dy = r[1] - system_center_y;
+//        double dx = r[0] - system_center_x; // Moved origin to center of circle
+//        double dy = r[1] - system_center_y;
         
-        did_collide = (abs(dy) >= system_center_y*0.2*0.9);
+//        did_collide = (abs(dy) >= system_center_y*0.2*0.9);
     }
 }
 

@@ -72,6 +72,7 @@ public:
     double reservoir_size;
     double grid_origo_x, grid_origo_y, grid_origo_z;
     double length[3];
+    double one_over_length[3];
     double half_length[3];
     double atoms_per_molecule;
 	double mpv; 	// Most probable velocity
