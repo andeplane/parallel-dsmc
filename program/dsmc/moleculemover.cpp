@@ -189,35 +189,77 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
 }
 
 void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
-    double tau = dt;
+    double nx_div_lx = grid->Nx*system->one_over_length[0];
+    double ny_div_ly = grid->Ny*system->one_over_length[1];
+    double nz_div_lz = grid->Nz*system->one_over_length[2];
+    int nx = grid->Nx;
+    int nynx = grid->Nx*grid->Ny;
 
+    double tau = dt;
+    double r_prime[3];
     double *r = &system->r[3*molecule_index];
     double *r0 = &system->r0[3*molecule_index];
     double *v = &system->v[3*molecule_index];
 
     do_move(r,v,r0,dt);
 
-    double nx_div_lx = grid->Nx/system->length[0];
-    double ny_div_ly = grid->Ny/system->length[1];
-    double nz_div_lz = grid->Nz/system->length[2];
-    int nx = grid->Nx;
-    int nynx = grid->Nx*grid->Ny;
-
     int idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
 
     // We have to calculate time until collision
     if(voxels[idx]>=voxel_type_wall) { // Is wall
-        if(voxels[idx]!=voxel_type_boundary) { // Not boundary
+        if(voxels[idx]==voxel_type_boundary) {
+            int count = 0;
+            while(voxels[idx]==voxel_type_boundary) {
+                r_prime[0] = r[0];
+                r_prime[1] = r[1];
+                r_prime[2] = r[2];
+                r_prime[0] -= v[0]*tau;
+                r_prime[1] -= v[1]*tau;
+                r_prime[2] -= v[2]*tau;
+
+                do_move(r,v,r0,-tau);
+                tau = grid->get_time_until_collision(r_prime, v, idx);
+                if(tau>1000) {
+                    cout << "Molecule index: " << molecule_index << endl;
+                    exit(1);
+                }
+
+                if(tau > dt) tau = 0;
+                if(abs(tau) < 1e-10) tau = 0;
+
+                do_move(r,v,r0,tau);
+
+                idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
+                if(voxels[idx]==voxel_type_boundary) {
+                    if(++count > 10) { cout << "Fuck" << endl; exit(1); }
+                } else dt -= tau;
+            }
+        }
+        else {
             int count = 0;
             while(true) {
                 idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
                 if(voxels[idx]==voxel_type_boundary) {
-                    dt -= tau;
-                    while(*grid->get_voxel(r)>=voxel_type_wall) {
-                        dt += 0.1*tau;
-                        do_move(r,v,r0,-0.1*tau);
+                    // cout << "2: Tau until voxel hit: " << tau << endl;
+                    r_prime[0] = r[0];
+                    r_prime[1] = r[1];
+                    r_prime[2] = r[2];
+                    r_prime[0] -= v[0]*tau;
+                    r_prime[1] -= v[1]*tau;
+                    r_prime[2] -= v[2]*tau;
+                    do_move(r,v,r0,-tau);
+                    tau = grid->get_time_until_collision(r_prime, v, idx);
+
+                    if(tau>1000) {
+                        cout << "Molecule index: " << molecule_index << endl;
+                        exit(1);
                     }
-                    break;
+                    do_move(r,v,r0,tau);
+                    idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
+                    if(voxels[idx]!=voxel_type_boundary) {
+                        dt -= tau;
+                        break;
+                    }
                 }
 
                 if(voxels[idx]>=voxel_type_wall) {
@@ -236,22 +278,16 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
                 do_move(r,v,r0,tau);
             }
         }
-        else {
-            dt -= tau;
-            int count = 0;
-            while(*grid->get_voxel(r)>=voxel_type_wall) {
-                dt += 0.1*tau;
-                do_move(r,v,r0,-0.1*tau);
-                if(++count > 100) {
-                    cout << "TROUBLE 2" << endl;
-                    exit(0);
-                }
-            }
-        }
 
         surface_collider->collide(rnd, v, &grid->normals[3*idx], &grid->tangents1[3*idx], &grid->tangents2[3*idx]);
     }
     else dt = 0;
+
+    idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
+    if(voxels[idx]==voxel_type_boundary) {
+        cout << "We are inside a boundary even after we moved... :/" << endl;
+        exit(1);
+    }
 
     if(dt > 1e-5 && depth < 10) {
         move_molecule(molecule_index,dt,rnd,depth+1);

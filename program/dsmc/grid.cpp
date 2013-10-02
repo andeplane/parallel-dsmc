@@ -3,6 +3,7 @@
 #include <fstream>
 #include <system.h>
 #include <dsmc_io.h>
+#include <cvector.h>
 
 #define min(a,b)                      (((a) < (b)) ? (a) : (b))
 #define max(a,b)                      (((a) > (b)) ? (a) : (b))
@@ -20,6 +21,18 @@ Grid::Grid(string filename, System *system_)
     voxel_size[0] = system->length[0] / Nx;
     voxel_size[1] = system->length[1] / Ny;
     voxel_size[2] = system->length[2] / Nz;
+
+    // The unit normal vectors are 6 vectors pointing in the following directions
+    // x-, x+, y-, y+, z-, z+
+    unit_normal_vectors.resize(6,CVector(0,0,0));
+
+    unit_normal_vectors[0].x = -1;
+    unit_normal_vectors[1].x = 1;
+    unit_normal_vectors[2].y = -1;
+    unit_normal_vectors[3].y = 1;
+    unit_normal_vectors[4].z = -1;
+    unit_normal_vectors[5].z = 1;
+
 }
 
 unsigned char *Grid::get_voxel(const int &i, const int &j, const int &k) {
@@ -54,37 +67,97 @@ int Grid::get_index_of_voxel(double *r) {
     return i + j*Nx + k*Nx*Ny;
 }
 
-inline double time_until_intersection_with_plane(vector<double> &point, vector<double> &point_in_plane, vector<double> &normal) {
-
+void Grid::get_index_vector_from_index(const int &index, int &i, int &j, int &k) {
+    i = index % Nx;
+    j = (index / Nx) % Ny;
+    k = index / (Nx*Ny);
 }
 
-double Grid::get_time_until_collision(double *r, double *v) {
+inline double time_until_collision_with_plane(CVector &r, CVector &v, CVector &point_in_plane, CVector &normal) {
+    return (point_in_plane - r).dot(normal) / v.dot(normal);
+}
+
+inline bool same_side(CVector &p1, CVector &p2, CVector &a, CVector &b) {
+    CVector cp1 = (b-a).cross(p1-a);
+    CVector cp2 = (b-a).cross(p2-a);
+    if(cp1.dot(cp2) >= 0) return true;
+    else return false;
+}
+
+inline bool is_point_within_square(vector<CVector> &square, CVector point) {
+    CVector center = (square[0] + square[1] + square[2] + square[3])*0.25;
+
+    if (same_side(point, center, square[0], square[1]) && same_side(point, center, square[1], square[2]) &&
+        same_side(point, center, square[2], square[3]) && same_side(point, center, square[3], square[0])) return true;
+    else return false;
+}
+
+double Grid::get_time_until_collision(double *r, double *v, const int &voxel_index) {
     /*
      * Strategy:
-     *          First calculate time until intersection with every facet of the voxel, choose the face with lowest TOC.
-     *          Then check if that point is inside the facet. If yes, return the time until collision with that facet.
+     *          First calculate time until intersection with every facet of the voxel.
+     *          Then, for each facet, check if collision point is inside the facet. Among those points that are inside a facet, choose the one with lowest collision time.
      */
+
+    CVector r_vec(r[0], r[1], r[2]);
+    CVector v_vec(v[0], v[1], v[2]);
 
     double time_until_collision = 1e9;
     // Voxel index vector
-    int i =  r[0]*system->one_over_length[0]*Nx;
-    int j =  r[1]*system->one_over_length[1]*Ny;
-    int k =  r[2]*system->one_over_length[2]*Nz;
-    vector<vector<double> > cube;
+    int i,j,k;
+    get_index_vector_from_index(voxel_index, i, j, k);
 
-    vector<double> p1(3,0); vector<double> p2(3,0); vector<double> p3(3,0); vector<double> p4(3,0);
-    vector<double> p5(3,0); vector<double> p6(3,0); vector<double> p7(3,0); vector<double> p8(3,0);
+    CVector p1(i*voxel_size[0], j*voxel_size[1], k*voxel_size[2]);
+    CVector p2( (i+1)*voxel_size[0], j*voxel_size[1], k*voxel_size[2]);
+    CVector p3( i*voxel_size[0], j*voxel_size[1], (k+1)*voxel_size[2]);
+    CVector p4( (i+1)*voxel_size[0], j*voxel_size[1], (k+1)*voxel_size[2]);
+    CVector p5(i*voxel_size[0], (j+1)*voxel_size[1], k*voxel_size[2]);
+    CVector p6( (i+1)*voxel_size[0], (j+1)*voxel_size[1], k*voxel_size[2]);
+    CVector p7( i*voxel_size[0], (j+1)*voxel_size[1], (k+1)*voxel_size[2]);
+    CVector p8( (i+1)*voxel_size[0], (j+1)*voxel_size[1], (k+1)*voxel_size[2]);
 
-    p1[0] = i*voxel_size[0]; p1[1] = j*voxel_size[1]; p1[2] = k*voxel_size[2];
-    p2[0] = (i+1)*voxel_size[0]; p2[1] = j*voxel_size[1]; p2[2] = k*voxel_size[2];
-    p3[0] = i*voxel_size[0]; p3[1] = j*voxel_size[1]; p3[2] = (k+1)*voxel_size[2];
-    p4[0] = (i+1)*voxel_size[0]; p4[1] = j*voxel_size[1]; p4[2] = (k+1)*voxel_size[2];
-    p5[0] = i*voxel_size[0]; p5[1] = (j+1)*voxel_size[1]; p5[2] = k*voxel_size[2];
-    p6[0] = (i+1)*voxel_size[0]; p6[1] = (j+1)*voxel_size[1]; p6[2] = k*voxel_size[2];
-    p7[0] = i*voxel_size[0]; p7[1] = (j+1)*voxel_size[1]; p7[2] = (k+1)*voxel_size[2];
-    p8[0] = (i+1)*voxel_size[0]; p8[1] = (j+1)*voxel_size[1]; p8[2] = (k+1)*voxel_size[2];
+    vector<vector<CVector> > facets(6);
+    facets[0].push_back(p5); facets[0].push_back(p1); facets[0].push_back(p3); facets[0].push_back(p7);
+    facets[1].push_back(p2); facets[1].push_back(p6); facets[1].push_back(p8); facets[1].push_back(p4);
+    facets[2].push_back(p1); facets[2].push_back(p2); facets[2].push_back(p4); facets[2].push_back(p3);
+    facets[3].push_back(p6); facets[3].push_back(p5); facets[3].push_back(p7); facets[3].push_back(p8);
+    facets[4].push_back(p5); facets[4].push_back(p6); facets[4].push_back(p2); facets[4].push_back(p1);
+    facets[5].push_back(p3); facets[5].push_back(p4); facets[5].push_back(p8); facets[5].push_back(p7);
 
+    double time_facet_1 = time_until_collision_with_plane(r_vec, v_vec, p3, unit_normal_vectors[0]);
 
+    double time_facet_2 = time_until_collision_with_plane(r_vec, v_vec, p2, unit_normal_vectors[1]);
+    double time_facet_3 = time_until_collision_with_plane(r_vec, v_vec, p1, unit_normal_vectors[2]);
+    double time_facet_4 = time_until_collision_with_plane(r_vec, v_vec, p5, unit_normal_vectors[3]);
+    double time_facet_5 = time_until_collision_with_plane(r_vec, v_vec, p1, unit_normal_vectors[4]);
+    double time_facet_6 = time_until_collision_with_plane(r_vec, v_vec, p3, unit_normal_vectors[5]);
 
+    bool will_hit_facet_1 = is_point_within_square(facets[0], r_vec+v_vec*time_facet_1);
+    bool will_hit_facet_2 = is_point_within_square(facets[1], r_vec+v_vec*time_facet_2);
+    bool will_hit_facet_3 = is_point_within_square(facets[2], r_vec+v_vec*time_facet_3);
+    bool will_hit_facet_4 = is_point_within_square(facets[3], r_vec+v_vec*time_facet_4);
+    bool will_hit_facet_5 = is_point_within_square(facets[4], r_vec+v_vec*time_facet_5);
+    bool will_hit_facet_6 = is_point_within_square(facets[5], r_vec+v_vec*time_facet_6);
 
+    if(will_hit_facet_1 && abs(time_facet_1) < 1e-10) time_facet_1 = abs(time_facet_1);
+    if(will_hit_facet_2 && abs(time_facet_2) < 1e-10) time_facet_2 = abs(time_facet_2);
+    if(will_hit_facet_3 && abs(time_facet_3) < 1e-10) time_facet_3 = abs(time_facet_3);
+    if(will_hit_facet_4 && abs(time_facet_4) < 1e-10) time_facet_4 = abs(time_facet_4);
+    if(will_hit_facet_5 && abs(time_facet_5) < 1e-10) time_facet_5 = abs(time_facet_5);
+    if(will_hit_facet_6 && abs(time_facet_6) < 1e-10) time_facet_6 = abs(time_facet_6);
+
+    if( time_facet_1 > 0 && !isnan(time_facet_1) && time_facet_1 < time_until_collision && will_hit_facet_1) time_until_collision = time_facet_1;
+    if( time_facet_2 > 0 && !isnan(time_facet_2) && time_facet_2 < time_until_collision && will_hit_facet_2) time_until_collision = time_facet_2;
+    if( time_facet_3 > 0 && !isnan(time_facet_3) && time_facet_3 < time_until_collision && will_hit_facet_3) time_until_collision = time_facet_3;
+    if( time_facet_4 > 0 && !isnan(time_facet_4) && time_facet_4 < time_until_collision && will_hit_facet_4) time_until_collision = time_facet_4;
+    if( time_facet_5 > 0 && !isnan(time_facet_5) && time_facet_5 < time_until_collision && will_hit_facet_5) time_until_collision = time_facet_5;
+    if( time_facet_6 > 0 && !isnan(time_facet_6) && time_facet_6 < time_until_collision && will_hit_facet_6) time_until_collision = time_facet_6;
+
+    if( time_until_collision > 1000) {
+        cout << "Didn't collide with anything :/ " << endl;
+        exit(1);
+    }
+
+    if(time_until_collision < 1e-10) return 0;
+    else return time_until_collision - 1e-10;
 }
