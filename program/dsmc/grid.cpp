@@ -85,11 +85,11 @@ inline bool same_side(CVector &p1, CVector &p2, CVector &a, CVector &b) {
     else return false;
 }
 
-inline bool is_point_within_square(vector<CVector> &square, CVector point) {
-    CVector center = (square[0] + square[1] + square[2] + square[3])*0.25;
+inline bool is_point_within_square(CVector &p1, CVector &p2, CVector &p3, CVector &p4, CVector point) {
+    CVector center = (p1 + p2 + p3 + p4)*0.25;
 
-    if (same_side(point, center, square[0], square[1]) && same_side(point, center, square[1], square[2]) &&
-        same_side(point, center, square[2], square[3]) && same_side(point, center, square[3], square[0])) return true;
+    if (same_side(point, center, p1, p2) && same_side(point, center, p2, p3) &&
+        same_side(point, center, p3, p4) && same_side(point, center, p4, p1)) return true;
     else return false;
 }
 
@@ -117,14 +117,6 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     point_list[6].x = i*voxel_size[0]; point_list[6].y = (j+1)*voxel_size[1]; point_list[6].z = (k+1)*voxel_size[2];
     point_list[7].x = (i+1)*voxel_size[0]; point_list[7].y = (j+1)*voxel_size[1]; point_list[7].z = (k+1)*voxel_size[2];
 
-    vector<vector<CVector> > facets(6);
-    facets[0].push_back(point_list[4]); facets[0].push_back(point_list[0]); facets[0].push_back(point_list[2]); facets[0].push_back(point_list[6]);
-    facets[1].push_back(point_list[1]); facets[1].push_back(point_list[5]); facets[1].push_back(point_list[7]); facets[1].push_back(point_list[3]);
-    facets[2].push_back(point_list[0]); facets[2].push_back(point_list[1]); facets[2].push_back(point_list[3]); facets[2].push_back(point_list[2]);
-    facets[3].push_back(point_list[5]); facets[3].push_back(point_list[4]); facets[3].push_back(point_list[6]); facets[3].push_back(point_list[7]);
-    facets[4].push_back(point_list[4]); facets[4].push_back(point_list[5]); facets[4].push_back(point_list[1]); facets[4].push_back(point_list[0]);
-    facets[5].push_back(point_list[2]); facets[5].push_back(point_list[3]); facets[5].push_back(point_list[7]); facets[5].push_back(point_list[6]);
-
     double time_facet_1 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[0]);
     double time_facet_2 = time_until_collision_with_plane(r_vec, v_vec, point_list[1], unit_normal_vectors[1]);
     double time_facet_3 = time_until_collision_with_plane(r_vec, v_vec, point_list[0], unit_normal_vectors[2]);
@@ -132,32 +124,24 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     double time_facet_5 = time_until_collision_with_plane(r_vec, v_vec, point_list[0], unit_normal_vectors[4]);
     double time_facet_6 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[5]);
 
-    bool will_hit_facet_1 = is_point_within_square(facets[0], r_vec+v_vec*time_facet_1);
-    bool will_hit_facet_2 = is_point_within_square(facets[1], r_vec+v_vec*time_facet_2);
-    bool will_hit_facet_3 = is_point_within_square(facets[2], r_vec+v_vec*time_facet_3);
-    bool will_hit_facet_4 = is_point_within_square(facets[3], r_vec+v_vec*time_facet_4);
-    bool will_hit_facet_5 = is_point_within_square(facets[4], r_vec+v_vec*time_facet_5);
-    bool will_hit_facet_6 = is_point_within_square(facets[5], r_vec+v_vec*time_facet_6);
+    bool will_hit_facet_1 = is_point_within_square(point_list[4], point_list[0], point_list[2], point_list[6], r_vec+v_vec*time_facet_1);
+    bool will_hit_facet_2 = is_point_within_square(point_list[1], point_list[5], point_list[7], point_list[3], r_vec+v_vec*time_facet_2);
+    bool will_hit_facet_3 = is_point_within_square(point_list[0], point_list[1], point_list[3], point_list[2], r_vec+v_vec*time_facet_3);
+    bool will_hit_facet_4 = is_point_within_square(point_list[5], point_list[4], point_list[6], point_list[7], r_vec+v_vec*time_facet_4);
+    bool will_hit_facet_5 = is_point_within_square(point_list[4], point_list[5], point_list[1], point_list[0], r_vec+v_vec*time_facet_5);
+    bool will_hit_facet_6 = is_point_within_square(point_list[2], point_list[3], point_list[7], point_list[6], r_vec+v_vec*time_facet_6);
 
-    if(will_hit_facet_1 && abs(time_facet_1) < 1e-10) time_facet_1 = abs(time_facet_1);
-    if(will_hit_facet_2 && abs(time_facet_2) < 1e-10) time_facet_2 = abs(time_facet_2);
-    if(will_hit_facet_3 && abs(time_facet_3) < 1e-10) time_facet_3 = abs(time_facet_3);
-    if(will_hit_facet_4 && abs(time_facet_4) < 1e-10) time_facet_4 = abs(time_facet_4);
-    if(will_hit_facet_5 && abs(time_facet_5) < 1e-10) time_facet_5 = abs(time_facet_5);
-    if(will_hit_facet_6 && abs(time_facet_6) < 1e-10) time_facet_6 = abs(time_facet_6);
-
-    if( time_facet_1 > 0 && !isnan(time_facet_1) && time_facet_1 < time_until_collision && will_hit_facet_1) time_until_collision = time_facet_1;
-    if( time_facet_2 > 0 && !isnan(time_facet_2) && time_facet_2 < time_until_collision && will_hit_facet_2) time_until_collision = time_facet_2;
-    if( time_facet_3 > 0 && !isnan(time_facet_3) && time_facet_3 < time_until_collision && will_hit_facet_3) time_until_collision = time_facet_3;
-    if( time_facet_4 > 0 && !isnan(time_facet_4) && time_facet_4 < time_until_collision && will_hit_facet_4) time_until_collision = time_facet_4;
-    if( time_facet_5 > 0 && !isnan(time_facet_5) && time_facet_5 < time_until_collision && will_hit_facet_5) time_until_collision = time_facet_5;
-    if( time_facet_6 > 0 && !isnan(time_facet_6) && time_facet_6 < time_until_collision && will_hit_facet_6) time_until_collision = time_facet_6;
+    if( time_facet_1 > 0 && time_facet_1 < time_until_collision && will_hit_facet_1 && !isnan(time_facet_1)) time_until_collision = time_facet_1;
+    if( time_facet_2 > 0 && time_facet_2 < time_until_collision && will_hit_facet_2 && !isnan(time_facet_2)) time_until_collision = time_facet_2;
+    if( time_facet_3 > 0 && time_facet_3 < time_until_collision && will_hit_facet_3 && !isnan(time_facet_3)) time_until_collision = time_facet_3;
+    if( time_facet_4 > 0 && time_facet_4 < time_until_collision && will_hit_facet_4 && !isnan(time_facet_4)) time_until_collision = time_facet_4;
+    if( time_facet_5 > 0 && time_facet_5 < time_until_collision && will_hit_facet_5 && !isnan(time_facet_5)) time_until_collision = time_facet_5;
+    if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !isnan(time_facet_6)) time_until_collision = time_facet_6;
 
     if( time_until_collision > 1000) {
         cout << "Didn't collide with anything :/ " << endl;
         exit(1);
     }
 
-    if(time_until_collision < 1e-10) return 0;
-    else return time_until_collision - 1e-10;
+    return time_until_collision - 1e-10; // Subtract a small number to avoid being exactly at the boundary of a voxel
 }

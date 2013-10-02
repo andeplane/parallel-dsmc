@@ -240,26 +240,29 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
             while(true) {
                 idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
                 if(voxels[idx]==voxel_type_boundary) {
-                    // cout << "2: Tau until voxel hit: " << tau << endl;
                     r_prime[0] = r[0];
                     r_prime[1] = r[1];
                     r_prime[2] = r[2];
                     r_prime[0] -= v[0]*tau;
                     r_prime[1] -= v[1]*tau;
                     r_prime[2] -= v[2]*tau;
+
                     do_move(r,v,r0,-tau);
                     tau = grid->get_time_until_collision(r_prime, v, idx);
-
                     if(tau>1000) {
                         cout << "Molecule index: " << molecule_index << endl;
                         exit(1);
                     }
+
+                    if(tau > dt) tau = 0;
+                    if(abs(tau) < 1e-10) tau = 0;
+
                     do_move(r,v,r0,tau);
+
                     idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
-                    if(voxels[idx]!=voxel_type_boundary) {
-                        dt -= tau;
-                        break;
-                    }
+                    if(voxels[idx]==voxel_type_boundary) {
+                        if(++count > 10) { cout << "Fuck" << endl; exit(1); }
+                    } else dt -= tau;
                 }
 
                 if(voxels[idx]>=voxel_type_wall) {
