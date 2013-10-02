@@ -23,6 +23,8 @@ public:
 
     vector<double> voxel_size;
     vector<CVector> unit_normal_vectors;
+    vector<CVector> point_list;
+
     System *system;
     unsigned char *voxels;
     float *normals;

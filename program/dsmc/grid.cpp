@@ -33,6 +33,7 @@ Grid::Grid(string filename, System *system_)
     unit_normal_vectors[4].z = -1;
     unit_normal_vectors[5].z = 1;
 
+    point_list.resize(8, CVector(0,0,0));
 }
 
 unsigned char *Grid::get_voxel(const int &i, const int &j, const int &k) {
@@ -107,30 +108,29 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     int i,j,k;
     get_index_vector_from_index(voxel_index, i, j, k);
 
-    CVector p1(i*voxel_size[0], j*voxel_size[1], k*voxel_size[2]);
-    CVector p2( (i+1)*voxel_size[0], j*voxel_size[1], k*voxel_size[2]);
-    CVector p3( i*voxel_size[0], j*voxel_size[1], (k+1)*voxel_size[2]);
-    CVector p4( (i+1)*voxel_size[0], j*voxel_size[1], (k+1)*voxel_size[2]);
-    CVector p5(i*voxel_size[0], (j+1)*voxel_size[1], k*voxel_size[2]);
-    CVector p6( (i+1)*voxel_size[0], (j+1)*voxel_size[1], k*voxel_size[2]);
-    CVector p7( i*voxel_size[0], (j+1)*voxel_size[1], (k+1)*voxel_size[2]);
-    CVector p8( (i+1)*voxel_size[0], (j+1)*voxel_size[1], (k+1)*voxel_size[2]);
+    point_list[0].x = i*voxel_size[0]; point_list[0].y = j*voxel_size[1]; point_list[0].z = k*voxel_size[2];
+    point_list[1].x = (i+1)*voxel_size[0]; point_list[1].y = j*voxel_size[1]; point_list[1].z = k*voxel_size[2];
+    point_list[2].x = i*voxel_size[0]; point_list[2].y = j*voxel_size[1]; point_list[2].z = (k+1)*voxel_size[2];
+    point_list[3].x = (i+1)*voxel_size[0]; point_list[3].y = j*voxel_size[1]; point_list[3].z = (k+1)*voxel_size[2];
+    point_list[4].x = i*voxel_size[0]; point_list[4].y = (j+1)*voxel_size[1]; point_list[4].z = k*voxel_size[2];
+    point_list[5].x = (i+1)*voxel_size[0]; point_list[5].y = (j+1)*voxel_size[1]; point_list[5].z = k*voxel_size[2];
+    point_list[6].x = i*voxel_size[0]; point_list[6].y = (j+1)*voxel_size[1]; point_list[6].z = (k+1)*voxel_size[2];
+    point_list[7].x = (i+1)*voxel_size[0]; point_list[7].y = (j+1)*voxel_size[1]; point_list[7].z = (k+1)*voxel_size[2];
 
     vector<vector<CVector> > facets(6);
-    facets[0].push_back(p5); facets[0].push_back(p1); facets[0].push_back(p3); facets[0].push_back(p7);
-    facets[1].push_back(p2); facets[1].push_back(p6); facets[1].push_back(p8); facets[1].push_back(p4);
-    facets[2].push_back(p1); facets[2].push_back(p2); facets[2].push_back(p4); facets[2].push_back(p3);
-    facets[3].push_back(p6); facets[3].push_back(p5); facets[3].push_back(p7); facets[3].push_back(p8);
-    facets[4].push_back(p5); facets[4].push_back(p6); facets[4].push_back(p2); facets[4].push_back(p1);
-    facets[5].push_back(p3); facets[5].push_back(p4); facets[5].push_back(p8); facets[5].push_back(p7);
+    facets[0].push_back(point_list[4]); facets[0].push_back(point_list[0]); facets[0].push_back(point_list[2]); facets[0].push_back(point_list[6]);
+    facets[1].push_back(point_list[1]); facets[1].push_back(point_list[5]); facets[1].push_back(point_list[7]); facets[1].push_back(point_list[3]);
+    facets[2].push_back(point_list[0]); facets[2].push_back(point_list[1]); facets[2].push_back(point_list[3]); facets[2].push_back(point_list[2]);
+    facets[3].push_back(point_list[5]); facets[3].push_back(point_list[4]); facets[3].push_back(point_list[6]); facets[3].push_back(point_list[7]);
+    facets[4].push_back(point_list[4]); facets[4].push_back(point_list[5]); facets[4].push_back(point_list[1]); facets[4].push_back(point_list[0]);
+    facets[5].push_back(point_list[2]); facets[5].push_back(point_list[3]); facets[5].push_back(point_list[7]); facets[5].push_back(point_list[6]);
 
-    double time_facet_1 = time_until_collision_with_plane(r_vec, v_vec, p3, unit_normal_vectors[0]);
-
-    double time_facet_2 = time_until_collision_with_plane(r_vec, v_vec, p2, unit_normal_vectors[1]);
-    double time_facet_3 = time_until_collision_with_plane(r_vec, v_vec, p1, unit_normal_vectors[2]);
-    double time_facet_4 = time_until_collision_with_plane(r_vec, v_vec, p5, unit_normal_vectors[3]);
-    double time_facet_5 = time_until_collision_with_plane(r_vec, v_vec, p1, unit_normal_vectors[4]);
-    double time_facet_6 = time_until_collision_with_plane(r_vec, v_vec, p3, unit_normal_vectors[5]);
+    double time_facet_1 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[0]);
+    double time_facet_2 = time_until_collision_with_plane(r_vec, v_vec, point_list[1], unit_normal_vectors[1]);
+    double time_facet_3 = time_until_collision_with_plane(r_vec, v_vec, point_list[0], unit_normal_vectors[2]);
+    double time_facet_4 = time_until_collision_with_plane(r_vec, v_vec, point_list[4], unit_normal_vectors[3]);
+    double time_facet_5 = time_until_collision_with_plane(r_vec, v_vec, point_list[0], unit_normal_vectors[4]);
+    double time_facet_6 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[5]);
 
     bool will_hit_facet_1 = is_point_within_square(facets[0], r_vec+v_vec*time_facet_1);
     bool will_hit_facet_2 = is_point_within_square(facets[1], r_vec+v_vec*time_facet_2);
