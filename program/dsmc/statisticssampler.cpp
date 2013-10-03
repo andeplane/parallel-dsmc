@@ -10,8 +10,8 @@
 #include <moleculemover.h>
 #include <colliderbase.h>
 
-int num_bins_per_dimension = 31;
-int num_bins = num_bins_per_dimension*num_bins_per_dimension;
+int num_bins_per_dimension;
+int num_bins;
 double *vel;
 int *count_;
 
@@ -23,8 +23,10 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     velocity_distribution_sampled_at = -1;
     flux_sampled_at = -1;
     permeability_sampled_at = -1;
+    density_sampled_at = -1;
     permeability = 0;
     flux = 0;
+    num_samples = 0;
 
     num_bins_per_dimension = settings->velocity_bins;
     num_bins = num_bins_per_dimension*num_bins_per_dimension;
@@ -46,6 +48,7 @@ void StatisticsSampler::sample() {
     } else if(settings->velocity_profile_type.compare("box") == 0) {
         sample_velocity_distribution_box();
     }
+    sample_density();
     sample_temperature();
     sample_permeability();
 
@@ -65,6 +68,8 @@ void StatisticsSampler::sample() {
         double pressure = system->num_molecules*system->atoms_per_molecule / system->volume * temperature;
         cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions  <<  "   Molecules: " << system->num_molecules << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) << endl ;
     }
+
+    num_samples++;
 }
 
 void StatisticsSampler::sample_kinetic_energy() {
@@ -194,9 +199,25 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     delete v_of_y_count;
 }
 
+void StatisticsSampler::sample_density() {
+    if(system->steps == density_sampled_at) return;
+    density_sampled_at = system->steps;
+
+    for(unsigned int i=0; i<system->num_molecules; i++) {
+        int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
+        int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;
+        int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
+
+        int index = bin_x*num_bins_per_dimension + bin_y;
+
+        count_[index]++;
+    }
+}
+
 void StatisticsSampler::sample_velocity_distribution() {
     if(system->steps == velocity_distribution_sampled_at) return;
     velocity_distribution_sampled_at = system->steps;
+    density_sampled_at = system->steps;
 
     for(unsigned int i=0; i<system->num_molecules; i++) {
         int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
@@ -204,29 +225,25 @@ void StatisticsSampler::sample_velocity_distribution() {
         int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
 
         // int index = bin_x*num_bins_per_dimension + bin_y;
-        int index = bin_z*num_bins_per_dimension + bin_y;
-        // int index = bin_y;
+        int index = bin_x*num_bins_per_dimension + bin_y;
 
-        // vel[3*index+0] += system->v[3*i+0];
-        // vel[3*index+1] += system->v[3*i+1];
         vel[index] += system->v[3*i+2];
         count_[index]++;
     }
-    
-    
-
-    // delete vel;
-    // delete count;
 }
 
 void StatisticsSampler::finalize() {
     for(int i=0;i<num_bins;i++) {
-        if(count_[i]>0) vel[i] /= count_[i];
+        if(settings->velocity_profile_type.compare("other") == 0) {
+            // If we sample the 2d field, the averages are done in cpp code
+            if(count_[i]>0) vel[i] /= count_[i];
+            fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
+        }
 
-        fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
+        fprintf(system->io->density_file,"%f ",(double)count_[i] / this->num_samples);
     }
-    fprintf(system->io->velocity_file,"\n");
 
+    fprintf(system->io->velocity_file,"\n");
     fclose(system->io->energy_file);
     fclose(system->io->velocity_file);
     fclose(system->io->flux_file);

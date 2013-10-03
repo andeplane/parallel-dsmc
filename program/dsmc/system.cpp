@@ -205,7 +205,6 @@ void System::maintain_pressure_B() {
      * Strategy: Keep the number of molecules in a cell equal to that of the neighbor cell towards the center of the system
      *           If adding any new molecules, let the velocity be equal to the average in the neighbor cell plus a MB-distribution.
      */
-    // cout << "Maintaining pressure in B" << endl;
 
     double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_B);
     double velocity_std_dev = sqrt(wanted_pressure/density); // Shouldn't this density be the wanted density?
@@ -241,6 +240,6 @@ void System::maintain_pressure_B() {
 void System::maintain_pressure() {
     timer->start_pressure();
     maintain_pressure_A();
-    // maintain_pressure_B();
+    maintain_pressure_B();
     timer->end_pressure();
 }

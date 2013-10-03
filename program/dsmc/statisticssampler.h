@@ -14,8 +14,10 @@ private:
     long temperature_sampled_at;
     long kinetic_energy_sampled_at;
     long velocity_distribution_sampled_at;
+    long density_sampled_at;
     long flux_sampled_at;
     long permeability_sampled_at;
+    long num_samples;
 
 public:
     StatisticsSampler(System *system);
@@ -27,6 +29,7 @@ public:
     void sample_velocity_distribution_cylinder();
     void sample_flux();
     void sample_permeability();
+    void sample_density();
     void finalize();
 
     double kinetic_energy;

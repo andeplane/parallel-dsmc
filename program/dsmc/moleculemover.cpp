@@ -73,8 +73,8 @@ void MoleculeMover::move_molecule_box(int &molecule_index, double dt, Random *rn
     double system_center_x = system->length[0]*0.5;
     double system_center_y = system->length[1]*0.5;
 
-    double upper_wall = system->length[1]*0.6;
-    double lower_wall = system->length[1]*0.4;
+    double upper_wall = system_center_y*(1+BOX_FRACTION);
+    double lower_wall = system_center_y*(1-BOX_FRACTION);
 
     int collided = 0;
     if(r[1] >= upper_wall) collided = 1;
@@ -87,12 +87,12 @@ void MoleculeMover::move_molecule_box(int &molecule_index, double dt, Random *rn
         // Calculate distance to the wall
         if(collided == 1) {
             // We will collide in the positive direction
-            dy = upper_wall - r[1];
+            dy = upper_wall - r[1] - 1e-5;
         } else {
-            dy = lower_wall - r[1];
+            dy = lower_wall - r[1] + 1e-5;
         }
 
-        double time_until_collision = dy / v[1] - 1e-7;
+        double time_until_collision = dy / v[1];
         do_move(r,v,r0,time_until_collision);
         dt -= time_until_collision;
 

@@ -16,6 +16,7 @@ class MoleculeMover;
 #include <cinifile.h>
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
+#define BOX_FRACTION 0.2
 #define MAX_MOLECULE_NUM 10000000
 
 using namespace std;

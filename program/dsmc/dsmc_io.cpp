@@ -17,6 +17,7 @@ DSMC_IO::DSMC_IO(System *system_) {
         velocity_file = fopen("statistics/velocity.txt","w");
         flux_file = fopen("statistics/flux.txt","w");
         permeability_file = fopen("statistics/permeability.txt","w");
+        density_file = fopen("statistics/density.txt","w");
     }
 }
 
