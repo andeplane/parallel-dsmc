@@ -24,6 +24,9 @@ void System::initialize(Settings *settings_, int myid_) {
     length[0] = settings->Lx;
     length[1] = settings->Ly;
     length[2] = settings->Lz;
+    one_over_length[0] = 1.0/length[0];
+    one_over_length[1] = 1.0/length[1];
+    one_over_length[2] = 1.0/length[2];
 
     temperature      = unit_converter->temperature_from_SI(settings->temperature);;
     wall_temperature = unit_converter->temperature_from_SI(settings->wall_temperature);
@@ -116,7 +119,22 @@ inline void System::find_position(double *r) {
         r[1] = length[1]*rnd->next_double();
         r[2] = length[2]*rnd->next_double();
 
-        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+
+//         double cylinder_center_x = length[0]*0.5;
+//         double cylinder_center_y = length[1]*0.5;
+//         double dx = r[0] - cylinder_center_x;
+//         double dy = r[1] - cylinder_center_y;
+//         double dr2 = dx*dx + dy*dy;
+//         did_collide = dr2 >= CYLINDER_RADIUS_SQUARED;
+
+//        double system_center_x = length[0]*0.5;
+//        double system_center_y = length[1]*0.5;
+
+//        double dx = r[0] - system_center_x; // Moved origin to center of circle
+//        double dy = r[1] - system_center_y;
+        
+//        did_collide = (abs(dy) >= system_center_y*0.2*0.9);
     }
 }
 
@@ -156,7 +174,7 @@ void System::update_cell_volume() {
 
 void System::setup_molecules() {
     r = new double[3*MAX_MOLECULE_NUM];
-
+    
     molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
     molecule_cell_index    = new unsigned long[MAX_MOLECULE_NUM];
 
@@ -251,6 +269,15 @@ void System::calculate_porosity() {
 
 void System::init_randoms() {
     long seed = time(NULL);
-    seed = 2;
+    seed = 10;
     rnd = new Random(-seed, settings->alpha_n, settings->alpha_t);
+}
+
+void System::count_reservoir_particles() {
+    reservoir_b_particle_count = 0;
+
+    for(int i=0;i<reservoir_B_cells.size();i++) {
+        Cell *cell = reservoir_B_cells[i];
+        reservoir_b_particle_count += cell->num_molecules;
+    }
 }

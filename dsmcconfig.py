@@ -38,6 +38,7 @@ class DSMC:
 
 		self.statistics_interval = 100
 		self.velocity_bins = 100
+		self.velocity_profile_type = "other"
 		self.movie_every_n_frame = 1
 		self.movie_molecules = 10000
 
@@ -163,6 +164,7 @@ class DSMC:
 			line = line.replace('__alpha_t__',str(self.alpha_t) )
 			line = line.replace('__velocity_bins__', str(self.velocity_bins))
 			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )
+			line = line.replace('__velocity_profile_type__', str(self.velocity_profile_type).lower() )
 			line = line.replace('__temperature__',str(self.temperature) )
 			line = line.replace('__wall_temperature__',str(self.wall_temperature) )
 			line = line.replace('__dt__',str(self.dt) )
@@ -227,3 +229,10 @@ class DSMC:
 	def create_movie(self, frames):
 		self.run_command("%s -O3 program/tools/create_movie.cpp -o create_movie" % self.compiler)
 		self.run_command("./create_movie ./ %d" % (frames) )
+
+	def create_xyz(self, state = "./", xyz_file = "./state.xyz"):
+		if self.test_mode: return
+		state = state+"state_files/"
+		self.run_command(self.compiler + " program/tools/create_xyz.cpp -o ./create_xyz")
+		self.run_command("./create_xyz %d %s %s" % (1, state, xyz_file))
+	

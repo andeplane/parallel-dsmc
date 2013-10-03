@@ -3,6 +3,7 @@
 #include <string>
 class System;
 class DSMC_IO;
+class CVector;
 
 using namespace std;
 
@@ -20,6 +21,10 @@ public:
     int Nz;
     int points;
 
+    vector<double> voxel_size;
+    vector<CVector> unit_normal_vectors;
+    vector<CVector> point_list;
+
     System *system;
     unsigned char *voxels;
     float *normals;
@@ -30,6 +35,8 @@ public:
     unsigned char *get_voxel(const int &i, const int &j, const int &k);
     unsigned char *get_voxel(const double &x, const double &y, const double &z);
     unsigned char *get_voxel(double *r);
+    void get_index_vector_from_index(const int &index, int &i, int &j, int &k);
     int get_index_of_voxel(double *r);
+    double get_time_until_collision(double *r, double *v, const int &voxel_index);
     void read_matrix(string filename, DSMC_IO *io);
 };

@@ -8,6 +8,12 @@
 #include <mpi.h>
 #include <settings.h>
 #include <moleculemover.h>
+#include <colliderbase.h>
+
+int num_bins_per_dimension = 31;
+int num_bins = num_bins_per_dimension*num_bins_per_dimension;
+double *vel;
+int *count_;
 
 StatisticsSampler::StatisticsSampler(System *system_) {
     system = system_;
@@ -18,29 +24,46 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     flux_sampled_at = -1;
     permeability_sampled_at = -1;
     permeability = 0;
-    flux[0] = 0; flux[1] = 0; flux[2] = 0;
+    flux = 0;
+
+    num_bins_per_dimension = settings->velocity_bins;
+    num_bins = num_bins_per_dimension*num_bins_per_dimension;
+    vel = new double[num_bins];
+    count_ = new int[num_bins];
+
+    memset((void*)count_,0,num_bins*sizeof(int));
+    memset((void*)vel,0,num_bins*sizeof(double));
 }
 
 void StatisticsSampler::sample() {
     if(settings->statistics_interval && system->steps % settings->statistics_interval != 0) return;
     double t_in_nano_seconds = system->unit_converter->time_to_SI(system->t)*1e9;
 
-    // sample_velocity_distribution_cylinder();
-    sample_velocity_distribution_box();
-    // sample_velocity_distribution();
+    if(settings->velocity_profile_type.compare("other") == 0) {
+        sample_velocity_distribution();
+    } else if(settings->velocity_profile_type.compare("cylinder") == 0) {
+        sample_velocity_distribution_cylinder();
+    } else if(settings->velocity_profile_type.compare("box") == 0) {
+        sample_velocity_distribution_box();
+    }
     sample_temperature();
+    sample_permeability();
 
     if(system->myid == 0) {
         double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules*system->atoms_per_molecule);
 
         fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
-        fprintf(system->io->flux_file, "%f %f %f %f\n",t_in_nano_seconds, flux[0], flux[1], flux[2]);
+
+        if(settings->maintain_pressure) {
+            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->flux_count);
+        } else {
+            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->gravity_direction]);
+        }
+
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
         double pressure = system->num_molecules*system->atoms_per_molecule / system->volume * temperature;
-        // cout << "Pressure: " << unit_converter->pressure_to_SI(pressure) << endl;
-
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<  "   Molecules: " << system->num_molecules << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) << endl ;
+        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions  <<  "   Molecules: " << system->num_molecules << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) << endl ;
     }
 }
 
@@ -68,10 +91,13 @@ void StatisticsSampler::sample_temperature() {
 void StatisticsSampler::sample_flux() {
     if(system->steps == flux_sampled_at) return;
     flux_sampled_at = system->steps;
+    // Either, the gas is pressure driven or gravity driven. We measure flux different in these two cases.
+    if(settings->maintain_pressure) {
+        flux = system->flux_count / system->t;
+    } else {
+        flux = system->mover->count_periodic[settings->gravity_direction] / system->t;
+    }
 
-    flux[0] = system->mover->count_periodic[0] / system->t;
-    flux[1] = system->mover->count_periodic[1] / system->t;
-    flux[2] = system->mover->count_periodic[2] / system->t;
 }
 
 void StatisticsSampler::sample_permeability() {
@@ -82,7 +108,7 @@ void StatisticsSampler::sample_permeability() {
     sample_flux();
     double volume_per_molecule = system->volume / system->num_molecules;
     double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(settings->viscosity);
-    double volume_flux = flux[settings->gravity_direction]*volume_per_molecule;
+    double volume_flux = flux*volume_per_molecule;
     double L = system->length[settings->gravity_direction];
     double mass_density = system->density*settings->mass;
 
@@ -90,14 +116,23 @@ void StatisticsSampler::sample_permeability() {
     for(int a=0;a<3;a++) {
         if(a != settings->gravity_direction) area *= system->length[a];
     }
+    double pressure_in_reservoir_a = system->unit_converter->pressure_from_SI(settings->pressure_A);
+    double pressure_in_reservoir_b = system->unit_converter->pressure_from_SI(settings->pressure_B);
 
-    permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
+
+    if(settings->maintain_pressure) {
+        // Expression from Darcy's law of gases
+        permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
+    } else {
+        permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
+    }
 }
 
 void StatisticsSampler::sample_velocity_distribution_cylinder() {
-    int N = 100;
+    int N = this->system->settings->velocity_bins;
     double center_x = system->length[0]/2;
     double center_y = system->length[1]/2;
+
     double *v_of_r = new double[N];
     int *v_of_r_count = new int[N];
     memset(v_of_r,0,N*sizeof(double));
@@ -111,6 +146,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
         double dr = sqrt(dx*dx + dy*dy);
         int v_of_r_index = N*dr/dr_max;
         if(v_of_r_index>=N) continue;
+        
         double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
         double vz = system->v[3*i+2];
 
@@ -121,6 +157,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
     for(int i=0;i<N;i++) {
         if(v_of_r_count[i]>0) v_of_r[i] /= v_of_r_count[i];
         fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(v_of_r[i]));
+        // fprintf(system->io->velocity_file,"%d ", v_of_r_count[i]);
     }
     fprintf(system->io->velocity_file,"\n");
     delete v_of_r;
@@ -137,8 +174,6 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     memset(v_of_y_count,0,N*sizeof(int));
 
     for(int i=0;i<system->num_molecules;i++) {
-        // Skip molecules that are in the reservoir
-
         double y = system->r[3*i+1];
         int v_of_y_index = N*(y/system->length[1]);
 
@@ -163,13 +198,6 @@ void StatisticsSampler::sample_velocity_distribution() {
     if(system->steps == velocity_distribution_sampled_at) return;
     velocity_distribution_sampled_at = system->steps;
 
-    int num_bins_per_dimension = 50;
-    int num_bins = num_bins_per_dimension*num_bins_per_dimension;
-    double *vel = new double[num_bins];
-    int *count = new int[num_bins];
-    memset((void*)count,0,num_bins*sizeof(int));
-    memset((void*)vel,0,num_bins*sizeof(double));
-
     for(unsigned int i=0; i<system->num_molecules; i++) {
         int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
         int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;
@@ -182,18 +210,27 @@ void StatisticsSampler::sample_velocity_distribution() {
         // vel[3*index+0] += system->v[3*i+0];
         // vel[3*index+1] += system->v[3*i+1];
         vel[index] += system->v[3*i+2];
-        count[index]++;
+        count_[index]++;
     }
+    
+    
 
+    // delete vel;
+    // delete count;
+}
+
+void StatisticsSampler::finalize() {
     for(int i=0;i<num_bins;i++) {
-        if(count[i]>0) vel[i] /= count[i];
+        if(count_[i]>0) vel[i] /= count_[i];
 
         fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
     }
     fprintf(system->io->velocity_file,"\n");
 
-    delete vel;
-    delete count;
+    fclose(system->io->energy_file);
+    fclose(system->io->velocity_file);
+    fclose(system->io->flux_file);
+    fclose(system->io->permeability_file);
 }
 
 /*

@@ -5,6 +5,7 @@
 
 ColliderThermal::ColliderThermal(double sqrt_wall_temp_over_mass_)
 {
+    num_collisions = 0;
     sqrt_wall_temp_over_mass = sqrt_wall_temp_over_mass_;
 }
 
@@ -32,4 +33,5 @@ void ColliderThermal::collide(Random *rnd, double *v, float *normal_vector, floa
     v[0] = v_normal*n_x + v_tangent1*t1_x + v_tangent2*t2_x;
     v[1] = v_normal*n_y + v_tangent1*t1_y + v_tangent2*t2_y;
     v[2] = v_normal*n_z + v_tangent1*t1_z + v_tangent2*t2_z;
+    num_collisions++;
 }

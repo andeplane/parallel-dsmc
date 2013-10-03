@@ -25,7 +25,8 @@ SOURCES += main.cpp \
     colliderspecular.cpp \
     colliderthermal.cpp \
     collidercercignanilampis.cpp \
-    collidermaxwell.cpp
+    collidermaxwell.cpp \
+    cvector.cpp
 
 HEADERS += \
     system.h \
@@ -44,7 +45,8 @@ HEADERS += \
     colliderspecular.h \
     colliderthermal.h \
     collidercercignanilampis.h \
-    collidermaxwell.h
+    collidermaxwell.h \
+    cvector.h
 
 
 OTHER_FILES += \
@@ -82,10 +84,10 @@ QMAKE_CXXFLAGS += $$system(mpicxx --showme:compile) -DMPICH_IGNORE_CXX_SEEK
 QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
 
 QMAKE_LFLAGS += -ipo -no-prec-div -falign-functions=16
-QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16
+QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -O3
+QMAKE_CFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -O3
 
 QMAKE_LFLAGS -= -lm
-QMAKE_LFLAGS -= -O2
-QMAKE_LFLAGS += -O3
-QMAKE_CFLAGS_RELEASE -= -fPIE
+QMAKE_CFLAGS_RELEASE -= -fPIE -O2
+QMAKE_CFLAGS_RELEASE += -O3
 QMAKE_CXXFLAGS_RELEASE -= -fPIE

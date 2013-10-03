@@ -27,9 +27,10 @@ public:
     void sample_velocity_distribution_cylinder();
     void sample_flux();
     void sample_permeability();
+    void finalize();
 
     double kinetic_energy;
     double temperature;
-    double flux[3];
+    double flux;
     double permeability;
 };

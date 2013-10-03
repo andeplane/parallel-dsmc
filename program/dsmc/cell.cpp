@@ -72,6 +72,10 @@ void Cell::collide_molecules(double *v0, double *v1, const double &v_rel, Random
     v1[2] = vcmz - 0.5*vrelz;
 }
 
+#define HEALTHY 0
+#define AIDS 1
+#define PRIEST 2
+
 int Cell::collide(Random *rnd) {
 
     //* Skip cells with only one particle
@@ -105,7 +109,7 @@ int Cell::collide(Random *rnd) {
 			//* If pair accepted, select post-collision velocities
 
 			collisions++;
-            collide_molecules(v0,v1, v_rel, rnd);
+            collide_molecules(v0, v1, v_rel, rnd);
 		} // Loop over pairs
 	}
 	

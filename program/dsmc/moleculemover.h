@@ -18,6 +18,8 @@ public:
     void initialize(System *system_, ColliderBase *surface_collider_);
     void move_molecules(double dt, Random *rnd);
     void move_molecule(const int &idx);
-    inline void do_move(double *r, double *v, double *r0, const double &dt);
+    void do_move(double *r, double *v, double *r0, double dt);
     void move_molecule(int &idx, double dt, Random *rnd, int depth);
+    void move_molecule_cylinder(int &idx, double dt, Random *rnd, int depth);
+    void move_molecule_box(int &molecule_index, double dt, Random *rnd, int depth);
 };

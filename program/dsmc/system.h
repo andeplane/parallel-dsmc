@@ -15,6 +15,7 @@ class MoleculeMover;
 #include <vector>
 #include <cinifile.h>
 
+#define CYLINDER_RADIUS_SQUARED 0.0064
 #define MAX_MOLECULE_NUM 10000000
 
 using namespace std;
@@ -47,6 +48,7 @@ private:
     void setup_cells();
     void calculate_porosity();
     void update_molecule_cells();
+    void count_reservoir_particles();
 public:
     int cell_index_from_position(double *r);
 
@@ -74,6 +76,7 @@ public:
 
     double grid_origo_x, grid_origo_y, grid_origo_z;
     double length[3];
+    double one_over_length[3];
     double half_length[3];
     double atoms_per_molecule;
 	double mpv; 	// Most probable velocity
@@ -94,6 +97,8 @@ public:
     int myid;
     int cells_x, cells_y, cells_z;
     int num_cells_vector[3];
+    long reservoir_b_particle_count;
+    long flux_count;
 
     void initialize(Settings *settings_, int myid_);
 	void step();
