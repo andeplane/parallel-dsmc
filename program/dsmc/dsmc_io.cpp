@@ -18,6 +18,10 @@ DSMC_IO::DSMC_IO(System *system_) {
         flux_file = fopen("statistics/flux.txt","w");
         permeability_file = fopen("statistics/permeability.txt","w");
         density_file = fopen("statistics/density.txt","w");
+        linear_density_file = fopen("statistics/linear_density.txt","w");
+        num_molecules_file = fopen("statistics/num_molecules_file.txt","w");
+        pressure_file = fopen("statistics/num_molecules_file.txt","w");
+        linear_pressure_file = fopen("statistics/linear_pressure.txt","w");
     }
 }
 
@@ -147,10 +151,14 @@ void DSMC_IO::finalize() {
     fclose(velocity_file);
     fclose(flux_file);
     fclose(permeability_file);
+    fclose(num_molecules_file);
+    fclose(linear_density_file);
+    fclose(density_file);
+    fclose(pressure_file);
+    fclose(linear_pressure_file);
 }
 
-void DSMC_IO::
-read_grid_matrix(string filename, Grid *grid) {
+void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
     ifstream file (filename.c_str(), ios::in | ios::binary);
     if(!file.is_open()) {
         cout << "Error, could not open file " << filename << endl;

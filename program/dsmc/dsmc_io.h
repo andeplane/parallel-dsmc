@@ -29,5 +29,9 @@ public:
     FILE *flux_file;
     FILE *permeability_file;
     FILE *density_file;
+    FILE *linear_density_file;
+    FILE *num_molecules_file;
+    FILE *pressure_file;
+    FILE *linear_pressure_file;
     ofstream *movie_file;
 };

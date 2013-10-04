@@ -96,7 +96,7 @@ void System::initialize(Settings *settings_, int myid_) {
     int number_of_cells_all = cells_x*cells_y*cells_z;
 
     printf("done.\n\n");
-    printf("%d molecules\n",num_molecules);
+    printf("%ld molecules\n",num_molecules);
     printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
     printf("Porosity: %f\n",porosity);
     printf("System volume: %f\n",length[0]*length[1]*length[2]);
@@ -105,7 +105,7 @@ void System::initialize(Settings *settings_, int myid_) {
     printf("Mean free path: %.4f \n",mfp);
     printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mfp,length[1]/cells_y/mfp), length[2]/cells_z/mfp));
     printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-    printf("%d molecules per active cell\n",num_molecules/number_of_cells);
+    printf("%ld molecules per active cell\n",num_molecules/number_of_cells);
 
     printf("dt = %f\n\n",dt);
     cout << endl;

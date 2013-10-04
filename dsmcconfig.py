@@ -85,6 +85,7 @@ class DSMC:
 		self.clean()
 		self.log("Loading state from "+path)
 		self.run_command("cp -r "+path+"/ ./")
+		self.load_previous_state = True
 
 	def save_state(self, path):
 		if self.test_mode: return

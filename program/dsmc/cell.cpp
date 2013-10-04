@@ -171,9 +171,9 @@ vector<double>& Cell::update_average_velocity() {
         new_average_velocity[2] /= num_molecules;
     }
 
-    average_velocity[0] = 0.9*average_velocity[0] + 0.1*new_average_velocity[0];
-    average_velocity[1] = 0.9*average_velocity[1] + 0.1*new_average_velocity[1];
-    average_velocity[2] = 0.9*average_velocity[2] + 0.1*new_average_velocity[2];
+    average_velocity[0] = 0.8*average_velocity[0] + 0.2*new_average_velocity[0];
+    average_velocity[1] = 0.8*average_velocity[1] + 0.2*new_average_velocity[1];
+    average_velocity[2] = 0.8*average_velocity[2] + 0.2*new_average_velocity[2];
 
     return average_velocity;
 }

@@ -24,6 +24,7 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     flux_sampled_at = -1;
     permeability_sampled_at = -1;
     density_sampled_at = -1;
+    linear_density_sampled_at = -1;
     permeability = 0;
     flux = 0;
     num_samples = 0;
@@ -48,8 +49,9 @@ void StatisticsSampler::sample() {
     } else if(settings->velocity_profile_type.compare("box") == 0) {
         sample_velocity_distribution_box();
     }
-    sample_density();
     sample_temperature();
+    sample_density();
+    sample_linear_density();
     sample_permeability();
 
     if(system->myid == 0) {
@@ -67,6 +69,8 @@ void StatisticsSampler::sample() {
 
         double pressure = system->num_molecules*system->atoms_per_molecule / system->volume * temperature;
         cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions  <<  "   Molecules: " << system->num_molecules << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) << endl ;
+        fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
+        fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules);
     }
 
     num_samples++;
@@ -124,7 +128,6 @@ void StatisticsSampler::sample_permeability() {
     double pressure_in_reservoir_a = system->unit_converter->pressure_from_SI(settings->pressure_A);
     double pressure_in_reservoir_b = system->unit_converter->pressure_from_SI(settings->pressure_B);
 
-
     if(settings->maintain_pressure) {
         // Expression from Darcy's law of gases
         permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
@@ -152,7 +155,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
         int v_of_r_index = N*dr/dr_max;
         if(v_of_r_index>=N) continue;
         
-        double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
+        // double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
         double vz = system->v[3*i+2];
 
         v_of_r[v_of_r_index] += vz;
@@ -182,7 +185,7 @@ void StatisticsSampler::sample_velocity_distribution_box() {
         double y = system->r[3*i+1];
         int v_of_y_index = N*(y/system->length[1]);
 
-        double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
+        // double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
         double vz = system->v[3*i+2];
 
         if(v_of_y_index >= N) continue;
@@ -214,15 +217,43 @@ void StatisticsSampler::sample_density() {
     }
 }
 
+void StatisticsSampler::sample_linear_density() {
+    this->sample_temperature();
+    int num_bins = this->system->settings->velocity_bins;
+
+    int *linear_density_count = new int[num_bins];
+    memset(linear_density_count,0,num_bins*sizeof(int));
+
+    for(int i=0;i<system->num_molecules;i++) {
+        double z = system->r[3*i+2];
+        int bin_index = num_bins*(z/system->length[2]);
+        linear_density_count[bin_index]++;
+    }
+
+    double volume_per_bin = system->volume / num_bins;
+
+    for(int i=0;i<num_bins;i++) {
+        double density = system->atoms_per_molecule*linear_density_count[i]/volume_per_bin;
+        double pressure = density*temperature; // Ideal gas law
+
+        fprintf(system->io->linear_density_file,"%E ", system->unit_converter->number_density_to_SI(density));
+        fprintf(system->io->linear_pressure_file,"%E ",system->unit_converter->pressure_to_SI(pressure));
+    }
+
+    fprintf(system->io->linear_density_file,"\n");
+    fprintf(system->io->linear_pressure_file,"\n");
+    delete linear_density_count;
+}
+
 void StatisticsSampler::sample_velocity_distribution() {
     if(system->steps == velocity_distribution_sampled_at) return;
     velocity_distribution_sampled_at = system->steps;
     density_sampled_at = system->steps;
 
     for(unsigned int i=0; i<system->num_molecules; i++) {
-        int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
-        int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;
-        int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
+        int bin_x = system->r[3*i+0]*system->one_over_length[0]*num_bins_per_dimension;
+        int bin_y = system->r[3*i+1]*system->one_over_length[1]*num_bins_per_dimension;
+        int bin_z = system->r[3*i+2]*system->one_over_length[2]*num_bins_per_dimension;
 
         // int index = bin_x*num_bins_per_dimension + bin_y;
         int index = bin_x*num_bins_per_dimension + bin_y;

@@ -73,7 +73,7 @@ public:
     unsigned long *molecule_index_in_cell;
     unsigned long *molecule_cell_index;
 
-    int num_molecules;
+    long num_molecules;
 
     double grid_origo_x, grid_origo_y, grid_origo_z;
     double length[3];
