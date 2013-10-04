@@ -189,7 +189,6 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
 }
 
 void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
-
     double nx_div_lx = grid->Nx*system->one_over_length[0];
     double ny_div_ly = grid->Ny*system->one_over_length[1];
     double nz_div_lz = grid->Nz*system->one_over_length[2];
@@ -227,7 +226,10 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
                 idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
                 if(voxels[idx]==voxel_type_boundary) {
                     if(++count > 10) { cout << "Fuck, molecule " << molecule_index << " has trouble in timestep " << system->steps << endl; exit(1); }
-                } else dt -= tau;
+                } else {
+                    dt -= tau;
+                    break;
+                }
             }
         }
         else {
@@ -252,7 +254,10 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
                     idx = get_index_of_voxel(r,nx_div_lx,ny_div_ly,nz_div_lz,nx,nynx);
                     if(voxels[idx]==voxel_type_boundary) {
                         if(++count > 10) { cout << "Fuck, molecule " << molecule_index << " has trouble in timestep " << system->steps << endl; exit(1); }
-                    } else dt -= tau;
+                    } else {
+                        dt -= tau;
+                        break;
+                    }
                 }
 
                 if(voxels[idx]>=voxel_type_wall) {

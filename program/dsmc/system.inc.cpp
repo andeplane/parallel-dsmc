@@ -101,6 +101,7 @@ void System::initialize(Settings *settings_, int myid_) {
     printf("Porosity: %f\n",porosity);
     printf("System volume: %f\n",length[0]*length[1]*length[2]);
     printf("Effective system volume: %f\n",volume);
+    printf("Density: %E\n",unit_converter->number_density_to_SI(density));
     printf("Surface interaction model: %s\n",settings->surface_interaction_model.c_str());
     printf("Mean free path: %.4f \n",mfp);
     printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mfp,length[1]/cells_y/mfp), length[2]/cells_z/mfp));

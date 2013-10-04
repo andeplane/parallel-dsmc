@@ -187,6 +187,7 @@ void System::maintain_pressure_A() {
 
     for(int i=0;i<reservoir_A_cells.size();i++) {
         Cell *cell = reservoir_A_cells[i];
+        if(cell->volume == 0) continue;
         int num_molecules_in_reservoir = cell->num_molecules;
         int wanted_num_molecules_in_reservoir = wanted_density*cell->volume / atoms_per_molecule;
         int delta_num_molecules = wanted_num_molecules_in_reservoir - num_molecules_in_reservoir;
@@ -212,6 +213,7 @@ void System::maintain_pressure_B() {
 
     for(int i=0;i<reservoir_B_cells.size();i++) {
         Cell *cell = reservoir_B_cells[i];
+        if(cell->volume == 0) continue;
 
         // Find neighbor cell
         int neighbor_cell_index_vector[3];
