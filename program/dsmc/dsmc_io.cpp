@@ -6,6 +6,7 @@
 #include <grid.h>
 #include <settings.h>
 #include <dsmctimer.h>
+#include <topology.h>
 
 DSMC_IO::DSMC_IO(System *system_) {
     system = system_;
@@ -45,10 +46,11 @@ void DSMC_IO::save_state_to_movie_file() {
             data[count++] = system->r[3*n+2];
         }
 
-        count /= 4; // This should represent the number of particles
+        count /= 4; // This should represent the number of particles, 4 doubles per particle
+        int actual_movie_molecules = settings->movie_molecules / system->topology->num_processors;
 
-        movie_file->write (reinterpret_cast<char*>(&settings->movie_molecules), sizeof(int));
-        movie_file->write (reinterpret_cast<char*>(data), 3*settings->movie_molecules*sizeof(double));
+        movie_file->write (reinterpret_cast<char*>(&actual_movie_molecules), sizeof(int));
+        movie_file->write (reinterpret_cast<char*>(data), 3*actual_movie_molecules*sizeof(double));
     }
     system->timer->end_io();
 }

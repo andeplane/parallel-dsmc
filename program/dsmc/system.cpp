@@ -21,6 +21,7 @@ void System::step() {
     if(topology->num_processors>1) mpi_move();
     collide();
     if(settings->maintain_pressure) maintain_pressure();
+    // cout << myid << " has " << collisions << " collisions in timestep " << steps << endl;
 }
 
 void System::mpi_move() {

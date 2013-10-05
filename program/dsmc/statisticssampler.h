@@ -34,6 +34,8 @@ public:
     void sample_linear_density();
     void finalize();
 
+    unsigned long collisions;
+    unsigned long wall_collisions;
     double kinetic_energy;
     double temperature;
     double flux;

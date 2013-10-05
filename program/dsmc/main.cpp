@@ -22,8 +22,12 @@ int main(int args, char* argv[]) {
     double t_start = MPI_Wtime();
 
     Settings *settings = new Settings("dsmc.ini");
-    System system;
+    if(num_nodes != settings->nx*settings->ny*settings->nz) {
+        if(myid==0) cout << "Error, wrong number of CPUs, aborting!" << endl;
+        exit(1);
+    }
 
+    System system;
     system.initialize(settings, myid);
     
     ifstream to_continue("Tocontinue");

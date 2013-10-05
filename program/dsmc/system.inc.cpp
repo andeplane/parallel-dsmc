@@ -118,6 +118,13 @@ void System::initialize(Settings *settings_, int myid_) {
     }
 
     timer->end_system_initialize();
+
+    int num_with_molecules = 0;
+    for(int i=0;i<all_cells.size();i++) {
+        Cell *cell = all_cells[i];
+        if(cell->num_molecules > 0) num_with_molecules++;
+    }
+    cout << myid << " has " << (float)num_with_molecules / all_cells.size() << " of the cells with molecules" << endl;
 }
 
 inline void System::find_position(double *r) {
@@ -240,19 +247,17 @@ void System::calculate_porosity() {
     int k_start = 0; //float(my_vector_index[2])*settings->cells_per_node_z/cells_z*world_grid->Nz;
     int k_end   = world_grid->Nz; //float(my_vector_index[2]+1)*settings->cells_per_node_z/cells_z*world_grid->Nz;
     int cell_index, c_x, c_y, c_z;
-
     for(int k=k_start;k<k_end;k++) {
+        c_z = (float)k/world_grid->Nz*cells_z;
         for(int j=j_start;j<j_end;j++) {
+            c_y = (float)j/world_grid->Ny*cells_y;
             for(int i=i_start;i<i_end;i++) {
-                c_x = i*cells_x/(float)world_grid->Nx;
-                c_y = j*cells_y/(float)world_grid->Ny;
-                c_z = k*cells_z/(float)world_grid->Nz;
+                c_x = (float)i/world_grid->Nx*cells_x;
                 cell_index = cell_index_from_ijk(c_x,c_y,c_z);
                 Cell *c = all_cells[cell_index];
 
                 c->total_pixels++;
                 all_pixels++;
-
                 c->pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
                 filled_pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
             }

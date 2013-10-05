@@ -235,8 +235,9 @@ class DSMC:
 		self.load_previous_state = True
 
 	def create_movie(self, frames):
+		num_procs = self.nx*self.ny*self.nz
 		self.run_command("%s -O3 program/tools/create_movie.cpp -o create_movie" % self.compiler)
-		self.run_command("./create_movie ./ %d" % (frames) )
+		self.run_command("./create_movie ./ %d %d" % (num_procs, frames) )
 
 	def create_xyz(self, state = "./", xyz_file = "./state.xyz"):
 		if self.test_mode: return
