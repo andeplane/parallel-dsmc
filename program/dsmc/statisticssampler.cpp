@@ -42,35 +42,36 @@ void StatisticsSampler::sample() {
     if(settings->statistics_interval && system->steps % settings->statistics_interval != 0) return;
     double t_in_nano_seconds = system->unit_converter->time_to_SI(system->t)*1e9;
 
-    if(settings->velocity_profile_type.compare("other") == 0) {
-        sample_velocity_distribution();
-    } else if(settings->velocity_profile_type.compare("cylinder") == 0) {
-        sample_velocity_distribution_cylinder();
-    } else if(settings->velocity_profile_type.compare("box") == 0) {
-        sample_velocity_distribution_box();
-    }
+//    if(settings->velocity_profile_type.compare("other") == 0) {
+//        sample_velocity_distribution();
+//    } else if(settings->velocity_profile_type.compare("cylinder") == 0) {
+//        sample_velocity_distribution_cylinder();
+//    } else if(settings->velocity_profile_type.compare("box") == 0) {
+//        sample_velocity_distribution_box();
+//    }
     sample_temperature();
-    sample_density();
-    sample_linear_density();
-    sample_permeability();
+//    sample_density();
+//    sample_linear_density();
+//    sample_permeability();
 
-    if(system->myid == 0) {
-        double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_local*system->atoms_per_molecule);
+    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
+
+    if(system->myid==0) {
 
         fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
 
-        if(settings->maintain_pressure) {
-            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->flux_count);
-        } else {
-            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->flow_direction]);
-        }
+//        if(settings->maintain_pressure) {
+//            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->flux_count);
+//        } else {
+//            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->flow_direction]);
+//        }
 
-        fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
+//        fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
-        double pressure = system->num_molecules_local*system->atoms_per_molecule / system->volume * temperature;
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_local << endl ;
+        double pressure = system->num_molecules_global*system->atoms_per_molecule / system->volume * temperature;
+        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_global << endl ;
         fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
-        fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_local);
+        fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_global);
     }
 
     num_samples++;
@@ -80,12 +81,15 @@ void StatisticsSampler::sample_kinetic_energy() {
     if(system->steps == kinetic_energy_sampled_at) return;
     kinetic_energy_sampled_at = system->steps;
 
-    kinetic_energy = 0;
+    double kinetic_energy_local = 0;
 
     for(unsigned int i=0;i<system->num_molecules_local;i++) {
-        kinetic_energy += (system->v[3*i+0]*system->v[3*i+0] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+2]*system->v[3*i+2]);
+        kinetic_energy_local += (system->v[3*i+0]*system->v[3*i+0] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+2]*system->v[3*i+2]);
     }
-    kinetic_energy *= 0.5*settings->mass*system->atoms_per_molecule;
+    kinetic_energy_local *= 0.5*settings->mass*system->atoms_per_molecule;
+    kinetic_energy = 0;
+    MPI_Reduce(&kinetic_energy_local, &kinetic_energy,1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
 }
 
 void StatisticsSampler::sample_temperature() {
@@ -93,7 +97,7 @@ void StatisticsSampler::sample_temperature() {
     temperature_sampled_at = system->steps;
 
     sample_kinetic_energy();
-    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_local*system->atoms_per_molecule);
+    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
     temperature = 2.0/3*kinetic_energy_per_molecule;
 }
 

@@ -41,10 +41,9 @@ int main(int args, char* argv[]) {
     system.collisions = collisions;
     system.mover->surface_collider->num_collisions = wall_collisions;
 
-    StatisticsSampler *sampler;
+    StatisticsSampler *sampler = new StatisticsSampler(&system);
 
     if(myid==0) {
-        sampler = new StatisticsSampler(&system);
         for(int i=0;i<settings->timesteps;i++) {
             system.io->save_state_to_movie_file();
             system.step();
@@ -53,6 +52,7 @@ int main(int args, char* argv[]) {
             sampler->sample();
             system.timer->end_sample();
         }
+
         system.io->save_state_to_file_binary();
         sampler->finalize();
         system.io->finalize();
@@ -60,7 +60,12 @@ int main(int args, char* argv[]) {
 
     } else {
         for(int i=0;i<settings->timesteps;i++) {
+            system.io->save_state_to_movie_file();
             system.step();
+
+            system.timer->start_sample();
+            sampler->sample();
+            system.timer->end_sample();
         }
 
         system.io->save_state_to_file_binary();

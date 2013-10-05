@@ -24,6 +24,7 @@ void System::step() {
 }
 
 void System::mpi_move() {
+    timer->start_mpi();
     vector<int> node_num_new_molecules;
     vector<vector<double> > node_molecule_data;
 
@@ -68,6 +69,7 @@ void System::mpi_move() {
 
     num_molecules_global = 0;
     MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
+    timer->end_mpi();
 }
 
 void System::move() {
