@@ -233,6 +233,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         }
 
         int collision_voxel_index = idx;
+
         while(voxels[idx] == voxel_type_boundary) {
             collision_voxel_index = idx;
             r_prime[0] = r[0] - v[0]*tau; r_prime[1] = r[1] - v[1]*tau; r_prime[2] = r[2] - v[2]*tau; // Move back, but don't care about periodic boundary conditions

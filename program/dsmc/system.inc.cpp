@@ -174,13 +174,13 @@ void System::update_cell_volume() {
 }
 
 void System::setup_molecules() {
-    r = new double[3*MAX_MOLECULE_NUM];
-    
-    molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
-    molecule_cell_index    = new unsigned long[MAX_MOLECULE_NUM];
+    r.resize(3*MAX_MOLECULE_NUM,0);
 
-    v = new double[3*MAX_MOLECULE_NUM];
-    r0 = new double[3*MAX_MOLECULE_NUM];
+    molecule_index_in_cell.resize(MAX_MOLECULE_NUM);
+    molecule_cell_index.resize(MAX_MOLECULE_NUM);
+
+    v.resize(3*MAX_MOLECULE_NUM,0);
+    r0.resize(3*MAX_MOLECULE_NUM,0);
 
     if(settings->load_previous_state) {
         io->load_state_from_file_binary();
