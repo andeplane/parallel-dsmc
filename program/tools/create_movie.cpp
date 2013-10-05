@@ -9,12 +9,13 @@ double L0 = 1e4;
 
 int main(int args, char *argv[]) {
 	if(args < 2) {
-		cout << "Please specify project folder and timesteps." << endl;
+		cout << "Please specify project folder, number of CPUs and timesteps." << endl;
 		return 0;
 	}
+
 	char *base_name = argv[1];
-	int cpus = 1;
-	int timesteps = atoi(argv[2]);
+	int cpus = atoi(argv[2]);
+	int timesteps = atoi(argv[3]);
 	
 	double *positions = new double[3*1000000];
 	ofstream file ("movie.xyz", ios::out);
