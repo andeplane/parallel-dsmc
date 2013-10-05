@@ -44,7 +44,7 @@ class DSMC:
 
 		# Gravity direction also determins which dimension we measure flux in
 		self.gravity = 0
-		self.gravity_direction = 2
+		self.flow_direction = 2
 
 		self.maintain_pressure = True
 		self.pressure_A = 100000
@@ -173,7 +173,7 @@ class DSMC:
 			line = line.replace('__movie_every_n_frame__',str(self.movie_every_n_frame) )
 			line = line.replace('__movie_molecules__',str(self.movie_molecules) )
 			line = line.replace('__gravity__',str(self.gravity) )
-			line = line.replace('__gravity_direction__',str(self.gravity_direction) )
+			line = line.replace('__flow_direction__',str(self.flow_direction) )
 			line = line.replace('__maintain_pressure__',str(self.maintain_pressure).lower() )
 			line = line.replace('__pressure_A__',str(self.pressure_A) )
 			line = line.replace('__pressure_B__',str(self.pressure_B) )

@@ -49,14 +49,14 @@ void System::collide() {
 }
 
 void System::accelerate() {
-    if(settings->gravity_direction < 0) return;
+    if(settings->flow_direction < 0) return;
     timer->start_accelerate();
 
-    int gravity_dir = settings->gravity_direction;
+    int flow_dir = settings->flow_direction;
     double gravity = settings->gravity*dt;
 
     for(int n=0;n<num_molecules;n++) {
-        v[3*n+gravity_dir] += gravity;
+        v[3*n+flow_dir] += gravity;
     }
     timer->end_accelerate();
 }
@@ -112,7 +112,7 @@ void System::add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity
     neighbor_cell_index_vector[0] = cell->index_vector[0];
     neighbor_cell_index_vector[1] = cell->index_vector[1];
     neighbor_cell_index_vector[2] = cell->index_vector[2];
-    neighbor_cell_index_vector[settings->gravity_direction] += 1; // We want the next cell in flow direction
+    neighbor_cell_index_vector[settings->flow_direction] += 1; // We want the next cell in flow direction
     int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
     vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
 
@@ -145,7 +145,7 @@ void System::add_molecules_in_outlet_reservoir(Cell *cell, const double &velocit
     neighbor_cell_index_vector[0] = cell->index_vector[0];
     neighbor_cell_index_vector[1] = cell->index_vector[1];
     neighbor_cell_index_vector[2] = cell->index_vector[2];
-    neighbor_cell_index_vector[settings->gravity_direction] -= 1; // We want the previous cell in flow direction
+    neighbor_cell_index_vector[settings->flow_direction] -= 1; // We want the previous cell in flow direction
     int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
     vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
 
@@ -220,7 +220,7 @@ void System::maintain_pressure_B() {
         neighbor_cell_index_vector[0] = cell->index_vector[0];
         neighbor_cell_index_vector[1] = cell->index_vector[1];
         neighbor_cell_index_vector[2] = cell->index_vector[2];
-        neighbor_cell_index_vector[settings->gravity_direction] -= 1; // We want the previous cell in flow direction
+        neighbor_cell_index_vector[settings->flow_direction] -= 1; // We want the previous cell in flow direction
         int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
         Cell *neighbor_cell = all_cells[neighbor_cell_index];
 

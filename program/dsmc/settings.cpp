@@ -16,7 +16,7 @@ Settings::Settings(string filename) {
     cells_x = ini_file.getint("cells_x");
     cells_y = ini_file.getint("cells_y");
     cells_z = ini_file.getint("cells_z");
-    gravity_direction = ini_file.getint("gravity_direction");
+    flow_direction = ini_file.getint("flow_direction");
 
     viscosity = ini_file.getdouble("viscosity");
     mass = ini_file.getdouble("mass");

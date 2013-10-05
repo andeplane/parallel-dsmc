@@ -219,11 +219,11 @@ void System::setup_cells() {
                 cell->index_vector[0] = idx[0]; cell->index_vector[1] = idx[1]; cell->index_vector[2] = idx[2];
                 all_cells.push_back(cell);
                 cell->is_reservoir = false;
-                if(idx[settings->gravity_direction] == 0) {
+                if(idx[settings->flow_direction] == 0) {
                     // "Left" most cell matrix is the A reservoir
                     reservoir_A_cells.push_back(cell);
                     cell->is_reservoir = true;
-                } else if(idx[settings->gravity_direction] == num_cells_vector[settings->gravity_direction] - 1) {
+                } else if(idx[settings->flow_direction] == num_cells_vector[settings->flow_direction] - 1) {
                     // "Right" most cell matrix is the B reservoir
                     reservoir_B_cells.push_back(cell);
                     cell->is_reservoir = true;

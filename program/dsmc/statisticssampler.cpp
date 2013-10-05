@@ -62,7 +62,7 @@ void StatisticsSampler::sample() {
         if(settings->maintain_pressure) {
             fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->flux_count);
         } else {
-            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->gravity_direction]);
+            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->flow_direction]);
         }
 
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
@@ -104,7 +104,7 @@ void StatisticsSampler::sample_flux() {
     if(settings->maintain_pressure) {
         flux = system->flux_count / system->t;
     } else {
-        flux = system->mover->count_periodic[settings->gravity_direction] / system->t;
+        flux = system->mover->count_periodic[settings->flow_direction] / system->t;
     }
 
 }
@@ -112,18 +112,18 @@ void StatisticsSampler::sample_flux() {
 void StatisticsSampler::sample_permeability() {
     if(system->steps == permeability_sampled_at) return;
     permeability_sampled_at = system->steps;
-    if(settings->gravity_direction<0) return;
+    if(settings->flow_direction<0) return;
 
     sample_flux();
     double volume_per_molecule = system->volume / system->num_molecules;
     double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(settings->viscosity);
     double volume_flux = flux*volume_per_molecule;
-    double L = system->length[settings->gravity_direction];
+    double L = system->length[settings->flow_direction];
     double mass_density = system->density*settings->mass;
 
     double area = 1;
     for(int a=0;a<3;a++) {
-        if(a != settings->gravity_direction) area *= system->length[a];
+        if(a != settings->flow_direction) area *= system->length[a];
     }
     double pressure_in_reservoir_a = system->unit_converter->pressure_from_SI(settings->pressure_A);
     double pressure_in_reservoir_b = system->unit_converter->pressure_from_SI(settings->pressure_B);
@@ -132,7 +132,7 @@ void StatisticsSampler::sample_permeability() {
         // Expression from Darcy's law of gases
         permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
     } else {
-        permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->gravity_direction]*settings->gravity*area);
+        permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->flow_direction]*settings->gravity*area);
     }
 }
 

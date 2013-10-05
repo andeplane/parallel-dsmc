@@ -24,7 +24,7 @@ public:
     int cells_x;
     int cells_y;
     int cells_z;
-    int gravity_direction;
+    int flow_direction;
     int velocity_bins;
 
     double viscosity;
