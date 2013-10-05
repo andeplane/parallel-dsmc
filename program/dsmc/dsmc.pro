@@ -55,7 +55,7 @@ OTHER_FILES += \
 mac {
     CONFIG -= app_bundle
     LIBS   +=
-    INCLUDEPATH +=
+    INCLUDEPATH += /opt/intel/composer_xe_2013.1.119/tbb/include/
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
@@ -84,10 +84,9 @@ QMAKE_CXXFLAGS += $$system(mpicxx --showme:compile) -DMPICH_IGNORE_CXX_SEEK
 QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
 
 QMAKE_LFLAGS += -ipo -no-prec-div -falign-functions=16
-QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -O3
-QMAKE_CFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -O3
+QMAKE_CXXFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -O3 -xAVX -mavx -fomit-frame-pointer -fno-alias
+QMAKE_CFLAGS_RELEASE += -ipo -no-prec-div -falign-functions=16 -O3 -xAVX -mavx -fomit-frame-pointer -fno-alias
 
 QMAKE_LFLAGS -= -lm
 QMAKE_CFLAGS_RELEASE -= -fPIE -O2
-QMAKE_CFLAGS_RELEASE += -O3
 QMAKE_CXXFLAGS_RELEASE -= -fPIE

@@ -30,7 +30,7 @@ void System::initialize(Settings *settings_, int myid_) {
 
     temperature      = unit_converter->temperature_from_SI(settings->temperature);;
     wall_temperature = unit_converter->temperature_from_SI(settings->wall_temperature);
-    mpv = sqrt(temperature);  // Most probable initial velocity
+    most_probable_velocity = sqrt(temperature);  // Most probable initial velocity
     density = unit_converter->number_density_from_SI(settings->density);
     diam = settings->diam;
     dt = settings->dt;
@@ -73,7 +73,7 @@ void System::initialize(Settings *settings_, int myid_) {
 
     mpi_receive_buffer = new double[9*MAX_MOLECULE_NUM];
 
-    mfp = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules*atoms_per_molecule);
+    mean_free_path = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules*atoms_per_molecule);
     
     cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
@@ -103,8 +103,8 @@ void System::initialize(Settings *settings_, int myid_) {
     printf("Effective system volume: %f\n",volume);
     printf("Density: %E\n",unit_converter->number_density_to_SI(density));
     printf("Surface interaction model: %s\n",settings->surface_interaction_model.c_str());
-    printf("Mean free path: %.4f \n",mfp);
-    printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mfp,length[1]/cells_y/mfp), length[2]/cells_z/mfp));
+    printf("Mean free path: %.4f \n",mean_free_path);
+    printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
     printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
     printf("%ld molecules per active cell\n",num_molecules/number_of_cells);
 
@@ -167,7 +167,7 @@ void System::update_cell_volume() {
 
     for(int i=0;i<all_cells.size();i++) {
         Cell *cell = all_cells[i];
-        cell->vr_max = 3*mpv;
+        cell->vr_max = 3*most_probable_velocity;
         cell->update_volume();
         if(cell->volume>0) active_cells.push_back(cell);
     }
@@ -213,7 +213,7 @@ void System::setup_cells() {
                 Cell *cell = new Cell(this);
 
                 cell->index = cell_index_from_ijk(idx[0],idx[1],idx[2]);
-                cell->vr_max = 3*mpv;
+                cell->vr_max = 3*most_probable_velocity;
                 cell->Lx = cell_length_x; cell->Ly = cell_length_y; cell->Lz = cell_length_z;
                 cell->origin[0] = idx[0]*cell_length_x; cell->origin[1] = idx[1]*cell_length_y; cell->origin[2] = idx[2]*cell_length_z;
                 cell->index_vector[0] = idx[0]; cell->index_vector[1] = idx[1]; cell->index_vector[2] = idx[2];

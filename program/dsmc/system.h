@@ -80,8 +80,8 @@ public:
     double one_over_length[3];
     double half_length[3];
     double atoms_per_molecule;
-	double mpv; 	// Most probable velocity
-	double mfp; 	// Mean free path
+    double most_probable_velocity; 	// Most probable velocity
+    double mean_free_path; 	// Mean free path
 	double dt;
 	double t;
     double temperature;
