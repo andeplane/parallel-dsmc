@@ -228,7 +228,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         }
 
         if(voxels[idx] == voxel_type_empty) {
-            cout << "We have fucked up BIG TIME 1!" << endl;
+            cout << "Error 1: We hit a wall, but managed to skip the surface voxel. Decrease your timestep." << endl;
             exit(1);
         }
 
@@ -246,7 +246,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         dt -= tau;
 
         if(voxels[collision_voxel_index] != voxel_type_boundary) {
-            cout << "We have fucked up BIG TIME!" << endl;
+            cout << "Error 2: We hit a wall, but managed to skip the surface voxel. Decrease your timestep." << endl;
             exit(1);
         }
 
