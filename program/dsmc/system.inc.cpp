@@ -101,7 +101,7 @@ void System::initialize(Settings *settings_, int myid_) {
 
     if(myid==0) {
         printf("done.\n\n");
-        printf("%ld molecules\n",num_molecules_global);
+        printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_local);
         printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
         printf("Porosity: %f\n",porosity);
         printf("System volume: %f\n",length[0]*length[1]*length[2]);
@@ -130,21 +130,6 @@ inline void System::find_position(double *r) {
 
         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
         is_inside = topology->is_position_inside(r);
-
-//         double cylinder_center_x = length[0]*0.5;
-//         double cylinder_center_y = length[1]*0.5;
-//         double dx = r[0] - cylinder_center_x;
-//         double dy = r[1] - cylinder_center_y;
-//         double dr2 = dx*dx + dy*dy;
-//         did_collide = dr2 >= CYLINDER_RADIUS_SQUARED;
-
-        double system_center_x = length[0]*0.5;
-        double system_center_y = length[1]*0.5;
-
-        double dx = r[0] - system_center_x; // Moved origin to center of circle
-        double dy = r[1] - system_center_y;
-        
-        // did_collide = (abs(dy) >= system_center_y*BOX_FRACTION);
     }
 }
 
@@ -207,7 +192,7 @@ void System::setup_molecules() {
         r0[3*n+1] = r[3*n+1];
         r0[3*n+2] = r[3*n+2];
         Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
-        cell->add_molecule(n,this->molecule_index_in_cell,this->molecule_cell_index);
+        cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
     }
 }
 

@@ -30,6 +30,7 @@ private:
     void init_molecules();
     void init_cells();
 	void move();
+    void mpi_move();
     void init_randoms();
     void collide();
 	void accelerate();
@@ -42,6 +43,7 @@ private:
     void add_molecules_in_outlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules);
     void remove_molecules_in_outlet_reservoir(Cell *cell, const int &delta_num_molecules);
     void add_molecule_to_cell(Cell *cell, const int &molecule_index);
+    void add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules);
     void remove_molecule_from_system(const long &molecule_index);
     inline void find_position(double *r);
     inline void find_position_in_cell(Cell *cell, double *r);

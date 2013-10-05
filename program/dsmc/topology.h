@@ -15,9 +15,12 @@ public:
     vector<double> origin;
     vector<int>    index_vector;
     int            myid;
-
+    System        *system;
 
     Topology(int myid_, int nx, int ny, int nz, System *system);
     vector<int> index_vector_from_index(const int &index);
+    vector<int> index_vector_from_position(const double *r);
     bool is_position_inside(double *r);
+    int index_from_position(const double *r);
+
 };

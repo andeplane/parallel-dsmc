@@ -18,8 +18,56 @@ void System::step() {
     t += dt;
     accelerate();
     move();
+    if(topology->num_processors>1) mpi_move();
     collide();
     if(settings->maintain_pressure) maintain_pressure();
+}
+
+void System::mpi_move() {
+    vector<int> node_num_new_molecules;
+    vector<vector<double> > node_molecule_data;
+
+    node_molecule_data.resize(topology->num_processors);
+    node_num_new_molecules.resize(topology->num_processors,0);
+    for(int i=0; i<topology->num_processors; i++) node_molecule_data.reserve(100000);
+
+    for(unsigned long n=0; n<num_molecules_local; n++) {
+        int node_id = topology->index_from_position(&r[3*n]);
+        if(node_id != myid) {
+            node_num_new_molecules[node_id]++;
+            node_molecule_data[node_id].push_back(r[3*n+0]);
+            node_molecule_data[node_id].push_back(r[3*n+1]);
+            node_molecule_data[node_id].push_back(r[3*n+2]);
+            node_molecule_data[node_id].push_back(v[3*n+0]);
+            node_molecule_data[node_id].push_back(v[3*n+1]);
+            node_molecule_data[node_id].push_back(v[3*n+2]);
+            remove_molecule_from_system(n);
+        }
+    }
+
+    MPI_Status status;
+
+    for(int node_id=0; node_id<topology->num_processors; node_id++) {
+        if(node_id == myid) continue;
+        int num_recieve;
+        if(node_id < myid) {
+            MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 100, MPI_COMM_WORLD);
+            MPI_Recv(&num_recieve, 1, MPI_INT, node_id, 100, MPI_COMM_WORLD, &status);
+            // 6 doubles per molecule
+            MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
+            MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, node_id, 100, MPI_COMM_WORLD, &status);
+        } else {
+            MPI_Recv(&num_recieve, 1, MPI_INT, node_id, 100, MPI_COMM_WORLD, &status);
+            MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 100, MPI_COMM_WORLD);
+            // 6 doubles per molecule
+            MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, node_id, 100, MPI_COMM_WORLD, &status);
+            MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
+        }
+        add_molecules_from_mpi(mpi_receive_buffer, num_recieve);
+    }
+
+    num_molecules_global = 0;
+    MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
 }
 
 void System::move() {
@@ -81,6 +129,25 @@ void System::update_molecule_cells() {
 void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
     cell->add_molecule(molecule_index,molecule_index_in_cell,molecule_cell_index);
     num_molecules_local++;
+}
+
+void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules) {
+    for(int i=0; i<num_new_molecules; i++) {
+        int n = num_molecules_local;
+        r[3*n+0] = data[6*i+0];
+        r[3*n+1] = data[6*i+1];
+        r[3*n+2] = data[6*i+2];
+        r0[3*n+0] = data[6*i+0];
+        r0[3*n+1] = data[6*i+1];
+        r0[3*n+2] = data[6*i+2];
+        v[3*n+0] = data[6*i+3];
+        v[3*n+1] = data[6*i+4];
+        v[3*n+2] = data[6*i+5];
+
+        Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
+        cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
+        num_molecules_local++;
+    }
 }
 
 void System::remove_molecule_from_system(const long &molecule_index) {
