@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 
 class DSMC:
-	def __init__(self, compiler = "icpc", dt=0.001, logging_enabled=True):
+	def __init__(self, compiler = "icpc", dt=0.001, nx=1, ny=1, nz=1):
 		"""
 		Initializes an object with parameters.
 		"""
@@ -36,6 +36,10 @@ class DSMC:
 		self.temperature = 300
 		self.wall_temperature = 300
 
+		self.nx = nx
+		self.ny = ny
+		self.nz = nz
+
 		self.statistics_interval = 100
 		self.velocity_bins = 100
 		self.velocity_profile_type = "other"
@@ -52,8 +56,7 @@ class DSMC:
 		self.reservoir_fraction = 0
 
 		self.world = "../worlds/empty.bin"
-		self.threads = 1
-
+		
 		# physical constants, density in N/m^3, length in micrometer, mass in amu, viscosity in Pa*s
 		self.density = 2.4143e25
 		self.diam = 3.62e-4
@@ -70,7 +73,7 @@ class DSMC:
 		self.cells_z = 10
 		
 		self.test_mode = False
-		self.logging_enabled = logging_enabled
+		self.logging_enabled = True
 		self.total_timesteps = 0
 
 		logging.basicConfig(filename='run_log.txt',level=logging.INFO)
@@ -157,7 +160,9 @@ class DSMC:
 		for line in original_file:
 			line = line.replace('__load_previous_state__',str(self.load_previous_state).lower() )
 			line = line.replace('__create_movie__',str(self.create_movie_files).lower() )
-			line = line.replace('__threads__',str(self.threads) )
+			line = line.replace('__nx__',str(self.nx) )
+			line = line.replace('__ny__',str(self.ny) )
+			line = line.replace('__nz__',str(self.nz) )
 			line = line.replace('__atoms_per_molecule__',str(self.atoms_per_molecule) )
 			line = line.replace('__timesteps__',str(self.timesteps) )
 			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )
@@ -215,7 +220,9 @@ class DSMC:
 		
 		self.log("Running executable "+executable)
 		now = datetime.now()
-		self.run_command("./"+executable+" | tee log")
+		num_procs = self.nx*self.ny*self.nz
+		self.run_command("mpirun -n %d %s | tee log" % (num_procs, executable))
+		#self.run_command("./"+executable+" | tee log")
 		t1 = (datetime.now() - now).seconds
 		steps_per_second = self.timesteps / max(t1,1)
 

@@ -9,11 +9,13 @@ class Settings;
 class UnitConverter;
 class DSMCTimer;
 class MoleculeMover;
+class Topology;
 
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <cinifile.h>
+#include <mpi.h>
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
 #define BOX_FRACTION 0.2
@@ -60,20 +62,23 @@ public:
     UnitConverter * unit_converter;
     Random *rnd;
     MoleculeMover *mover;
+    Topology *topology;
 
     vector<Cell*> active_cells;
     vector<Cell*> all_cells;
     vector<Cell*> reservoir_A_cells;
     vector<Cell*> reservoir_B_cells;
 
-    double *mpi_receive_buffer;
+    vector<double> mpi_receive_buffer;
+    vector<double> mpi_send_buffer;
     vector<double> r;
     vector<double> v;
     vector<double> r0;
     vector<unsigned long> molecule_index_in_cell;
     vector<unsigned long> molecule_cell_index;
 
-    long num_molecules;
+    long num_molecules_local;
+    long num_molecules_global;
 
     double grid_origo_x, grid_origo_y, grid_origo_z;
     double length[3];

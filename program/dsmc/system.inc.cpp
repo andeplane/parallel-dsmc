@@ -9,6 +9,7 @@
 #include <collidercercignanilampis.h>
 #include <collidermaxwell.h>
 #include <cell.h>
+#include <topology.h>
 
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
@@ -49,33 +50,36 @@ void System::initialize(Settings *settings_, int myid_) {
     num_cells_vector[1] = cells_y;
     num_cells_vector[2] = cells_z;
     io = new DSMC_IO(this);
+    topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
 
-    cout << "Loading world..." << endl;
-
+    if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
 
     // First create all the cells
-    cout << "Creating cells..." << endl;
+    if(myid==0) cout << "Creating cells..." << endl;
     setup_cells();
     // Calculate porosity based on the world grid
-    cout << "Calculating porosity..." << endl;
+    if(myid==0) cout << "Calculating porosity..." << endl;
     calculate_porosity();
     // Calculate cell volume 
     volume = length[0]*length[1]*length[2];
-    cout << "Updating cell volume..." << endl;
+    if(myid==0) cout << "Updating cell volume..." << endl;
     update_cell_volume();
     // Update system volume with the correct porosity
     volume = length[0]*length[1]*length[2]*porosity;
-    num_molecules = density*volume/atoms_per_molecule;
+    num_molecules_global = density*volume/atoms_per_molecule;
+    num_molecules_local = num_molecules_global / topology->num_processors;
+    MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
 
-    cout << "Creating/loading molecules..." << endl;
+    if(myid==0) cout << "Creating/loading molecules..." << endl;
     setup_molecules();
 
-    mpi_receive_buffer = new double[9*MAX_MOLECULE_NUM];
+    mpi_receive_buffer.resize(9*MAX_MOLECULE_NUM,0);
+    mpi_send_buffer.resize(9*MAX_MOLECULE_NUM,0);
 
-    mean_free_path = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules*atoms_per_molecule);
+    mean_free_path = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules_global*atoms_per_molecule);
     
-    cout << "Creating surface collider..." << endl;
+    if(myid==0) cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
     ColliderBase *surface_collider;
     if(settings->surface_interaction_model.compare("thermal") == 0) {
@@ -88,39 +92,44 @@ void System::initialize(Settings *settings_, int myid_) {
         surface_collider = new ColliderMaxwell(sqrt_wall_temp_over_mass);
     }
 
-    cout << "Creating molecule mover..." << endl;
+    if(myid==0) cout << "Creating molecule mover..." << endl;
     mover = new MoleculeMover();
     mover->initialize(this, surface_collider);
 
     int number_of_cells = all_cells.size();
     int number_of_cells_all = cells_x*cells_y*cells_z;
 
-    printf("done.\n\n");
-    printf("%ld molecules\n",num_molecules);
-    printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
-    printf("Porosity: %f\n",porosity);
-    printf("System volume: %f\n",length[0]*length[1]*length[2]);
-    printf("Effective system volume: %f\n",volume);
-    printf("Density: %E\n",unit_converter->number_density_to_SI(density));
-    printf("Surface interaction model: %s\n",settings->surface_interaction_model.c_str());
-    printf("Mean free path: %.4f \n",mean_free_path);
-    printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
-    printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-    printf("%ld molecules per active cell\n",num_molecules/number_of_cells);
+    if(myid==0) {
+        printf("done.\n\n");
+        printf("%ld molecules\n",num_molecules_global);
+        printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
+        printf("Porosity: %f\n",porosity);
+        printf("System volume: %f\n",length[0]*length[1]*length[2]);
+        printf("Effective system volume: %f\n",volume);
+        printf("Density: %E\n",unit_converter->number_density_to_SI(density));
+        printf("Surface interaction model: %s\n",settings->surface_interaction_model.c_str());
+        printf("Mean free path: %.4f \n",mean_free_path);
+        printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
+        printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
+        printf("%ld molecules per active cell\n",num_molecules_global/active_cells.size());
 
-    printf("dt = %f\n\n",dt);
-    cout << endl;
+        printf("dt = %f\n\n",dt);
+        cout << endl;
+    }
+
     timer->end_system_initialize();
 }
 
 inline void System::find_position(double *r) {
     bool did_collide = true;
-    while(did_collide) {
+    bool is_inside = false;
+    while(did_collide || !is_inside) {
         r[0] = length[0]*rnd->next_double();
         r[1] = length[1]*rnd->next_double();
         r[2] = length[2]*rnd->next_double();
 
-         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+        is_inside = topology->is_position_inside(r);
 
 //         double cylinder_center_x = length[0]*0.5;
 //         double cylinder_center_y = length[1]*0.5;
@@ -189,7 +198,7 @@ void System::setup_molecules() {
 
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
 
-    for(int n=0;n<num_molecules;n++) {
+    for(int n=0;n<num_molecules_local;n++) {
         v[3*n+0] = rnd->next_gauss()*sqrt_temp_over_mass;
         v[3*n+1] = rnd->next_gauss()*sqrt_temp_over_mass;
         v[3*n+2] = rnd->next_gauss()*sqrt_temp_over_mass;

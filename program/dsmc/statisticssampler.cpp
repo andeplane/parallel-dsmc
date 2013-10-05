@@ -55,7 +55,7 @@ void StatisticsSampler::sample() {
     sample_permeability();
 
     if(system->myid == 0) {
-        double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules*system->atoms_per_molecule);
+        double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_local*system->atoms_per_molecule);
 
         fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
 
@@ -67,10 +67,10 @@ void StatisticsSampler::sample() {
 
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
-        double pressure = system->num_molecules*system->atoms_per_molecule / system->volume * temperature;
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules << endl ;
+        double pressure = system->num_molecules_local*system->atoms_per_molecule / system->volume * temperature;
+        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_local << endl ;
         fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
-        fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules);
+        fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_local);
     }
 
     num_samples++;
@@ -82,7 +82,7 @@ void StatisticsSampler::sample_kinetic_energy() {
 
     kinetic_energy = 0;
 
-    for(unsigned int i=0;i<system->num_molecules;i++) {
+    for(unsigned int i=0;i<system->num_molecules_local;i++) {
         kinetic_energy += (system->v[3*i+0]*system->v[3*i+0] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+2]*system->v[3*i+2]);
     }
     kinetic_energy *= 0.5*settings->mass*system->atoms_per_molecule;
@@ -93,7 +93,7 @@ void StatisticsSampler::sample_temperature() {
     temperature_sampled_at = system->steps;
 
     sample_kinetic_energy();
-    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules*system->atoms_per_molecule);
+    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_local*system->atoms_per_molecule);
     temperature = 2.0/3*kinetic_energy_per_molecule;
 }
 
@@ -115,7 +115,7 @@ void StatisticsSampler::sample_permeability() {
     if(settings->flow_direction<0) return;
 
     sample_flux();
-    double volume_per_molecule = system->volume / system->num_molecules;
+    double volume_per_molecule = system->volume / system->num_molecules_local;
     double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(settings->viscosity);
     double volume_flux = flux*volume_per_molecule;
     double L = system->length[settings->flow_direction];
@@ -148,7 +148,7 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
 
     double dr_max = sqrt(system->length[0]*system->length[0]+system->length[1]*system->length[1]);
 
-    for(int i=0;i<system->num_molecules;i++) {
+    for(int i=0;i<system->num_molecules_local;i++) {
         double dx = system->r[3*i+0] - center_x;
         double dy = system->r[3*i+1] - center_y;
         double dr = sqrt(dx*dx + dy*dy);
@@ -181,7 +181,7 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     memset(v_of_y,0,N*sizeof(double));
     memset(v_of_y_count,0,N*sizeof(int));
 
-    for(int i=0;i<system->num_molecules;i++) {
+    for(int i=0;i<system->num_molecules_local;i++) {
         double y = system->r[3*i+1];
         int v_of_y_index = N*(y/system->length[1]);
 
@@ -206,7 +206,7 @@ void StatisticsSampler::sample_density() {
     if(system->steps == density_sampled_at) return;
     density_sampled_at = system->steps;
 
-    for(unsigned int i=0; i<system->num_molecules; i++) {
+    for(unsigned int i=0; i<system->num_molecules_local; i++) {
         int bin_x = system->r[3*i+0] / system->length[0]*num_bins_per_dimension;
         int bin_y = system->r[3*i+1] / system->length[1]*num_bins_per_dimension;
         int bin_z = system->r[3*i+2] / system->length[2]*num_bins_per_dimension;
@@ -224,7 +224,7 @@ void StatisticsSampler::sample_linear_density() {
     int *linear_density_count = new int[num_bins];
     memset(linear_density_count,0,num_bins*sizeof(int));
 
-    for(int i=0;i<system->num_molecules;i++) {
+    for(int i=0;i<system->num_molecules_local;i++) {
         double z = system->r[3*i+2];
         int bin_index = num_bins*(z/system->length[2]);
         linear_density_count[bin_index]++;
@@ -250,7 +250,7 @@ void StatisticsSampler::sample_velocity_distribution() {
     velocity_distribution_sampled_at = system->steps;
     density_sampled_at = system->steps;
 
-    for(unsigned int i=0; i<system->num_molecules; i++) {
+    for(unsigned int i=0; i<system->num_molecules_local; i++) {
         int bin_x = system->r[3*i+0]*system->one_over_length[0]*num_bins_per_dimension;
         int bin_y = system->r[3*i+1]*system->one_over_length[1]*num_bins_per_dimension;
         int bin_z = system->r[3*i+2]*system->one_over_length[2]*num_bins_per_dimension;

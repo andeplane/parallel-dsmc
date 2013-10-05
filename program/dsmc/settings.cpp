@@ -13,6 +13,9 @@ Settings::Settings(string filename) {
     movie_molecules = ini_file.getint("movie_molecules");
     velocity_bins = ini_file.getint("velocity_bins");
 
+    nx = ini_file.getint("nx");
+    ny = ini_file.getint("ny");
+    nz = ini_file.getint("nz");
     cells_x = ini_file.getint("cells_x");
     cells_y = ini_file.getint("cells_y");
     cells_z = ini_file.getint("cells_z");

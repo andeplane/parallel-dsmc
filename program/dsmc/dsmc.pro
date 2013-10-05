@@ -26,7 +26,8 @@ SOURCES += main.cpp \
     colliderthermal.cpp \
     collidercercignanilampis.cpp \
     collidermaxwell.cpp \
-    cvector.cpp
+    cvector.cpp \
+    topology.cpp
 
 HEADERS += \
     system.h \
@@ -46,7 +47,8 @@ HEADERS += \
     colliderthermal.h \
     collidercercignanilampis.h \
     collidermaxwell.h \
-    cvector.h
+    cvector.h \
+    topology.h
 
 
 OTHER_FILES += \
@@ -55,7 +57,7 @@ OTHER_FILES += \
 mac {
     CONFIG -= app_bundle
     LIBS   +=
-    INCLUDEPATH += /opt/intel/composer_xe_2013.1.119/tbb/include/
+    INCLUDEPATH += /opt/intel/composer_xe_2013.1.119/tbb/include/ /usr/local/include/
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS

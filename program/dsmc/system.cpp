@@ -11,7 +11,7 @@
 #include <time.h>
 #include <system.inc.cpp>
 #include <dsmctimer.h>
-
+#include <topology.h>
 
 void System::step() {
     steps += 1;
@@ -24,7 +24,7 @@ void System::step() {
 
 void System::move() {
     timer->start_moving();
-    for(int n=0;n<num_molecules;n++) {
+    for(int n=0;n<num_molecules_local;n++) {
         // mover->move_molecule_cylinder(n,dt,rnd,0);
         mover->move_molecule(n,dt,rnd,0);
         // mover->move_molecule_box(n,dt,rnd,0);
@@ -56,14 +56,14 @@ void System::accelerate() {
     int flow_dir = settings->flow_direction;
     double gravity = settings->gravity*dt;
 
-    for(int n=0;n<num_molecules;n++) {
+    for(int n=0;n<num_molecules_local;n++) {
         v[3*n+flow_dir] += gravity;
     }
     timer->end_accelerate();
 }
 
 void System::update_molecule_cells() {
-    for(int n=0;n<num_molecules;n++) {
+    for(int n=0;n<num_molecules_local;n++) {
         int cell_index_new = cell_index_from_position(&r[3*n]);
         int cell_index_old = molecule_cell_index[n];
 
@@ -80,7 +80,7 @@ void System::update_molecule_cells() {
 
 void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
     cell->add_molecule(molecule_index,molecule_index_in_cell,molecule_cell_index);
-    num_molecules++;
+    num_molecules_local++;
 }
 
 void System::remove_molecule_from_system(const long &molecule_index) {
@@ -89,7 +89,7 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     cell->remove_molecule(molecule_index,molecule_index_in_cell);
 
     // Move the last molecule into that memory location
-    int last_molecule_index = num_molecules-1;
+    int last_molecule_index = num_molecules_local-1;
 
     while(last_molecule_index==molecule_index) {
         last_molecule_index--;
@@ -105,7 +105,7 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     molecule_cell_index[molecule_index] = last_molecule_cell_index;
     molecule_index_in_cell[molecule_index] = last_molecule_index_in_cell;
     cell->molecules[last_molecule_index_in_cell] = molecule_index;
-    num_molecules--;
+    num_molecules_local--;
 }
 
 void System::add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules) {
@@ -118,7 +118,7 @@ void System::add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity
     vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
 
     for(int i=0; i<delta_num_molecules; i++) {
-        int molecule_index = num_molecules;
+        int molecule_index = num_molecules_local;
 
         v[3*molecule_index+0] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[0];
         v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
@@ -151,7 +151,7 @@ void System::add_molecules_in_outlet_reservoir(Cell *cell, const double &velocit
     vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
 
     for(int i=0; i<delta_num_molecules; i++) {
-        int molecule_index = num_molecules;
+        int molecule_index = num_molecules_local;
 
         v[3*molecule_index+0] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[0];
         v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];

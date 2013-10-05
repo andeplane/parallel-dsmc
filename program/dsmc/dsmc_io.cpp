@@ -39,7 +39,7 @@ void DSMC_IO::save_state_to_movie_file() {
         }
 
         int count = 0;
-        for(unsigned int n=0;n<system->num_molecules;n++) {
+        for(unsigned int n=0;n<system->num_molecules_local;n++) {
             data[count++] = system->r[3*n+0];
             data[count++] = system->r[3*n+1];
             data[count++] = system->r[3*n+2];
@@ -57,7 +57,7 @@ void DSMC_IO::save_state_to_file_binary() {
     system->timer->start_io();
     if(system->myid==0) cout << "Saving state to file..." << endl;
 
-    int N = system->num_molecules;
+    int N = system->num_molecules_local;
 
     char *filename = new char[100];
     sprintf(filename,"state_files/state%04d.bin",system->myid);
@@ -73,7 +73,7 @@ void DSMC_IO::save_state_to_file_binary() {
 
     int count = 0;
 
-    for(unsigned int n=0;n<system->num_molecules;n++) {
+    for(unsigned int n=0;n<system->num_molecules_local;n++) {
         tmp_data[count++] = system->r[3*n+0];
         tmp_data[count++] = system->r[3*n+1];
         tmp_data[count++] = system->r[3*n+2];
@@ -134,7 +134,7 @@ void DSMC_IO::load_state_from_file_binary() {
         cell->add_molecule(n,system->molecule_index_in_cell,system->molecule_cell_index);
     }
 
-    system->num_molecules = N;
+    system->num_molecules_local = N;
 
     delete filename;
     delete tmp_data;

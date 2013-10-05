@@ -26,6 +26,7 @@ public:
     int cells_z;
     int flow_direction;
     int velocity_bins;
+    int nx, ny, nz;
 
     double viscosity;
     double mass;

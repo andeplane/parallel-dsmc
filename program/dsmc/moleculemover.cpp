@@ -26,7 +26,7 @@ void MoleculeMover::initialize(System *system_, ColliderBase *surface_collider_)
 }
 
 void MoleculeMover::move_molecules(double dt, Random *rnd) {
-    for(int n=0;n<system->num_molecules;n++) {
+    for(int n=0;n<system->num_molecules_local;n++) {
         move_molecule(n,dt,rnd,0);
     }
 }
