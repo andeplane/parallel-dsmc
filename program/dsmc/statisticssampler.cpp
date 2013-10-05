@@ -68,7 +68,7 @@ void StatisticsSampler::sample() {
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
 
         double pressure = system->num_molecules*system->atoms_per_molecule / system->volume * temperature;
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions  <<  "   Molecules: " << system->num_molecules << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) << endl ;
+        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  system->collisions <<   "   Wall collisions: " << system->mover->surface_collider->num_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules << endl ;
         fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
         fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules);
     }

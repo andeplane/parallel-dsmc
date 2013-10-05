@@ -30,13 +30,16 @@ int main(int args, char* argv[]) {
     double t = 0;
     unsigned long steps = 0;
     unsigned long collisions = 0;
+    unsigned long wall_collisions = 0;
     to_continue >> t;
     to_continue >> steps;
     to_continue >> collisions;
+    to_continue >> wall_collisions;
     to_continue.close();
     system.t = t;
     system.steps = steps;
     system.collisions = collisions;
+    system.mover->surface_collider->num_collisions = wall_collisions;
 
     StatisticsSampler *sampler;
 
@@ -92,7 +95,7 @@ int main(int args, char* argv[]) {
             cout << (double)system.num_molecules*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
             cout << (double)system.num_molecules*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
             ofstream to_continue_write("Tocontinue");
-            to_continue_write << system.t << " " << system.steps << " " << system.collisions;
+            to_continue_write << system.t << " " << system.steps << " " << system.collisions << " " << system.mover->surface_collider->num_collisions;
             to_continue_write.close();
         }
 

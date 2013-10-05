@@ -125,7 +125,7 @@ class DSMC:
 		self.run_command('mkdir state_files')
 		self.run_command('mkdir movie_files')
 		self.run_command('mkdir statistics')
-		self.run_command('echo 0.0 0 0 > Tocontinue')
+		self.run_command('echo 0.0 0 0 0 > Tocontinue')
 
 	def compile(self, path = "./program/dsmc", name="dsmc", skip_compile = False, clean = False):
 		if not skip_compile:
