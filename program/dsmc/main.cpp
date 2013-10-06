@@ -72,6 +72,7 @@ int main(int args, char* argv[]) {
 
         system.io->save_state_to_file_binary();
     }
+    system.timer->gather_all_nodes();
 
     if(myid==0) {
             double system_initialize_percentage = system.timer->fraction_system_initialize();
@@ -84,7 +85,7 @@ int main(int args, char* argv[]) {
             double fraction_pressure = system.timer->fraction_pressure();
             double fraction_system_initialize = system.timer->fraction_system_initialize();
 
-            double fraction_total = fraction_moving + fraction_colliding + fraction_io + fraction_mpi + fraction_sample + fraction_accelerate + fraction_pressure + fraction_system_initialize;
+            double fraction_total = (fraction_moving + fraction_colliding + fraction_io + fraction_mpi + fraction_sample + fraction_accelerate + fraction_pressure + fraction_system_initialize) / num_nodes;
             double time_total = system.timer->system_initialize + system.timer->moving + system.timer->colliding + system.timer->io + system.timer->mpi + system.timer->sample + system.timer->accelerate + system.timer->pressure;
 
             double total_time = MPI_Wtime() - t_start;
