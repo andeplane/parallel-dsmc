@@ -70,7 +70,7 @@ void StatisticsSampler::sample() {
 //        } else {
 //            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->flow_direction]);
 //        }
-        double pressure = system->num_molecules_global*system->atoms_per_molecule / system->volume * temperature;
+        double pressure = system->num_molecules_global*system->atoms_per_molecule / system->volume_global * temperature;
         cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  collisions <<   "   Wall collisions: " << wall_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_global << endl ;
         fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
         fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_global);
