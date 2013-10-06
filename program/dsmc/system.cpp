@@ -422,8 +422,6 @@ void System::initialize(Settings *settings_, int myid_) {
     mpi_receive_buffer.resize(9*MAX_MOLECULE_NUM,0);
     mpi_send_buffer.resize(9*MAX_MOLECULE_NUM,0);
 
-    mean_free_path = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules_global*atoms_per_molecule);
-
     if(myid==0) cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
     ColliderBase *surface_collider;
@@ -444,6 +442,7 @@ void System::initialize(Settings *settings_, int myid_) {
     int number_of_cells = all_cells.size();
 
     if(myid==0) {
+        double mean_free_path = volume_global/(sqrt(2.0)*M_PI*diam*diam*num_molecules_global*atoms_per_molecule);
         int num_active_cells = number_of_cells * porosity_global;
         printf("done.\n\n");
         printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_global / topology->num_processors);

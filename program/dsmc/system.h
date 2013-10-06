@@ -91,7 +91,6 @@ public:
     double half_length[3];
     double atoms_per_molecule;
     double most_probable_velocity; 	// Most probable velocity
-    double mean_free_path; 	// Mean free path
 	double dt;
 	double t;
     double temperature;

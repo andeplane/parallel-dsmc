@@ -11,7 +11,7 @@
 #include <dsmctimer.h>
 #include <colliderbase.h>
 #include <moleculemover.h>
-
+#define VERSION "1.0.1"
 using namespace std;
 
 int main(int args, char* argv[]) {
@@ -20,6 +20,7 @@ int main(int args, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &num_nodes);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     double t_start = MPI_Wtime();
+    if(myid == 0) cout << endl << "DSMC BINARY SOLVER VERSION " << VERSION << endl << endl;
 
     Settings *settings = new Settings("dsmc.ini");
     if(num_nodes != settings->nx*settings->ny*settings->nz) {
