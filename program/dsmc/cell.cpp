@@ -47,6 +47,7 @@ unsigned long Cell::prepare() {
     
     collision_pairs = round(select);      // Number of pairs to be selected
     collision_rest = select - collision_pairs;
+    // collision_pairs = 0;
 
     return collision_pairs;
 }
@@ -73,10 +74,6 @@ void Cell::collide_molecules(double *v0, double *v1, const double &v_rel, Random
     v1[2] = vcmz - 0.5*vrelz;
 }
 
-#define HEALTHY 0
-#define AIDS 1
-#define PRIEST 2
-
 int Cell::collide(Random *rnd) {
 
     //* Skip cells with only one particle
@@ -87,7 +84,6 @@ int Cell::collide(Random *rnd) {
 
 	//* Loop over total number of candidate collision pairs
     int collisions = 0;
-
     for(int isel=0; isel<collision_pairs; isel++ ) {
 		//* Pick two particles at random out of this cell
         int ip0 = (int)(rnd->next_double()*num_molecules);
@@ -115,7 +111,6 @@ int Cell::collide(Random *rnd) {
 	}
 	
     vr_max = crm;
-
 	return collisions;
 }
 

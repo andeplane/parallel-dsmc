@@ -13,7 +13,7 @@ Topology::Topology(int myid_, int nx, int ny, int nz, System *system_)
     length[0] = system->length[0]/num_processors_vector[0];
     length[1] = system->length[1]/num_processors_vector[1];
     length[2] = system->length[2]/num_processors_vector[2];
-    index_vector = Topology::index_vector_from_index(myid);
+    index_vector = index_vector_from_index(myid);
     origin[0] = length[0]*index_vector[0];
     origin[1] = length[1]*index_vector[1];
     origin[2] = length[2]*index_vector[2];

@@ -51,7 +51,7 @@ void StatisticsSampler::sample() {
 //    }
     sample_temperature();
 //    sample_density();
-//    sample_linear_density();
+    if(system->myid==0) sample_linear_density();
 //    sample_permeability();
 
     double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
@@ -228,7 +228,7 @@ void StatisticsSampler::sample_density() {
 
 void StatisticsSampler::sample_linear_density() {
     this->sample_temperature();
-    int num_bins = this->system->settings->velocity_bins;
+    int num_bins = system->settings->velocity_bins;
 
     int *linear_density_count = new int[num_bins];
     memset(linear_density_count,0,num_bins*sizeof(int));
@@ -273,21 +273,19 @@ void StatisticsSampler::sample_velocity_distribution() {
 }
 
 void StatisticsSampler::finalize() {
-    for(int i=0;i<num_bins;i++) {
-        if(settings->velocity_profile_type.compare("other") == 0) {
-            // If we sample the 2d field, the averages are done in cpp code
-            if(count_[i]>0) vel[i] /= count_[i];
-            fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
+    if(system->myid==0) {
+        for(int i=0;i<num_bins;i++) {
+            if(settings->velocity_profile_type.compare("other") == 0) {
+                // If we sample the 2d field, the averages are done in cpp code
+                if(count_[i]>0) vel[i] /= count_[i];
+                fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
+            }
+
+            fprintf(system->io->density_file,"%f ",(double)count_[i] / this->num_samples);
         }
 
-        fprintf(system->io->density_file,"%f ",(double)count_[i] / this->num_samples);
+        fprintf(system->io->velocity_file,"\n");
     }
-
-    fprintf(system->io->velocity_file,"\n");
-    fclose(system->io->energy_file);
-    fclose(system->io->velocity_file);
-    fclose(system->io->flux_file);
-    fclose(system->io->permeability_file);
 }
 
 /*

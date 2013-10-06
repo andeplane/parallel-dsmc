@@ -20,6 +20,7 @@ Settings::Settings(string filename) {
     cells_y = ini_file.getint("cells_y");
     cells_z = ini_file.getint("cells_z");
     flow_direction = ini_file.getint("flow_direction");
+    seed = ini_file.getint("seed");
 
     viscosity = ini_file.getdouble("viscosity");
     mass = ini_file.getdouble("mass");

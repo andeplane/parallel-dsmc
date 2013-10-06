@@ -40,6 +40,7 @@ class DSMC:
 		self.ny = ny
 		self.nz = nz
 
+		self.seed = -1
 		self.statistics_interval = 100
 		self.velocity_bins = 100
 		self.velocity_profile_type = "other"
@@ -160,6 +161,7 @@ class DSMC:
 		for line in original_file:
 			line = line.replace('__load_previous_state__',str(self.load_previous_state).lower() )
 			line = line.replace('__create_movie__',str(self.create_movie_files).lower() )
+			line = line.replace('__seed__',str(self.seed) )
 			line = line.replace('__nx__',str(self.nx) )
 			line = line.replace('__ny__',str(self.ny) )
 			line = line.replace('__nz__',str(self.nz) )

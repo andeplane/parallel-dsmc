@@ -69,16 +69,17 @@ void System::initialize(Settings *settings_, int myid_) {
     volume = length[0]*length[1]*length[2]*porosity;
     num_molecules_global = density*volume/atoms_per_molecule;
     num_molecules_local = num_molecules_global / topology->num_processors;
-    MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
 
     if(myid==0) cout << "Creating/loading molecules..." << endl;
     setup_molecules();
+
+    MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
 
     mpi_receive_buffer.resize(9*MAX_MOLECULE_NUM,0);
     mpi_send_buffer.resize(9*MAX_MOLECULE_NUM,0);
 
     mean_free_path = volume/(sqrt(2.0)*M_PI*diam*diam*num_molecules_global*atoms_per_molecule);
-    
+
     if(myid==0) cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
     ColliderBase *surface_collider;
@@ -118,13 +119,6 @@ void System::initialize(Settings *settings_, int myid_) {
     }
 
     timer->end_system_initialize();
-
-    int num_with_molecules = 0;
-    for(int i=0;i<all_cells.size();i++) {
-        Cell *cell = all_cells[i];
-        if(cell->num_molecules > 0) num_with_molecules++;
-    }
-    cout << myid << " has " << (float)num_with_molecules / all_cells.size() << " of the cells with molecules" << endl;
 }
 
 inline void System::find_position(double *r) {
@@ -237,15 +231,27 @@ void System::setup_cells() {
 void System::calculate_porosity() {
     int filled_pixels = 0;
     int all_pixels = 0;
+//    int cells_per_node_x = cells_x / topology->num_processors_vector[0];
+//    int cells_per_node_y = cells_y / topology->num_processors_vector[1];
+//    int cells_per_node_z = cells_z / topology->num_processors_vector[2];
+//    int i_start = float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
+//    int i_end   = float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
 
-    int i_start = 0; //float(my_vector_index[0])*settings->cells_per_node_x/cells_x*world_grid->Nx;
-    int i_end   = world_grid->Nx; //float(my_vector_index[0]+1)*settings->cells_per_node_x/cells_x*world_grid->Nx;
+//    int j_start = float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
+//    int j_end   = float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
 
-    int j_start = 0; //float(my_vector_index[1])*settings->cells_per_node_y/cells_y*world_grid->Ny;
-    int j_end   = world_grid->Ny; //float(my_vector_index[1]+1)*settings->cells_per_node_y/cells_y*world_grid->Ny;
+//    int k_start = float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
+//    int k_end   = float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
 
-    int k_start = 0; //float(my_vector_index[2])*settings->cells_per_node_z/cells_z*world_grid->Nz;
-    int k_end   = world_grid->Nz; //float(my_vector_index[2]+1)*settings->cells_per_node_z/cells_z*world_grid->Nz;
+    int i_start = 0;//float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
+    int i_end   = world_grid->Nx;// float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
+
+    int j_start = 0; //float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
+    int j_end   = world_grid->Ny; //float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
+
+    int k_start = 0; //float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
+    int k_end   = world_grid->Nz; //float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
+
     int cell_index, c_x, c_y, c_z;
     for(int k=k_start;k<k_end;k++) {
         c_z = (float)k/world_grid->Nz*cells_z;
@@ -268,9 +274,11 @@ void System::calculate_porosity() {
 }
 
 void System::init_randoms() {
-    long seed = time(NULL);
-    seed = 10;
-    rnd = new Random(-seed, settings->alpha_n, settings->alpha_t);
+    long seed = settings->seed;
+    if(seed == 0)  seed = time(NULL);
+    seed = -abs(seed + 1242461*(myid+1));
+    cout << "Seed: " << seed << endl;
+    rnd = new Random(seed, settings->alpha_n, settings->alpha_t);
 }
 
 void System::count_reservoir_particles() {

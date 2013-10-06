@@ -21,10 +21,11 @@ void System::step() {
     if(topology->num_processors>1) mpi_move();
     collide();
     if(settings->maintain_pressure) maintain_pressure();
-    // cout << myid << " has " << collisions << " collisions in timestep " << steps << endl;
 }
 
 void System::mpi_move() {
+    MPI_Barrier(MPI_COMM_WORLD);
+
     timer->start_mpi();
     vector<int> node_num_new_molecules;
     vector<vector<double> > node_molecule_data;
@@ -44,6 +45,7 @@ void System::mpi_move() {
             node_molecule_data[node_id].push_back(v[3*n+1]);
             node_molecule_data[node_id].push_back(v[3*n+2]);
             remove_molecule_from_system(n);
+            n--;
         }
     }
 
@@ -83,20 +85,19 @@ void System::move() {
     timer->end_moving();
 
     timer->start_moving();
-    if(myid==0) update_molecule_cells();
+    update_molecule_cells();
     timer->end_moving();
 }
 
 void System::collide() {
     timer->start_colliding();
-
+    // if(myid==1) return;
     for(int i=0;i<active_cells.size();i++) {
         Cell *cell = active_cells[i];
 
         cell->prepare();
         collisions += cell->collide(rnd);
     }
-
     timer->end_colliding();
 }
 

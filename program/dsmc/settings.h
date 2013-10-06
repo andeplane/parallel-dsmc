@@ -27,6 +27,7 @@ public:
     int flow_direction;
     int velocity_bins;
     int nx, ny, nz;
+    int seed;
 
     double viscosity;
     double mass;
