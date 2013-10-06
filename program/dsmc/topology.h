@@ -12,6 +12,7 @@ public:
     vector<int>    num_processors_vector;
     vector<int>    node_id_to_facet_id_list;
     vector<int>    facet_id_to_node_id_list;
+    vector<int>    my_parity;
     int            num_processors;
 
     vector<double> origin;

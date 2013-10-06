@@ -74,6 +74,18 @@ Topology::Topology(int myid_, int nx, int ny, int nz, System *system_)
     facet_id_to_node_id_list[4] = index_from_ijk(index_vector[0], index_vector[1], a);
     a = (index_vector[2] + 1 + num_processors_vector[2]) % num_processors_vector[2];  // k + 1
     facet_id_to_node_id_list[5] = index_from_ijk(index_vector[0], index_vector[1], a);
+
+    my_parity.resize(3,0);
+    /* Set up the node parity table, myparity */
+    for (int a=0; a<3; a++) {
+        if (num_processors_vector[a] == 1) {
+            my_parity[a] = 2;
+        } else if (index_vector[a]%2 == 0) {
+            my_parity[a] = 0;
+        } else {
+            my_parity[a] = 1;
+        }
+    }
 }
 
 vector<int> Topology::index_vector_from_index(const int &index) {
