@@ -54,46 +54,31 @@ void System::mpi_move() {
     }
 
     MPI_Status status;
-
-    if(myid>0) {
-        // Take all the other nodes first. Node 0 is slower.
-        for(int node_id=1; node_id<topology->num_processors; node_id++) {
+    int num_recieve;
+    for(int dimension = 0; dimension < 3; dimension++) {
+        for(int upper = 0; upper<=1; upper++) {
+            int facet_index = 2*dimension + upper;
+            int node_id = topology->facet_id_to_node_id_list[facet_index];
             if(node_id == myid) continue;
-            int num_recieve;
+
             if(node_id < myid) {
                 MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 100, MPI_COMM_WORLD);
                 MPI_Recv(&num_recieve, 1, MPI_INT, node_id, 100, MPI_COMM_WORLD, &status);
                 // 6 doubles per molecule
                 MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
                 MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, node_id, 100, MPI_COMM_WORLD, &status);
+                // cout << myid << " sent " << node_num_new_molecules[node_id] << " and received " << num_recieve << " particles from " << node_id << endl;
             } else {
                 MPI_Recv(&num_recieve, 1, MPI_INT, node_id, 100, MPI_COMM_WORLD, &status);
                 MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 100, MPI_COMM_WORLD);
                 // 6 doubles per molecule
                 MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, node_id, 100, MPI_COMM_WORLD, &status);
                 MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
+                // cout << myid << " sent " << node_num_new_molecules[node_id] << " and received " << num_recieve << " particles from " << node_id << endl;
             }
-
+            node_num_new_molecules[node_id] = 0; // We have sent everything we wanted to this node now.
             add_molecules_from_mpi(mpi_receive_buffer, num_recieve);
-        }
 
-        // Then communicate with node 0
-        int num_recieve;
-        MPI_Send(&node_num_new_molecules[0], 1, MPI_INT, 0, 100, MPI_COMM_WORLD);
-        MPI_Recv(&num_recieve, 1, MPI_INT, 0, 100, MPI_COMM_WORLD, &status);
-        // 6 doubles per molecule
-        MPI_Send(&node_molecule_data[0][0], 6*node_num_new_molecules[0],MPI_DOUBLE,0,100, MPI_COMM_WORLD);
-        MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, 0, 100, MPI_COMM_WORLD, &status);
-        add_molecules_from_mpi(mpi_receive_buffer, num_recieve);
-    } else {
-        for(int node_id=1; node_id<topology->num_processors; node_id++) {
-            int num_recieve;
-            MPI_Recv(&num_recieve, 1, MPI_INT, node_id, 100, MPI_COMM_WORLD, &status);
-            MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 100, MPI_COMM_WORLD);
-            // 6 doubles per molecule
-            MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, node_id, 100, MPI_COMM_WORLD, &status);
-            MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
-            add_molecules_from_mpi(mpi_receive_buffer, num_recieve);
         }
     }
 
@@ -159,6 +144,18 @@ void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
 
 void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules) {
     for(int i=0; i<num_new_molecules; i++) {
+        int node_id = topology->index_from_position(&data[6*i+0]);
+        if(node_id != myid) {
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = data[6*i+0];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = data[6*i+1];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = data[6*i+2];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 3] = data[6*i+3];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 4] = data[6*i+4];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 5] = data[6*i+5];
+            node_num_new_molecules[node_id]++;
+            continue;
+        }
+
         int n = num_molecules_local;
         r[3*n+0] = data[6*i+0];
         r[3*n+1] = data[6*i+1];

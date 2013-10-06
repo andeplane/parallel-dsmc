@@ -60,8 +60,6 @@ int main(int args, char* argv[]) {
         system.io->save_state_to_file_binary();
         sampler->finalize();
         system.io->finalize();
-        cout << "Num wall collisions = " << system.mover->surface_collider->num_collisions << endl;
-
     } else {
         for(int i=0;i<settings->timesteps;i++) {
             system.io->save_state_to_movie_file();
