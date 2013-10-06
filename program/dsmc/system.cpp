@@ -430,12 +430,11 @@ void System::initialize(Settings *settings_, int myid_) {
     mover->initialize(this, surface_collider);
 
     int number_of_cells = all_cells.size();
-    int number_of_cells_all = cells_x*cells_y*cells_z;
 
     if(myid==0) {
         printf("done.\n\n");
         printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_local);
-        printf("%d (%d inactive) cells\n",number_of_cells,number_of_cells_all - number_of_cells);
+        printf("%d cells\n",number_of_cells);
         printf("Porosity: %f\n",porosity);
         printf("System volume: %f\n",length[0]*length[1]*length[2]);
         printf("Effective system volume: %f\n",volume);
@@ -444,7 +443,7 @@ void System::initialize(Settings *settings_, int myid_) {
         printf("Mean free path: %.4f \n",mean_free_path);
         printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
         printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-        printf("%ld molecules per active cell\n",num_molecules_global/active_cells.size());
+        printf("%ld molecules per active cell\n",num_molecules_global/all_cells.size());
 
         printf("dt = %f\n\n",dt);
         cout << endl;
@@ -575,15 +574,6 @@ void System::calculate_porosity() {
     int k_start = float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
     int k_end   = float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
 
-//    int i_start = 0;//float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
-//    int i_end   = world_grid->Nx;// float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
-
-//    int j_start = 0; //float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
-//    int j_end   = world_grid->Ny; //float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
-
-//    int k_start = 0; //float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
-//    int k_end   = world_grid->Nz; //float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
-
     int cell_index, c_x, c_y, c_z;
     for(int k=k_start;k<k_end;k++) {
         c_z = (float)k/world_grid->Nz*cells_z;
@@ -609,7 +599,6 @@ void System::init_randoms() {
     long seed = settings->seed;
     if(seed == 0)  seed = time(NULL);
     seed = -abs(seed + 1242461*(myid+1));
-    cout << "Seed: " << seed << endl;
     rnd = new Random(seed, settings->alpha_n, settings->alpha_t);
 }
 
