@@ -5,7 +5,7 @@ using namespace std;
 #include <math.h>
 #include <iostream>
 #include <vector>
-#include <CUtil.h>
+#include <cutil.h>
 
 class CVector  {
  public:

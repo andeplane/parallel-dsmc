@@ -9,7 +9,7 @@
 #include <dsmc_io.h>
 
 #include <time.h>
-#include <system.inc.cpp>
+#include <system.inc>
 #include <dsmctimer.h>
 
 
