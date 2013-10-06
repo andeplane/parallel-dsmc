@@ -78,6 +78,8 @@ public:
     vector<double> r0;
     vector<unsigned long> molecule_index_in_cell;
     vector<unsigned long> molecule_cell_index;
+    vector<int> node_num_new_molecules;
+    vector<vector<double> > node_molecule_data;
 
     long num_molecules_local;
     long num_molecules_global;

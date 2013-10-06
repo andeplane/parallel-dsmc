@@ -51,6 +51,9 @@ void System::initialize(Settings *settings_, int myid_) {
     num_cells_vector[2] = cells_z;
     io = new DSMC_IO(this);
     topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
+    node_num_new_molecules.resize(topology->num_processors,0);
+    node_molecule_data.resize(topology->num_processors);
+    for(int i=0; i<topology->num_processors; i++) node_molecule_data[i].resize(100000,0);
 
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);

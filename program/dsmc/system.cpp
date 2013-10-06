@@ -27,23 +27,18 @@ void System::mpi_move() {
     MPI_Barrier(MPI_COMM_WORLD);
 
     timer->start_mpi();
-    vector<int> node_num_new_molecules;
-    vector<vector<double> > node_molecule_data;
-
-    node_molecule_data.resize(topology->num_processors);
-    node_num_new_molecules.resize(topology->num_processors,0);
-    for(int i=0; i<topology->num_processors; i++) node_molecule_data.reserve(100000);
+    for(int i=0; i<topology->num_processors; i++) node_num_new_molecules[i] = 0;
 
     for(unsigned long n=0; n<num_molecules_local; n++) {
         int node_id = topology->index_from_position(&r[3*n]);
         if(node_id != myid) {
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = r[3*n+0];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = r[3*n+1];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = r[3*n+2];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 3] = v[3*n+0];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 4] = v[3*n+1];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 5] = v[3*n+2];
             node_num_new_molecules[node_id]++;
-            node_molecule_data[node_id].push_back(r[3*n+0]);
-            node_molecule_data[node_id].push_back(r[3*n+1]);
-            node_molecule_data[node_id].push_back(r[3*n+2]);
-            node_molecule_data[node_id].push_back(v[3*n+0]);
-            node_molecule_data[node_id].push_back(v[3*n+1]);
-            node_molecule_data[node_id].push_back(v[3*n+2]);
             remove_molecule_from_system(n);
             n--;
         }
@@ -67,6 +62,7 @@ void System::mpi_move() {
             MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, node_id, 100, MPI_COMM_WORLD, &status);
             MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
         }
+
         add_molecules_from_mpi(mpi_receive_buffer, num_recieve);
     }
 
@@ -102,7 +98,7 @@ void System::collide() {
 }
 
 void System::accelerate() {
-    if(settings->flow_direction < 0) return;
+    if(settings->flow_direction < 0 || settings->gravity == 0) return;
     timer->start_accelerate();
 
     int flow_dir = settings->flow_direction;
