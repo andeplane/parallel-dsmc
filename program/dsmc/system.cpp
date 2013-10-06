@@ -399,14 +399,20 @@ void System::initialize(Settings *settings_, int myid_) {
     // Calculate porosity based on the world grid
     if(myid==0) cout << "Calculating porosity..." << endl;
     calculate_porosity();
+
     // Calculate cell volume 
     volume = length[0]*length[1]*length[2];
+    if(myid==0) {
+        calculate_global_porosity();
+        volume_global = volume*porosity_global;
+    }
+
     if(myid==0) cout << "Updating cell volume..." << endl;
     update_cell_volume();
     // Update system volume with the correct porosity
-    volume = length[0]*length[1]*length[2]*porosity;
-    num_molecules_global = density*volume/atoms_per_molecule;
-    num_molecules_local = num_molecules_global / topology->num_processors;
+    double volume_per_cpu = volume/topology->num_processors;
+    volume = volume_per_cpu*porosity;
+    num_molecules_local = density*volume/atoms_per_molecule;
 
     if(myid==0) cout << "Creating/loading molecules..." << endl;
     setup_molecules();
@@ -438,18 +444,19 @@ void System::initialize(Settings *settings_, int myid_) {
     int number_of_cells = all_cells.size();
 
     if(myid==0) {
+        int num_active_cells = number_of_cells * porosity_global;
         printf("done.\n\n");
-        printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_local);
+        printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_global / topology->num_processors);
         printf("%d cells\n",number_of_cells);
-        printf("Porosity: %f\n",porosity);
+        printf("Porosity: %f\n", porosity_global);
         printf("System volume: %f\n",length[0]*length[1]*length[2]);
-        printf("Effective system volume: %f\n",volume);
+        printf("Effective system volume: %f\n",volume_global);
         printf("Density: %E\n",unit_converter->number_density_to_SI(density));
         printf("Surface interaction model: %s\n",settings->surface_interaction_model.c_str());
         printf("Mean free path: %.4f \n",mean_free_path);
         printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
         printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-        printf("%ld molecules per active cell\n",num_molecules_global/all_cells.size());
+        printf("%ld molecules per active cell\n",num_molecules_global/num_active_cells);
 
         printf("dt = %f\n\n",dt);
         cout << endl;
@@ -520,8 +527,7 @@ void System::setup_molecules() {
     }
 
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
-
-    for(int n=0;n<num_molecules_local;n++) {
+    for(int n=0; n<num_molecules_local; n++) {
         v[3*n+0] = rnd->next_gauss()*sqrt_temp_over_mass;
         v[3*n+1] = rnd->next_gauss()*sqrt_temp_over_mass;
         v[3*n+2] = rnd->next_gauss()*sqrt_temp_over_mass;
@@ -563,6 +569,30 @@ void System::setup_cells() {
             }
         }
     }
+}
+
+void System::calculate_global_porosity() {
+    int filled_pixels = 0;
+    int all_pixels = 0;
+    int i_start = 0;
+    int i_end   = world_grid->Nx;
+
+    int j_start = 0;
+    int j_end   = world_grid->Ny;
+
+    int k_start = 0;
+    int k_end   = world_grid->Nz;
+
+    for(int k=k_start;k<k_end;k++) {
+        for(int j=j_start;j<j_end;j++) {
+            for(int i=i_start;i<i_end;i++) {
+                all_pixels++;
+                filled_pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
+            }
+        }
+    }
+
+    porosity_global = (float)filled_pixels / all_pixels;
 }
 
 void System::calculate_porosity() {
@@ -616,3 +646,4 @@ void System::count_reservoir_particles() {
         reservoir_b_particle_count += cell->num_molecules;
     }
 }
+

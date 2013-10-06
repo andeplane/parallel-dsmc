@@ -52,6 +52,7 @@ private:
     void setup_molecules();
     void setup_cells();
     void calculate_porosity();
+    void calculate_global_porosity();
     void update_molecule_cells();
     void count_reservoir_particles();
 public:
@@ -100,7 +101,9 @@ public:
     double cell_length_y;
     double cell_length_z;
     double porosity;
+    double porosity_global;
     double volume;
+    double volume_global;
 
     unsigned long collisions;
 	int steps;
