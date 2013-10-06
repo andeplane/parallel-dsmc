@@ -93,14 +93,14 @@ int main(int args, char* argv[]) {
             cout.precision(2);
             cout << endl << "Program finished after " << (long)total_time << " seconds. Time analysis:" << endl;
             cout << fixed
-                 << "      Moving            : " << system.timer->moving << " s ( " << 100*fraction_moving << "% )" <<  endl
-                 << "      Colliding         : " << system.timer->colliding << " s ( " << 100*fraction_colliding << "% )" <<  endl
-                 << "      Pressure          : " << system.timer->pressure << " s ( " << 100*fraction_pressure << "% )" <<  endl
-                 << "      Accelerating      : " << system.timer->accelerate << " s ( " << 100*fraction_accelerate << "% )" <<  endl
-                 << "      Sampling          : " << system.timer->sample << " s ( " << 100*fraction_sample << "% )" <<  endl
-                 << "      Disk IO           : " << system.timer->io << " s ( " << 100*fraction_io << "% )" <<  endl
-                 << "      System initialize : " << system.timer->system_initialize << " s ( " << 100*system_initialize_percentage << "% )" <<  endl
-                 << "      MPI communication : " << system.timer->mpi << " s ( " << 100*fraction_mpi << "% )" <<  endl << endl
+                 << "      Moving            : " << system.timer->moving_global << " s ( " << 100*fraction_moving << "% )" <<  endl
+                 << "      Colliding         : " << system.timer->colliding_global << " s ( " << 100*fraction_colliding << "% )" <<  endl
+                 << "      Pressure          : " << system.timer->pressure_global << " s ( " << 100*fraction_pressure << "% )" <<  endl
+                 << "      Accelerating      : " << system.timer->accelerate_global << " s ( " << 100*fraction_accelerate << "% )" <<  endl
+                 << "      Sampling          : " << system.timer->sample_global << " s ( " << 100*fraction_sample << "% )" <<  endl
+                 << "      Disk IO           : " << system.timer->io_global << " s ( " << 100*fraction_io << "% )" <<  endl
+                 << "      System initialize : " << system.timer->system_initialize_global << " s ( " << 100*system_initialize_percentage << "% )" <<  endl
+                 << "      MPI communication : " << system.timer->mpi_global << " s ( " << 100*fraction_mpi << "% )" <<  endl << endl
                  << "      TOTAL             : " << time_total << " s ( " << 100*fraction_total << "% )" <<  endl;
             cout << endl << settings->timesteps / total_time << " timesteps / second. " << endl;
             cout << (double)system.num_molecules_global*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
