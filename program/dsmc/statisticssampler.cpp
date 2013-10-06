@@ -142,7 +142,10 @@ void StatisticsSampler::sample_permeability() {
             double pressure_in_reservoir_b = system->unit_converter->pressure_from_SI(settings->pressure_B);
             permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
         } else {
-            permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->flow_direction]*settings->gravity*area);
+            double pressure_in_reservoir_b = system->density*system->temperature;
+            double pressure_in_reservoir_a = pressure_in_reservoir_b + mass_density*settings->gravity*system->length[settings->flow_direction];
+            permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
+            // permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->flow_direction]*settings->gravity*area);
         }
     }
 }
