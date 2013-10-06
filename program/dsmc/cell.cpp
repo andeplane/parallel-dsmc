@@ -5,6 +5,7 @@
 #include <system.h>
 #include <random.h>
 #include <settings.h>
+#include <cstring>
 
 using namespace std;
 
