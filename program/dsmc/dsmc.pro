@@ -15,7 +15,6 @@ SOURCES += main.cpp \
     random.cpp \
     grid.cpp \
     cutil.cpp \
-    system.inc.cpp \
     unitconverter.cpp \
     settings.cpp \
     dsmc_io.cpp \
