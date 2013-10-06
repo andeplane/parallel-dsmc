@@ -10,6 +10,8 @@ class Topology
 public:
     vector<double> length;
     vector<int>    num_processors_vector;
+    vector<int>    node_id_to_facet_id_list;
+    vector<int>    facet_id_to_node_id_list;
     int            num_processors;
 
     vector<double> origin;
@@ -22,5 +24,6 @@ public:
     vector<int> index_vector_from_position(const double *r);
     bool is_position_inside(double *r);
     int index_from_position(const double *r);
+    int index_from_ijk(int i, int j, int k);
 
 };
