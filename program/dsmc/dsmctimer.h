@@ -64,5 +64,5 @@ public:
     void end_pressure();
     double fraction_pressure();
 
-    void gather_all_nodes();
+    void gather_all_nodes(System *system);
 };

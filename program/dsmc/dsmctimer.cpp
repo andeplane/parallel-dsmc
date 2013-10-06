@@ -1,6 +1,7 @@
 #include <dsmctimer.h>
 #include <mpi.h>
 #include <system.h>
+#include <topology.h>
 
 DSMCTimer::DSMCTimer() {
     t0 = MPI_Wtime();
@@ -118,7 +119,7 @@ double DSMCTimer::fraction_pressure() {
     return pressure_global/(t1-t0);
 }
 
-void DSMCTimer::gather_all_nodes() {
+void DSMCTimer::gather_all_nodes(System *system) {
     colliding_global = 0;
     moving_global = 0;
     mpi_global = 0;
@@ -136,4 +137,12 @@ void DSMCTimer::gather_all_nodes() {
     MPI_Reduce(&pressure,&pressure_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&sample,&sample_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&io,&io_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    colliding_global /= system->topology->num_processors;
+    moving_global /= system->topology->num_processors;
+    mpi_global /= system->topology->num_processors;
+    system_initialize_global /= system->topology->num_processors;
+    accelerate_global /= system->topology->num_processors;
+    pressure_global /= system->topology->num_processors;
+    sample_global /= system->topology->num_processors;
+    io_global /= system->topology->num_processors;
 }
