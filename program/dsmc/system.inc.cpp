@@ -234,26 +234,26 @@ void System::setup_cells() {
 void System::calculate_porosity() {
     int filled_pixels = 0;
     int all_pixels = 0;
-//    int cells_per_node_x = cells_x / topology->num_processors_vector[0];
-//    int cells_per_node_y = cells_y / topology->num_processors_vector[1];
-//    int cells_per_node_z = cells_z / topology->num_processors_vector[2];
-//    int i_start = float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
-//    int i_end   = float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
+    int cells_per_node_x = cells_x / topology->num_processors_vector[0];
+    int cells_per_node_y = cells_y / topology->num_processors_vector[1];
+    int cells_per_node_z = cells_z / topology->num_processors_vector[2];
+    int i_start = float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
+    int i_end   = float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
 
-//    int j_start = float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
-//    int j_end   = float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
+    int j_start = float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
+    int j_end   = float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
 
-//    int k_start = float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
-//    int k_end   = float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
+    int k_start = float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
+    int k_end   = float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
 
-    int i_start = 0;//float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
-    int i_end   = world_grid->Nx;// float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
+//    int i_start = 0;//float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
+//    int i_end   = world_grid->Nx;// float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
 
-    int j_start = 0; //float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
-    int j_end   = world_grid->Ny; //float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
+//    int j_start = 0; //float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
+//    int j_end   = world_grid->Ny; //float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
 
-    int k_start = 0; //float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
-    int k_end   = world_grid->Nz; //float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
+//    int k_start = 0; //float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
+//    int k_end   = world_grid->Nz; //float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
 
     int cell_index, c_x, c_y, c_z;
     for(int k=k_start;k<k_end;k++) {
