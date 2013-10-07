@@ -19,7 +19,7 @@ class Topology;
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
 #define BOX_FRACTION 0.2
-#define MAX_MOLECULE_NUM 10000000
+#define MAX_MOLECULE_NUM 20000000
 
 using namespace std;
 

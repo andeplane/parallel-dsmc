@@ -11,7 +11,7 @@
 #include <dsmctimer.h>
 #include <colliderbase.h>
 #include <moleculemover.h>
-#define VERSION "1.0.05"
+#define VERSION "1.0.06"
 using namespace std;
 
 int main(int args, char* argv[]) {
