@@ -72,8 +72,8 @@ int main(int args, char* argv[]) {
 
         system.io->save_state_to_file_binary();
     }
-    system.timer->gather_all_nodes(system);
     system.timer->save_to_file(system);
+    system.timer->gather_all_nodes(system);
     system.io->finalize();
 
     if(myid==0) {
