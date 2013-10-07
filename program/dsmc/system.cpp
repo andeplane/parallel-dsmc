@@ -146,12 +146,10 @@ void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
 }
 
 void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules) {
-    int num_new = 0;
-    int num_sending = 0;
     for(int i=0; i<num_new_molecules; i++) {
         int node_id = topology->index_from_position(&data[6*i+0]);
         if(node_id != myid) {
-            num_sending++;
+            node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = data[6*i+0];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = data[6*i+1];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = data[6*i+2];
@@ -161,7 +159,6 @@ void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_mol
             node_num_new_molecules[node_id]++;
             continue;
         }
-        num_new++;
         int n = num_molecules_local;
         r[3*n+0] = data[6*i+0];
         r[3*n+1] = data[6*i+1];
@@ -177,8 +174,6 @@ void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_mol
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
         num_molecules_local++;
     }
-
-    // cout << myid << " has " << num_new << " new molecules, sending " << num_sending << " to other nodes." << endl;
 }
 
 void System::remove_molecule_from_system(const long &molecule_index) {
