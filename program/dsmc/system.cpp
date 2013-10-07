@@ -34,8 +34,6 @@ void System::step() {
 
 void System::mpi_move() {
     timer->start_mpi();
-
-    // MPI_Barrier(MPI_COMM_WORLD);
     for(int i=0; i<topology->num_processors; i++) node_num_new_molecules[i] = 0;
 
     for(unsigned long n=0; n<num_molecules_local; n++) {
@@ -57,27 +55,28 @@ void System::mpi_move() {
 
     MPI_Status status;
     int num_recieve;
+    int num_send;
     for(int dimension = 0; dimension < 3; dimension++) {
         for(int upper = 0; upper<=1; upper++) {
             int facet_index = 2*dimension + upper;
             int node_id = topology->facet_id_to_node_id_list[facet_index];
             if(node_id == myid) continue;
-
+            num_send = node_num_new_molecules[node_id];
             if(topology->my_parity[dimension] == 0) {
                 // cout << steps << " - " << myid << " with parity 0 will send to " << node_id << endl;
-                MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 10, MPI_COMM_WORLD);
+                MPI_Send(&num_send, 1, MPI_INT, node_id, 10, MPI_COMM_WORLD);
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD, &status);
                 // 6 doubles per molecule
-                MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
-                MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &status);
+                if(num_send) MPI_Send(&node_molecule_data[node_id][0], 6*num_send,MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
+                if(num_recieve) MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &status);
                 // cout << steps << " - " << myid << " sent " << node_num_new_molecules[node_id] << " and received " << num_recieve << " particles from " << node_id << endl;
             } else if (topology->my_parity[dimension] == 1){
                 // cout << steps << " - " << myid << " with parity 1 will send to " << node_id << endl;
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10, MPI_COMM_WORLD, &status);
-                MPI_Send(&node_num_new_molecules[node_id], 1, MPI_INT, node_id, 10, MPI_COMM_WORLD);
+                MPI_Send(&num_send, 1, MPI_INT, node_id, 10, MPI_COMM_WORLD);
                 // 6 doubles per molecule
-                MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &status);
-                MPI_Send(&node_molecule_data[node_id][0], 6*node_num_new_molecules[node_id],MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
+                if(num_recieve) MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &status);
+                if(num_send) MPI_Send(&node_molecule_data[node_id][0], 6*num_send,MPI_DOUBLE,node_id,100, MPI_COMM_WORLD);
                 // cout << steps << " - " << myid << " sent " << node_num_new_molecules[node_id] << " and received " << num_recieve << " particles from " << node_id << endl;
             }
             node_num_new_molecules[node_id] = 0; // We have sent everything we wanted to this node now.
@@ -87,7 +86,7 @@ void System::mpi_move() {
     }
 
     num_molecules_global = 0;
-    MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
+    MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
     timer->end_mpi();
 }
 
@@ -416,8 +415,9 @@ void System::initialize(Settings *settings_, int myid_) {
 
     if(myid==0) cout << "Creating/loading molecules..." << endl;
     setup_molecules();
+    num_molecules_global = 0;
 
-    MPI_Allreduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD) ;
+    MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
 
     mpi_receive_buffer.resize(9*MAX_MOLECULE_NUM,0);
     mpi_send_buffer.resize(9*MAX_MOLECULE_NUM,0);
