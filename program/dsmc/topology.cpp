@@ -27,32 +27,32 @@ Topology::Topology(int myid_, int nx, int ny, int nz, System *system_)
                 int dy = j - index_vector[1];
                 int dz = k - index_vector[2];
 
-                if(dx == -1 || i == num_processors_vector[0]-1 && index_vector[0] == 0) {
+                if(dx == -1 || (num_processors_vector[0] > 1 && i == num_processors_vector[0]-1 && index_vector[0] == 0)) {
                     // The node is to our left in x-dir
                     node_id_to_facet_id_list[index] = 0;
                     continue;
                 }
-                if(dx == 1 || i == 0 && index_vector[0] == num_processors_vector[0]-1) {
+                if(dx == 1 || (num_processors_vector[0] > 1 && i == 0 && index_vector[0] == num_processors_vector[0]-1)) {
                     // The node is to our right in x-dir
                     node_id_to_facet_id_list[index] = 1;
                     continue;
                 }
-                if(dy == -1 || j == num_processors_vector[1]-1 && index_vector[1] == 0) {
+                if(dy == -1 || (num_processors_vector[1] > 1 && j == num_processors_vector[1]-1 && index_vector[1] == 0)) {
                     // The node is to our left in y-dir
                     node_id_to_facet_id_list[index] = 2;
                     continue;
                 }
-                if(dy == 1 || j == 0 && index_vector[1] == num_processors_vector[1]-1) {
+                if(dy == 1 || (num_processors_vector[1] > 1 && j == 0 && index_vector[1] == num_processors_vector[1]-1)) {
                     // The node is to our right in y-dir
                     node_id_to_facet_id_list[index] = 3;
                     continue;
                 }
-                if(dz == -1 || k == num_processors_vector[2]-1 && index_vector[2] == 0) {
+                if(dz == -1 || (num_processors_vector[2] > 1 && k == num_processors_vector[2]-1 && index_vector[2] == 0)) {
                     // The node is to our left in z-dir
                     node_id_to_facet_id_list[index] = 4;
                     continue;
                 }
-                if(dz == 1 || k == 0 && index_vector[2] == num_processors_vector[2]-1) {
+                if(dz == 1 || (num_processors_vector[2] > 1 && k == 0 && index_vector[2] == num_processors_vector[2]-1)) {
                     // The node is to our right in z-dir
                     node_id_to_facet_id_list[index] = 5;
                     continue;
@@ -86,6 +86,18 @@ Topology::Topology(int myid_, int nx, int ny, int nz, System *system_)
             my_parity[a] = 1;
         }
     }
+
+//    if(myid==0) {
+//        for(int i=0; i<6; i++) {
+//            cout << "facet " << i << " is node " << facet_id_to_node_id_list[i] << endl;
+//        }
+//    }
+
+//    if(myid==0) {
+//        for(int i=0; i<num_processors; i++) {
+//            cout << "node " << i << " is facet " << node_id_to_facet_id_list[i] << endl;
+//        }
+//    }
 }
 
 vector<int> Topology::index_vector_from_index(const int &index) {

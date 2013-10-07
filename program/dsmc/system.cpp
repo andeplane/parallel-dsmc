@@ -40,7 +40,6 @@ void System::mpi_move() {
         int node_id = topology->index_from_position(&r[3*n]);
         if(node_id != myid) {
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
-
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = r[3*n+0];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = r[3*n+1];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = r[3*n+2];
