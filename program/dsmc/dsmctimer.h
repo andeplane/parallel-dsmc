@@ -65,4 +65,5 @@ public:
     double fraction_pressure();
 
     void gather_all_nodes(System &system);
+    void save_to_file(System &system);
 };

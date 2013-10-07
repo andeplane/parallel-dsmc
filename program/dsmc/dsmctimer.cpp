@@ -2,6 +2,11 @@
 #include <mpi.h>
 #include <system.h>
 #include <topology.h>
+#include <dsmc_io.h>
+#include <settings.h>
+#include <iostream>
+#include <fstream>
+using std::endl;
 
 DSMCTimer::DSMCTimer() {
     t0 = MPI_Wtime();
@@ -145,4 +150,34 @@ void DSMCTimer::gather_all_nodes(System &system) {
     pressure_global /= system.topology->num_processors;
     sample_global /= system.topology->num_processors;
     io_global /= system.topology->num_processors;
+}
+
+void DSMCTimer::save_to_file(System &system) {
+    colliding_global = colliding;
+    moving_global = moving;
+    mpi_global = mpi;
+    system_initialize_global = system_initialize;
+    accelerate_global = accelerate;
+    pressure_global = pressure;
+    sample_global = sample;
+    io_global = io;
+
+    double fraction_total = (fraction_moving() + fraction_colliding() + fraction_io() + fraction_mpi() + fraction_sample() + fraction_accelerate() + fraction_pressure() + fraction_system_initialize());
+    double time_total = system_initialize + moving + colliding + io + mpi + sample + accelerate + pressure;
+
+    double total_time = MPI_Wtime() - t0;
+    system.io->time_statistics_file->precision(2);
+    *system.io->time_statistics_file << "Program finished after " << (long)total_time << " seconds. Time analysis:" << endl;
+    *system.io->time_statistics_file << fixed
+         << "      Moving            : " << system.timer->moving << " s ( " << 100*fraction_moving() << "% )" <<  endl
+         << "      Colliding         : " << system.timer->colliding << " s ( " << 100*fraction_colliding() << "% )" <<  endl
+         << "      Pressure          : " << system.timer->pressure << " s ( " << 100*fraction_pressure() << "% )" <<  endl
+         << "      Accelerating      : " << system.timer->accelerate << " s ( " << 100*fraction_accelerate() << "% )" <<  endl
+         << "      Sampling          : " << system.timer->sample << " s ( " << 100*fraction_sample() << "% )" <<  endl
+         << "      Disk IO           : " << system.timer->io << " s ( " << 100*fraction_io() << "% )" <<  endl
+         << "      System initialize : " << system.timer->system_initialize << " s ( " << 100*fraction_system_initialize() << "% )" <<  endl
+         << "      MPI communication : " << system.timer->mpi << " s ( " << 100*fraction_mpi() << "% )" <<  endl << endl
+         << "      TOTAL             : " << time_total << " s ( " << 100*fraction_total << "% )" <<  endl;
+    *system.io->time_statistics_file << endl << system.settings->timesteps / total_time << " timesteps / second. " << endl;
+    *system.io->time_statistics_file << (double)system.num_molecules_local*system.settings->timesteps / (1000*total_time) << "k atom-timesteps / second. (this processor)" << endl;
 }

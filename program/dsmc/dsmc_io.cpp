@@ -13,6 +13,12 @@ DSMC_IO::DSMC_IO(System *system_) {
     settings = system->settings;
     movie_frames = 0;
     movie_file_open = false;
+
+    char *time_statistics_filename = new char[100];
+    sprintf(time_statistics_filename,"statistics/time/time%04d.txt",system->myid);
+    time_statistics_file = new ofstream(time_statistics_filename,ios::out | ios::binary);
+    delete time_statistics_filename;
+
     if(system->myid==0) {
         energy_file = fopen("statistics/energy.txt","w");
         velocity_file = fopen("statistics/velocity.txt","w");
@@ -147,6 +153,7 @@ void DSMC_IO::finalize() {
     if(movie_file_open) {
         movie_file->close();
     }
+    time_statistics_file->close();
 
     if(system->myid != 0) return;
     fclose(energy_file);

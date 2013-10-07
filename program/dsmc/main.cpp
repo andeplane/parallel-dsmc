@@ -11,7 +11,7 @@
 #include <dsmctimer.h>
 #include <colliderbase.h>
 #include <moleculemover.h>
-#define VERSION "1.0.04"
+#define VERSION "1.0.05"
 using namespace std;
 
 int main(int args, char* argv[]) {
@@ -60,7 +60,6 @@ int main(int args, char* argv[]) {
 
         system.io->save_state_to_file_binary();
         sampler->finalize();
-        system.io->finalize();
     } else {
         for(int i=0;i<settings->timesteps;i++) {
             system.io->save_state_to_movie_file();
@@ -74,6 +73,8 @@ int main(int args, char* argv[]) {
         system.io->save_state_to_file_binary();
     }
     system.timer->gather_all_nodes(system);
+    system.timer->save_to_file(system);
+    system.io->finalize();
 
     if(myid==0) {
             double system_initialize_percentage = system.timer->fraction_system_initialize();
