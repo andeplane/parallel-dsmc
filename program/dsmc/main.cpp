@@ -105,6 +105,7 @@ int main(int args, char* argv[]) {
             cout << endl << settings->timesteps / total_time << " timesteps / second. " << endl;
             cout << (double)system.num_molecules_global*settings->timesteps / (1000*total_time) << "k atom-timesteps / second. " << endl;
             cout << (double)system.num_molecules_global*settings->timesteps / (1000*total_time*num_nodes) << "k atom-timesteps / second (per node). " << endl;
+            cout << total_time/3600.0*num_nodes << " cpu hours. " << endl;
             ofstream to_continue_write("Tocontinue");
             to_continue_write << system.t << " " << system.steps << " " << system.collisions << " " << system.mover->surface_collider->num_collisions;
             to_continue_write.close();
