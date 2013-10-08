@@ -10,11 +10,6 @@
 #include <moleculemover.h>
 #include <colliderbase.h>
 
-int num_bins_per_dimension;
-int num_bins;
-double *vel;
-int *count_;
-
 StatisticsSampler::StatisticsSampler(System *system_) {
     system = system_;
     settings = system->settings;
@@ -31,27 +26,25 @@ StatisticsSampler::StatisticsSampler(System *system_) {
 
     num_bins_per_dimension = settings->velocity_bins;
     num_bins = num_bins_per_dimension*num_bins_per_dimension;
-    vel = new double[num_bins];
-    count_ = new int[num_bins];
 
-    memset((void*)count_,0,num_bins*sizeof(int));
-    memset((void*)vel,0,num_bins*sizeof(double));
+    velocity_distribution.resize(num_bins,0);
+    velocity_distribution_count.resize(num_bins,0);
 }
 
 void StatisticsSampler::sample() {
     if(settings->statistics_interval && system->steps % settings->statistics_interval != 0) return;
     double t_in_nano_seconds = system->unit_converter->time_to_SI(system->t)*1e9;
 
-//    if(settings->velocity_profile_type.compare("other") == 0) {
-//        sample_velocity_distribution();
-//    } else if(settings->velocity_profile_type.compare("cylinder") == 0) {
-//        sample_velocity_distribution_cylinder();
-//    } else if(settings->velocity_profile_type.compare("box") == 0) {
-//        sample_velocity_distribution_box();
-//    }
+    if(settings->velocity_profile_type.compare("other") == 0) {
+        sample_velocity_distribution();
+    } else if(settings->velocity_profile_type.compare("cylinder") == 0) {
+        sample_velocity_distribution_cylinder();
+    } else if(settings->velocity_profile_type.compare("box") == 0) {
+        sample_velocity_distribution_box();
+    }
     sample_temperature();
     sample_density();
-    if(system->myid==0) sample_linear_density();
+    sample_linear_density();
     sample_permeability();
 
     double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
@@ -62,21 +55,13 @@ void StatisticsSampler::sample() {
 
 
     if(system->myid==0) {
-
-        fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
-
-//        if(settings->maintain_pressure) {
-//            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->flux_count);
-//        } else {
-//            fprintf(system->io->flux_file, "%f %ld\n",t_in_nano_seconds, system->mover->count_periodic[settings->flow_direction]);
-//        }
         double pressure = system->num_molecules_global*system->atoms_per_molecule / system->volume_global * temperature;
         cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  collisions <<   "   Wall collisions: " << wall_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_global << endl ;
+        fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
         fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
         fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_global);
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
     }
-
     num_samples++;
 }
 
@@ -151,14 +136,12 @@ void StatisticsSampler::sample_permeability() {
 }
 
 void StatisticsSampler::sample_velocity_distribution_cylinder() {
-    int N = this->system->settings->velocity_bins;
+    int N = settings->velocity_bins;
     double center_x = system->length[0]/2;
     double center_y = system->length[1]/2;
 
-    double *v_of_r = new double[N];
-    int *v_of_r_count = new int[N];
-    memset(v_of_r,0,N*sizeof(double));
-    memset(v_of_r_count,0,N*sizeof(int));
+    velocity_distribution.resize(num_bins,0);
+    velocity_distribution_count.resize(num_bins,0);
 
     double dr_max = sqrt(system->length[0]*system->length[0]+system->length[1]*system->length[1]);
 
@@ -169,31 +152,33 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
         int v_of_r_index = N*dr/dr_max;
         if(v_of_r_index>=N) continue;
         
-        // double v_norm = sqrt(system->v[3*i+2]*system->v[3*i+2] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+0]*system->v[3*i+0]);
         double vz = system->v[3*i+2];
 
-        v_of_r[v_of_r_index] += vz;
-        v_of_r_count[v_of_r_index]++;
+        velocity_distribution[v_of_r_index] += vz;
+        velocity_distribution_count[v_of_r_index]++;
     }
 
-    for(int i=0;i<N;i++) {
-        if(v_of_r_count[i]>0) v_of_r[i] /= v_of_r_count[i];
-        fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(v_of_r[i]));
-        // fprintf(system->io->velocity_file,"%d ", v_of_r_count[i]);
-    }
-    fprintf(system->io->velocity_file,"\n");
-    delete v_of_r;
-    delete v_of_r_count;
+    vector<double> velocity_distribution_global;
+    vector<int> velocity_distribution_count_global;
+    velocity_distribution_global.resize(N,0);
+    velocity_distribution_count_global.resize(N,0);
 
+    MPI_Reduce(&velocity_distribution[0],&velocity_distribution_global[0],N,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(&velocity_distribution_count[0],&velocity_distribution_count_global[0],N,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+
+    if(system->myid==0) {
+        for(int i=0;i<N;i++) {
+            if(velocity_distribution_count_global[i]>0) velocity_distribution_global[i] /= velocity_distribution_count_global[i];
+            fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(velocity_distribution_global[i]));
+        }
+        fprintf(system->io->velocity_file,"\n");
+    }
 }
 
 void StatisticsSampler::sample_velocity_distribution_box() {
     int N = this->system->settings->velocity_bins;
-
-    double *v_of_y = new double[N];
-    int *v_of_y_count = new int[N];
-    memset(v_of_y,0,N*sizeof(double));
-    memset(v_of_y_count,0,N*sizeof(int));
+    velocity_distribution.resize(num_bins,0);
+    velocity_distribution_count.resize(num_bins,0);
 
     for(int i=0;i<system->num_molecules_local;i++) {
         double y = system->r[3*i+1];
@@ -202,20 +187,31 @@ void StatisticsSampler::sample_velocity_distribution_box() {
         double vz = system->v[3*i+2];
 
         if(v_of_y_index >= N) continue;
-        v_of_y[v_of_y_index] += vz;
-        v_of_y_count[v_of_y_index]++;
+
+        velocity_distribution[v_of_y_index] += vz;
+        velocity_distribution_count[v_of_y_index]++;
     }
 
-    for(int i=0;i<N;i++) {
-        if(v_of_y_count[i]>0) v_of_y[i] /= v_of_y_count[i];
-        fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(v_of_y[i]));
+    vector<double> velocity_distribution_global;
+    vector<int> velocity_distribution_count_global;
+    velocity_distribution_global.resize(N,0);
+    velocity_distribution_count_global.resize(N,0);
+
+    MPI_Reduce(&velocity_distribution[0],&velocity_distribution_global[0],N,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(&velocity_distribution_count[0],&velocity_distribution_count_global[0],N,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+
+    if(system->myid==0) {
+        for(int i=0;i<N;i++) {
+            if(velocity_distribution_count_global[i]>0) velocity_distribution_global[i] /= velocity_distribution_count_global[i];
+            fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(velocity_distribution_global[i]));
+        }
+        fprintf(system->io->velocity_file,"\n");
     }
-    fprintf(system->io->velocity_file,"\n");
-    delete v_of_y;
-    delete v_of_y_count;
 }
 
 void StatisticsSampler::sample_density() {
+    return;
+
     if(system->steps == density_sampled_at) return;
     density_sampled_at = system->steps;
 
@@ -226,36 +222,40 @@ void StatisticsSampler::sample_density() {
 
         int index = bin_x*num_bins_per_dimension + bin_y;
 
-        count_[index]++;
+        velocity_distribution_count[index]++;
     }
 }
 
 void StatisticsSampler::sample_linear_density() {
-    this->sample_temperature();
-    int num_bins = system->settings->velocity_bins;
-
-    int *linear_density_count = new int[num_bins];
-    memset(linear_density_count,0,num_bins*sizeof(int));
+    sample_temperature();
+    vector<unsigned long> linear_density_count;
+    linear_density_count.resize(num_bins_per_dimension,0);
 
     for(int i=0;i<system->num_molecules_local;i++) {
-        double z = system->r[3*i+2];
-        int bin_index = num_bins*(z/system->length[2]);
+        double pos_in_flow_direction = system->r[3*i + settings->flow_direction];
+        int bin_index = num_bins_per_dimension*(pos_in_flow_direction/system->length[settings->flow_direction]);
         linear_density_count[bin_index]++;
     }
 
-    double volume_per_bin = system->volume / num_bins;
+    vector<unsigned long> linear_density_count_global;
+    linear_density_count_global.resize(num_bins_per_dimension,0);
 
-    for(int i=0;i<num_bins;i++) {
-        double density = system->atoms_per_molecule*linear_density_count[i]/volume_per_bin;
-        double pressure = density*temperature; // Ideal gas law
+    MPI_Reduce(&linear_density_count[0],&linear_density_count_global[0],num_bins_per_dimension,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
 
-        fprintf(system->io->linear_density_file,"%E ", system->unit_converter->number_density_to_SI(density));
-        fprintf(system->io->linear_pressure_file,"%E ",system->unit_converter->pressure_to_SI(pressure));
+    if(system->myid == 0) {
+        double volume_per_bin = system->volume_global / num_bins_per_dimension;
+
+        for(int i=0;i<num_bins_per_dimension;i++) {
+            double density = system->atoms_per_molecule*linear_density_count_global[i]/volume_per_bin;
+            double pressure = density*temperature; // Ideal gas law
+
+            fprintf(system->io->linear_density_file,"%E ", system->unit_converter->number_density_to_SI(density));
+            fprintf(system->io->linear_pressure_file,"%E ",system->unit_converter->pressure_to_SI(pressure));
+        }
+
+        fprintf(system->io->linear_density_file,"\n");
+        fprintf(system->io->linear_pressure_file,"\n");
     }
-
-    fprintf(system->io->linear_density_file,"\n");
-    fprintf(system->io->linear_pressure_file,"\n");
-    delete linear_density_count;
 }
 
 void StatisticsSampler::sample_velocity_distribution() {
@@ -271,21 +271,28 @@ void StatisticsSampler::sample_velocity_distribution() {
         // int index = bin_x*num_bins_per_dimension + bin_y;
         int index = bin_x*num_bins_per_dimension + bin_y;
 
-        vel[index] += system->v[3*i+2];
-        count_[index]++;
+        velocity_distribution[index] += system->v[3*i+2];
+        velocity_distribution_count[index]++;
     }
 }
 
 void StatisticsSampler::finalize() {
-    if(system->myid==0) {
-        for(int i=0;i<num_bins;i++) {
-            if(settings->velocity_profile_type.compare("other") == 0) {
-                // If we sample the 2d field, the averages are done in cpp code
-                if(count_[i]>0) vel[i] /= count_[i];
-                fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(vel[i]));
-            }
+    if(settings->velocity_profile_type.compare("other") == 0) {
+        vector<double> velocity_distribution_global;
+        vector<int> velocity_distribution_count_global;
+        velocity_distribution_global.resize(num_bins,0);
+        velocity_distribution_count_global.resize(num_bins,0);
 
-            fprintf(system->io->density_file,"%f ",(double)count_[i] / this->num_samples);
+        MPI_Reduce(&velocity_distribution[0],&velocity_distribution_global[0],num_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(&velocity_distribution_count[0],&velocity_distribution_count_global[0],num_bins,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+
+        if(system->myid==0) {
+            for(int i=0;i<num_bins;i++) {
+                // If we sample the 2d field, the averages are done in cpp code
+                if(velocity_distribution_count_global[i]>0) velocity_distribution_global[i] /= velocity_distribution_count_global[i];
+                fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(velocity_distribution_global[i]));
+                fprintf(system->io->density_file,"%f ",(double)velocity_distribution_count_global[i] / num_samples);
+            }
         }
 
         fprintf(system->io->velocity_file,"\n");

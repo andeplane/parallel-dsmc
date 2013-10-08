@@ -20,6 +20,11 @@ private:
     long permeability_sampled_at;
     long num_samples;
 
+    int num_bins_per_dimension;
+    int num_bins;
+    vector<double> velocity_distribution;
+    vector<int> velocity_distribution_count;
+
 public:
     StatisticsSampler(System *system);
     void sample();

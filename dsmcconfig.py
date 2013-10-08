@@ -51,7 +51,7 @@ class DSMC:
 		self.gravity = 0
 		self.flow_direction = 2
 
-		self.maintain_pressure = True
+		self.maintain_pressure = False
 		self.pressure_A = 100000
 		self.pressure_B = 100000
 		self.reservoir_fraction = 0
@@ -116,6 +116,9 @@ class DSMC:
 		self.run_command('rm -rf state_files/*')
 		self.run_command('rm dsmc.ini')
 		self.run_command('rm Tocontinue')
+
+	def mkdir(self, directory_name):
+		self.run_command('mkdir '+directory_name)
 		
 	def reset(self):
 		"""
