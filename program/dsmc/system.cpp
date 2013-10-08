@@ -382,7 +382,7 @@ void System::initialize(Settings *settings_, int myid_) {
     topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
     node_num_new_molecules.resize(topology->num_processors,0);
     node_molecule_data.resize(topology->num_processors);
-    for(int i=0; i<topology->num_processors; i++) node_molecule_data[i].resize(100000,0);
+    for(int i=0; i<topology->num_processors; i++) node_molecule_data[i].resize(MAX_MPI_DATA,0);
 
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
@@ -414,8 +414,7 @@ void System::initialize(Settings *settings_, int myid_) {
 
     MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
 
-    mpi_receive_buffer.resize(9*MAX_MOLECULE_NUM,0);
-    mpi_send_buffer.resize(9*MAX_MOLECULE_NUM,0);
+    mpi_receive_buffer.resize(MAX_MPI_DATA,0);
 
     if(myid==0) cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);

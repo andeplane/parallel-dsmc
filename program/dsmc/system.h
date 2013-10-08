@@ -19,7 +19,8 @@ class Topology;
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
 #define BOX_FRACTION 0.2
-#define MAX_MOLECULE_NUM 20000000
+#define MAX_MOLECULE_NUM 5000000
+#define MAX_MPI_DATA 100000
 
 using namespace std;
 
@@ -73,7 +74,6 @@ public:
     vector<Cell*> reservoir_B_cells;
 
     vector<double> mpi_receive_buffer;
-    vector<double> mpi_send_buffer;
     vector<double> r;
     vector<double> v;
     vector<double> r0;
