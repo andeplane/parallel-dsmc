@@ -56,10 +56,7 @@ int main(int args, char* argv[]) {
             system.timer->start_sample();
             sampler->sample();
             system.timer->end_sample();
-        }
-
-        system.io->save_state_to_file_binary();
-        sampler->finalize();
+        }        
     } else {
         for(int i=0;i<settings->timesteps;i++) {
             system.io->save_state_to_movie_file();
@@ -69,11 +66,16 @@ int main(int args, char* argv[]) {
             sampler->sample();
             system.timer->end_sample();
         }
-
-        system.io->save_state_to_file_binary();
     }
+    system.io->save_state_to_file_binary();
+
+    system.timer->start_sample();
+    sampler->finalize();
+    system.timer->end_sample();
+
     system.timer->save_to_file(system);
     system.timer->gather_all_nodes(system);
+
     system.io->finalize();
 
     if(myid==0) {
