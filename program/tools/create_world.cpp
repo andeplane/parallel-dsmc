@@ -1,6 +1,7 @@
 // array::fill example
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <math.h>
 
 using namespace std;
@@ -60,17 +61,23 @@ void calculate_normals(int Nx, int Ny, int Nz, float *normal, unsigned char *M) 
     bool at_least_one_wall_neighbor;
     bool all_neighbors_are_walls;
     long num_voxels = Nx*Ny*Nz;
-    long voxel_counter = 0;
+    int old_progress = -1;
     for(int i=0;i<Nx;i++) {
+        if (i % 5 == 0) { // put couts at the top to avoid getting killed by "continue" further down
+            int progress = floor(i/double(Nx) / 0.1);
+            if (progress > old_progress) {
+                cout << "Creating normal vectors ";
+                cout << "[";
+                cout << setfill('#') << setw(progress) << "";
+                cout << setfill('-') << setw(10-progress) << "";
+                cout << "]" << endl;
+                old_progress = progress;
+            }
+        }
+
         for(int j=0;j<Ny;j++) {
             for(int k=0;k<Nz;k++) {
-                if(voxel_counter % 10000 == 0) {
-                    double percentage = (double)voxel_counter/num_voxels*100.0;
-                    cout << voxel_counter << "/" << num_voxels << " (" << percentage << "%)" << endl;
-                }
-                voxel_counter++;
-                
-            	at_least_one_wall_neighbor = false;
+                at_least_one_wall_neighbor = false;
             	all_neighbors_are_walls = true;
 
             	idx = i + j*Nx + k*Nx*Ny;
@@ -137,7 +144,20 @@ void calculate_tangents(int Nx, int Ny, int Nz, float *tangent1, float *tangent2
     float norm, dot_product;
     Random *rnd = new Random(-1);
     double max_val = 0;
+    int old_progress = -1;
 	for(int i=0;i<Nx;i++) {
+        if (i % 5 == 0) { // put couts at the top to avoid getting killed by "continue" further down
+            int progress = floor(i/double(Nx) / 0.1);
+            if (progress > old_progress) {
+                cout << "Creating tangent vectors ";
+                cout << "[";
+                cout << setfill('#') << setw(progress) << "";
+                cout << setfill('-') << setw(10-progress) << "";
+                cout << "]" << endl;
+                old_progress = progress;
+            }
+        }
+
         for(int j=0;j<Ny;j++) {
         	for(int k=0;k<Nz;k++) {
             	idx = i + j*Nx + k*Nx*Ny;
@@ -182,7 +202,19 @@ void calculate_tangents(int Nx, int Ny, int Nz, float *tangent1, float *tangent2
 void calculate_inner_points(int Nx, int Ny, int Nz, float *normal, unsigned char *M) {
 	int idx = 0;
     float norm;
+    int old_progress = -1;
     for(int i=0;i<Nx;i++) {
+        if (i % 5 == 0) { // put couts at the top to avoid getting killed by "continue" further down
+            int progress = floor(i/double(Nx) / 0.1);
+            if (progress > old_progress) {
+                cout << "Creating boundary ";
+                cout << "[";
+                cout << setfill('#') << setw(progress) << "";
+                cout << setfill('-') << setw(10-progress) << "";
+                cout << "]" << endl;
+                old_progress = progress;
+            }
+        }
     	for(int j=0;j<Ny;j++) {
 			for(int k=0;k<Nz;k++) {
                 idx = i + j*Nx + k*Nx*Ny;
@@ -289,13 +321,10 @@ int main (int args, char *argv[]) {
 		tangent2[i] = 0;
     }
 
-    cout << "Creating normals..." << endl;
     calculate_normals(N[0],N[1],N[2],normal,M2);
-    cout << "Creating tangents..." << endl;
     calculate_tangents(N[0],N[1],N[2],tangent1,tangent2,normal,M2);
-    cout << "Creating boundary..." << endl;
     calculate_inner_points(N[0],N[1],N[2],normal,M2);
-    cout << "Creating done!" << endl;
+    cout << "Done, saving to file..." << endl;
     save_to_file(outfile,N[0],N[1],N[2], normal,tangent1,tangent2,M2);
 	
 	return 0;
