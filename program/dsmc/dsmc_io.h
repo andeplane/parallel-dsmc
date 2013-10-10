@@ -22,7 +22,7 @@ public:
     void read_grid_matrix(string filename, Grid *grid);
     bool movie_file_open;
     int  movie_frames;
-    double *data;
+    float *data;
 
     FILE *energy_file;
     FILE *velocity_file;
