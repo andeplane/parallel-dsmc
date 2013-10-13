@@ -40,7 +40,7 @@ void DSMC_IO::save_state_to_movie_file() {
             sprintf(filename,"movie_files/movie%04d.bin",system->myid);
             movie_file = new ofstream(filename,ios::out | ios::binary);
             movie_file_open = true;
-            data = new float[3*MAX_MOLECULE_NUM];
+            data = new double[3*MAX_MOLECULE_NUM];
             memset(data,0,3*MAX_MOLECULE_NUM*sizeof(float));
             delete filename;
         }
@@ -56,7 +56,7 @@ void DSMC_IO::save_state_to_movie_file() {
         int actual_movie_molecules = settings->movie_molecules / system->topology->num_processors;
 
         movie_file->write (reinterpret_cast<char*>(&actual_movie_molecules), sizeof(int));
-        movie_file->write (reinterpret_cast<char*>(data), 3*actual_movie_molecules*sizeof(float));
+        movie_file->write (reinterpret_cast<char*>(data), 3*actual_movie_molecules*sizeof(double));
     }
     system->timer->end_io();
 }

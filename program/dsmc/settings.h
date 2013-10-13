@@ -16,6 +16,7 @@ public:
     bool load_previous_state;
     bool create_movie;
     bool maintain_pressure;
+    bool visualize;
     int statistics_interval;
     int movie_every_n_frame;
     int atoms_per_molecule;

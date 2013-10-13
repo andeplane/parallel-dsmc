@@ -1,4 +1,4 @@
-#include "colliderbase.h"
+#include <colliderbase.h>
 
 ColliderBase::ColliderBase()
 {

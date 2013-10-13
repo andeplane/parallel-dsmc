@@ -19,6 +19,7 @@
 #include <collidermaxwell.h>
 
 void System::step() {
+    for(int n=0; n<num_molecules_local; n++) steps_since_collision[n]++;
     steps += 1;
     t += dt;
     accelerate();
@@ -511,6 +512,7 @@ void System::setup_molecules() {
     molecule_index_in_cell.resize(MAX_MOLECULE_NUM);
     molecule_cell_index.resize(MAX_MOLECULE_NUM);
 
+    steps_since_collision.resize(MAX_MOLECULE_NUM,0);
     v.resize(3*MAX_MOLECULE_NUM,0);
     r0.resize(3*MAX_MOLECULE_NUM,0);
 
