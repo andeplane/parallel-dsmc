@@ -77,7 +77,7 @@ void DSMC_IO::save_state_to_file_binary() {
         exit(1);
     }
 
-    double *tmp_data = new double[9*N];
+    double *tmp_data = new double[6*N];
 
     int count = 0;
 
@@ -89,14 +89,10 @@ void DSMC_IO::save_state_to_file_binary() {
         tmp_data[count++] = system->v[3*n+0];
         tmp_data[count++] = system->v[3*n+1];
         tmp_data[count++] = system->v[3*n+2];
-
-        tmp_data[count++] = system->r0[3*n+0];
-        tmp_data[count++] = system->r0[3*n+1];
-        tmp_data[count++] = system->r0[3*n+2];
     }
 
     file.write (reinterpret_cast<char*>(&N), sizeof(int));
-    file.write (reinterpret_cast<char*>(tmp_data), 9*N*sizeof(double));
+    file.write (reinterpret_cast<char*>(tmp_data), 6*N*sizeof(double));
 
     file.close();
     delete tmp_data;
@@ -118,25 +114,21 @@ void DSMC_IO::load_state_from_file_binary() {
     }
 
     file.read(reinterpret_cast<char*>(&N),sizeof(int));
-    double *tmp_data = new double[9*N];
+    double *tmp_data = new double[6*N];
 
-    file.read(reinterpret_cast<char*>(tmp_data), 9*N*sizeof(double));
+    file.read(reinterpret_cast<char*>(tmp_data), 6*N*sizeof(double));
     file.close();
 
     for(int n=0;n<N;n++) {
         double *r = &system->r[3*n];
         double *v = &system->v[3*n];
-        double *r0 = &system->r0[3*n];
 
-        r[0] = tmp_data[9*n+0];
-        r[1] = tmp_data[9*n+1];
-        r[2] = tmp_data[9*n+2];
-        v[0] = tmp_data[9*n+3];
-        v[1] = tmp_data[9*n+4];
-        v[2] = tmp_data[9*n+5];
-        r0[0] = tmp_data[9*n+6];
-        r0[1] = tmp_data[9*n+7];
-        r0[2] = tmp_data[9*n+8];
+        r[0] = tmp_data[6*n+0];
+        r[1] = tmp_data[6*n+1];
+        r[2] = tmp_data[6*n+2];
+        v[0] = tmp_data[6*n+3];
+        v[1] = tmp_data[6*n+4];
+        v[2] = tmp_data[6*n+5];
 
         Cell *cell = system->all_cells[system->cell_index_from_position(r)];
         cell->add_molecule(n,system->molecule_index_in_cell,system->molecule_cell_index);

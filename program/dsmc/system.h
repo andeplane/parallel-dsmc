@@ -74,9 +74,7 @@ public:
     vector<Cell*> reservoir_B_cells;
 
     vector<double> mpi_receive_buffer;
-    vector<double> r;
-    vector<double> v;
-    vector<double> r0;
+    double *r, *v;
     vector<unsigned long> molecule_index_in_cell;
     vector<unsigned long> molecule_cell_index;
     vector<int> node_num_new_molecules;

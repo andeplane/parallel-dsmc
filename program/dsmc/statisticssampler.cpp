@@ -278,13 +278,13 @@ void StatisticsSampler::sample_velocity_distribution() {
 
 void StatisticsSampler::finalize() {
     if(settings->velocity_profile_type.compare("other") == 0) {
-        vector<double> velocity_distribution_global;
-        vector<int> velocity_distribution_count_global;
-        velocity_distribution_global.resize(num_bins,0);
-        velocity_distribution_count_global.resize(num_bins,0);
+        double *velocity_distribution_global = new double[num_bins];
+        int *velocity_distribution_count_global = new int[num_bins];
+        memset(velocity_distribution_global,0,num_bins);
+        memset(velocity_distribution_count_global,0,num_bins);
 
-        MPI_Reduce(&velocity_distribution[0],&velocity_distribution_global[0],num_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-        MPI_Reduce(&velocity_distribution_count[0],&velocity_distribution_count_global[0],num_bins,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(&velocity_distribution[0],velocity_distribution_global,num_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(&velocity_distribution_count[0],velocity_distribution_count_global,num_bins,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 
         if(system->myid==0) {
             for(int i=0;i<num_bins;i++) {
@@ -293,9 +293,9 @@ void StatisticsSampler::finalize() {
                 fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(velocity_distribution_global[i]));
                 fprintf(system->io->density_file,"%f ",(double)velocity_distribution_count_global[i] / num_samples);
             }
-        }
 
-        fprintf(system->io->velocity_file,"\n");
+            fprintf(system->io->velocity_file,"\n");
+        }
     }
 }
 

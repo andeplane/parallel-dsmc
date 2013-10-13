@@ -163,9 +163,6 @@ void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_mol
         r[3*n+0] = data[6*i+0];
         r[3*n+1] = data[6*i+1];
         r[3*n+2] = data[6*i+2];
-        r0[3*n+0] = data[6*i+0];
-        r0[3*n+1] = data[6*i+1];
-        r0[3*n+2] = data[6*i+2];
         v[3*n+0] = data[6*i+3];
         v[3*n+1] = data[6*i+4];
         v[3*n+2] = data[6*i+5];
@@ -192,7 +189,6 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     int last_molecule_index_in_cell = molecule_index_in_cell[last_molecule_index];
     memcpy(&r[3*molecule_index],&r[3*last_molecule_index],3*sizeof(double));
     memcpy(&v[3*molecule_index],&v[3*last_molecule_index],3*sizeof(double));
-    memcpy(&r0[3*molecule_index],&r0[3*last_molecule_index],3*sizeof(double));
 
     cell = all_cells[last_molecule_cell_index];
     molecule_cell_index[molecule_index] = last_molecule_cell_index;
@@ -217,9 +213,6 @@ void System::add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity
         v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
         v[3*molecule_index+2] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[2];
         find_position_in_cell(cell, &r[3*molecule_index]);
-        r0[3*molecule_index+0] = r[3*molecule_index+0];
-        r0[3*molecule_index+1] = r[3*molecule_index+1];
-        r0[3*molecule_index+2] = r[3*molecule_index+2];
 
         add_molecule_to_cell(cell, molecule_index);
     }
@@ -250,9 +243,6 @@ void System::add_molecules_in_outlet_reservoir(Cell *cell, const double &velocit
         v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
         v[3*molecule_index+2] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[2];
         find_position_in_cell(cell, &r[3*molecule_index]);
-        r0[3*molecule_index+0] = r[3*molecule_index+0];
-        r0[3*molecule_index+1] = r[3*molecule_index+1];
-        r0[3*molecule_index+2] = r[3*molecule_index+2];
 
         add_molecule_to_cell(cell, molecule_index);
     }
@@ -506,13 +496,11 @@ void System::update_cell_volume() {
 }
 
 void System::setup_molecules() {
-    r.resize(3*MAX_MOLECULE_NUM,0);
+    r = new double[3*MAX_MOLECULE_NUM];
+    v = new double[3*MAX_MOLECULE_NUM];
 
     molecule_index_in_cell.resize(MAX_MOLECULE_NUM);
     molecule_cell_index.resize(MAX_MOLECULE_NUM);
-
-    v.resize(3*MAX_MOLECULE_NUM,0);
-    r0.resize(3*MAX_MOLECULE_NUM,0);
 
     if(settings->load_previous_state) {
         io->load_state_from_file_binary();
@@ -525,9 +513,6 @@ void System::setup_molecules() {
         v[3*n+1] = rnd->next_gauss()*sqrt_temp_over_mass;
         v[3*n+2] = rnd->next_gauss()*sqrt_temp_over_mass;
         find_position(&r[3*n]);
-        r0[3*n+0] = r[3*n+0];
-        r0[3*n+1] = r[3*n+1];
-        r0[3*n+2] = r[3*n+2];
         Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
     }

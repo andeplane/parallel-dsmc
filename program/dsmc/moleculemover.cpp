@@ -33,19 +33,19 @@ void MoleculeMover::move_molecules(double dt, Random *rnd) {
 
 int idx = 0;
 
-void MoleculeMover::do_move(double *r, double *v, double *r0, double dt) {
+void MoleculeMover::do_move(double *r, double *v, double dt) {
     r[0] += v[0]*dt;
     r[1] += v[1]*dt;
     r[2] += v[2]*dt;
 
-    if(r[0] > system->length[0])  { r[0] -= system->length[0]; r0[0] -= system->length[0]; count_periodic[0]++; }
-    else if(r[0] < 0)         { r[0] += system->length[0]; r0[0] += system->length[0]; count_periodic[0]--; }
+    if(r[0] > system->length[0])  { r[0] -= system->length[0]; count_periodic[0]++; }
+    else if(r[0] < 0)         { r[0] += system->length[0]; count_periodic[0]--; }
 
-    if(r[1] > system->length[1]) { r[1] -= system->length[1]; r0[1] -= system->length[1]; count_periodic[1]++;}
-    else if(r[1] < 0)         { r[1] += system->length[1]; r0[1] += system->length[1]; count_periodic[1]--; }
+    if(r[1] > system->length[1]) { r[1] -= system->length[1]; count_periodic[1]++;}
+    else if(r[1] < 0)         { r[1] += system->length[1]; count_periodic[1]--; }
 
-    if(r[2] > system->length[2]) { r[2] -= system->length[2]; r0[2] -= system->length[2]; count_periodic[2]++; }
-    else if(r[2] < 0)         { r[2] += system->length[2]; r0[2] += system->length[2]; count_periodic[2]--; }
+    if(r[2] > system->length[2]) { r[2] -= system->length[2]; count_periodic[2]++; }
+    else if(r[2] < 0)         { r[2] += system->length[2]; count_periodic[2]--; }
 }
 
 inline int get_index_of_voxel(double *r, const double &nx_div_lx,const double &ny_div_ly,const double &nz_div_lz, const int &Nx, const int &NyNx) {
@@ -64,10 +64,9 @@ void MoleculeMover::move_molecule_box(int &molecule_index, double dt, Random *rn
     double tau = dt;
     
     double *r = &system->r[3*molecule_index];
-    double *r0 = &system->r0[3*molecule_index];
     double *v = &system->v[3*molecule_index];
     
-    do_move(r,v,r0, tau);
+    do_move(r,v,tau);
     double y = r[1];
     
     double system_center_x = system->length[0]*0.5;
@@ -83,7 +82,7 @@ void MoleculeMover::move_molecule_box(int &molecule_index, double dt, Random *rn
 
     if(collided > 0) {
         // We collided, move back
-        do_move(r,v,r0, -tau);
+        do_move(r,v,-tau);
         // Calculate distance to the wall
         if(collided == 1) {
             // We will collide in the positive direction
@@ -93,7 +92,7 @@ void MoleculeMover::move_molecule_box(int &molecule_index, double dt, Random *rn
         }
 
         double time_until_collision = dy / v[1];
-        do_move(r,v,r0,time_until_collision);
+        do_move(r,v,time_until_collision);
         dt -= time_until_collision;
 
         float normal[3];
@@ -125,10 +124,9 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
     double tau = dt;
 
     double *r = &system->r[3*molecule_index];
-    double *r0 = &system->r0[3*molecule_index];
     double *v = &system->v[3*molecule_index];
 
-    do_move(r,v,r0,tau);
+    do_move(r,v,tau);
 
     double cylinder_center_x = system->length[0]*0.5;
     double cylinder_center_y = system->length[1]*0.5;
@@ -139,7 +137,7 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
 
     if(dr2>=CYLINDER_RADIUS_SQUARED) {
         // We collided, move back
-        do_move(r,v,r0,-tau);
+        do_move(r,v,-tau);
 
         dx = r[0] - cylinder_center_x;
         dy = r[1] - cylinder_center_y;
@@ -151,7 +149,7 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
         if(tau < 0) tau = (-b - sqrt(b*b - 4*a*c))/(2*a);
         tau -= 1e-5;
 
-        do_move(r,v,r0,tau);
+        do_move(r,v,tau);
         dt -= tau;
 
         float normal[3];
@@ -198,7 +196,6 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
     double tau = dt;
     double r_prime[3];
     double *r = &system->r[3*molecule_index];
-    double *r0 = &system->r0[3*molecule_index];
     double *v = &system->v[3*molecule_index];
 
     int idx = grid->get_index_of_voxel(r);
@@ -207,7 +204,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         exit(1);
     }
 
-    do_move(r, v, r0, tau);
+    do_move(r, v, tau);
     idx = grid->get_index_of_voxel(r);
 
     // We now have three possible outcomes
@@ -216,7 +213,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         while(voxels[idx] != voxel_type_boundary) {
             if(voxels[idx] == voxel_type_wall) {
                 tau /= 2;
-                do_move(r, v, r0, -tau); // Move back
+                do_move(r, v, -tau); // Move back
                 idx = grid->get_index_of_voxel(r);
             } else {
                 dt -= tau;
@@ -237,9 +234,9 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         while(voxels[idx] == voxel_type_boundary) {
             collision_voxel_index = idx;
             r_prime[0] = r[0] - v[0]*tau; r_prime[1] = r[1] - v[1]*tau; r_prime[2] = r[2] - v[2]*tau; // Move back, but don't care about periodic boundary conditions
-            do_move(r, v, r0, -tau); // Move back
+            do_move(r, v, -tau); // Move back
             tau = grid->get_time_until_collision(r_prime, v, collision_voxel_index); // Time until collision with voxel boundary
-            do_move(r, v, r0, tau); // Move over there
+            do_move(r, v, tau); // Move over there
             idx = grid->get_index_of_voxel(r);
         }
 
