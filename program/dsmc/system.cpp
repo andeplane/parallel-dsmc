@@ -390,6 +390,7 @@ void System::initialize(Settings *settings_, int myid_) {
 
     if(myid==0) cout << "Updating cell volume..." << endl;
     update_cell_volume();
+
     // Update system volume with the correct porosity
     double volume_per_cpu = volume/topology->num_processors;
     volume = volume_per_cpu*porosity;
@@ -482,21 +483,23 @@ int System::cell_index_from_position(double *r) {
 }
 
 void System::update_cell_volume() {
-    int global_voxel_origin_x = topology->index_vector[0]*world_grid->nx;
-    int global_voxel_origin_y = topology->index_vector[1]*world_grid->ny;
-    int global_voxel_origin_z = topology->index_vector[2]*world_grid->nz;
+    int global_voxel_origin_x = topology->index_vector[0]*world_grid->nx_per_cpu;
+    int global_voxel_origin_y = topology->index_vector[1]*world_grid->ny_per_cpu;
+    int global_voxel_origin_z = topology->index_vector[2]*world_grid->nz_per_cpu;
 
-    for(int k=0;k<world_grid->nz;k++) {
+    for(int k=0;k<world_grid->nz_per_cpu;k++) {
         int c_z = (float)(k + global_voxel_origin_z)/world_grid->global_nz*cells_z;
-        for(int j=0;j<world_grid->ny;j++) {
+        for(int j=0;j<world_grid->ny_per_cpu;j++) {
             int c_y = (float)(j + global_voxel_origin_y)/world_grid->global_ny*cells_y;
-            for(int i=0;i<world_grid->nx;i++) {
+            for(int i=0;i<world_grid->nx_per_cpu;i++) {
                 int c_x = (float)(i + global_voxel_origin_x)/world_grid->global_nx*cells_x;
                 int cell_index = cell_index_from_ijk(c_x,c_y,c_z);
                 Cell *c = all_cells[cell_index];
 
                 c->total_pixels++;
-                c->pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
+                CVector voxel_index_adjusted_for_origin = CVector(i,j,k) + world_grid->voxel_origin;
+
+                c->pixels += *world_grid->get_voxel(voxel_index_adjusted_for_origin)<voxel_type_wall;
             }
         }
     }

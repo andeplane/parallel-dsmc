@@ -181,9 +181,12 @@ void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
     file.read (reinterpret_cast<char*>(&grid->nx), sizeof(unsigned int));
     file.read (reinterpret_cast<char*>(&grid->ny), sizeof(unsigned int));
     file.read (reinterpret_cast<char*>(&grid->nz), sizeof(unsigned int));
+    grid->num_voxels = grid->nx*grid->ny*grid->nz;
+    grid->nx_per_cpu = grid->nx / 3; grid->ny_per_cpu = grid->ny / 3; grid->nz_per_cpu = grid->nz / 3;
+
     cout << "Global num voxels " << grid->global_nx << " " << grid->global_ny << " " << grid->global_nz << endl;
     cout << "Local voxels " << grid->nx << " " << grid->ny << " " << grid->nz << endl;
-    grid->num_voxels = grid->nx*grid->ny*grid->nz;
+    cout << "Local unique voxels " << grid->nx_per_cpu << " " << grid->ny_per_cpu << " " << grid->nz_per_cpu << endl;
     cout << "Num voxels: " << grid->num_voxels << endl;
 
     grid->voxels = new unsigned char[grid->num_voxels];

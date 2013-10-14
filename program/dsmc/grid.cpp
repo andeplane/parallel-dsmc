@@ -40,31 +40,34 @@ Grid::Grid(string foldername, System *system_)
     point_list.resize(8, CVector(0,0,0));
 }
 
-unsigned char *Grid::get_voxel(const int &i, const int &j, const int &k) {
+unsigned char *Grid::get_voxel(const CVector &voxel_indices) {
+    return get_voxel(int(voxel_indices.x), int(voxel_indices.y), int(voxel_indices.z));
+}
 
+unsigned char *Grid::get_voxel(const int &i, const int &j, const int &k) {
     return &voxels[i + j*nx + k*nx*ny];
 }
 
 unsigned char *Grid::get_voxel(const double &x, const double &y, const double &z) {
-    int i =  (x-system->topology->origin[0])*system->one_over_length[0]*global_nx;
-    int j =  (y-system->topology->origin[1])*system->one_over_length[1]*global_ny;
-    int k =  (z-system->topology->origin[2])*system->one_over_length[2]*global_nz;
+    int i =  (x-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
+    int j =  (y-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
+    int k =  (z-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
 
     return get_voxel(i,j,k);
 }
 
 unsigned char *Grid::get_voxel(double *r) {
-    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx;
-    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny;
-    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz;
+    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
+    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
+    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
 
     return get_voxel(i,j,k);
 }
 
 int Grid::get_index_of_voxel(double *r) {
-    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx;
-    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny;
-    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz;
+    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
+    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
+    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
 
     return i + j*nx + k*nx*ny;
 }
