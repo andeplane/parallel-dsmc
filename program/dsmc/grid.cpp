@@ -112,14 +112,14 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     int i,j,k;
     get_index_vector_from_index(voxel_index, i, j, k);
 
-    point_list[0].x = i*voxel_size[0]; point_list[0].y = j*voxel_size[1]; point_list[0].z = k*voxel_size[2];
-    point_list[1].x = (i+1)*voxel_size[0]; point_list[1].y = j*voxel_size[1]; point_list[1].z = k*voxel_size[2];
-    point_list[2].x = i*voxel_size[0]; point_list[2].y = j*voxel_size[1]; point_list[2].z = (k+1)*voxel_size[2];
-    point_list[3].x = (i+1)*voxel_size[0]; point_list[3].y = j*voxel_size[1]; point_list[3].z = (k+1)*voxel_size[2];
-    point_list[4].x = i*voxel_size[0]; point_list[4].y = (j+1)*voxel_size[1]; point_list[4].z = k*voxel_size[2];
-    point_list[5].x = (i+1)*voxel_size[0]; point_list[5].y = (j+1)*voxel_size[1]; point_list[5].z = k*voxel_size[2];
-    point_list[6].x = i*voxel_size[0]; point_list[6].y = (j+1)*voxel_size[1]; point_list[6].z = (k+1)*voxel_size[2];
-    point_list[7].x = (i+1)*voxel_size[0]; point_list[7].y = (j+1)*voxel_size[1]; point_list[7].z = (k+1)*voxel_size[2];
+    point_list[0].x = (i-voxel_origin.x)*voxel_size[0]; point_list[0].y = (j-voxel_origin.y)*voxel_size[1]; point_list[0].z = (k-voxel_origin.z)*voxel_size[2];
+    point_list[1].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[1].y = (j-voxel_origin.y)*voxel_size[1]; point_list[1].z = (k-voxel_origin.z)*voxel_size[2];
+    point_list[2].x = (i-voxel_origin.x)*voxel_size[0]; point_list[2].y = (j-voxel_origin.y)*voxel_size[1]; point_list[2].z = ((k-voxel_origin.z)+1)*voxel_size[2];
+    point_list[3].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[3].y = (j-voxel_origin.y)*voxel_size[1]; point_list[3].z = ((k-voxel_origin.z)+1)*voxel_size[2];
+    point_list[4].x = (i-voxel_origin.x)*voxel_size[0]; point_list[4].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[4].z = (k-voxel_origin.z)*voxel_size[2];
+    point_list[5].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[5].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[5].z = (k-voxel_origin.z)*voxel_size[2];
+    point_list[6].x = (i-voxel_origin.x)*voxel_size[0]; point_list[6].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[6].z = ((k-voxel_origin.z)+1)*voxel_size[2];
+    point_list[7].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[7].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[7].z = ((k-voxel_origin.z)+1)*voxel_size[2];
 
     double time_facet_1 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[0]);
     double time_facet_2 = time_until_collision_with_plane(r_vec, v_vec, point_list[1], unit_normal_vectors[1]);
@@ -127,13 +127,6 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     double time_facet_4 = time_until_collision_with_plane(r_vec, v_vec, point_list[4], unit_normal_vectors[3]);
     double time_facet_5 = time_until_collision_with_plane(r_vec, v_vec, point_list[0], unit_normal_vectors[4]);
     double time_facet_6 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[5]);
-
-    cout << "Time 1: " << time_facet_1 << endl;
-    cout << "Time 2: " << time_facet_2 << endl;
-    cout << "Time 3: " << time_facet_3 << endl;
-    cout << "Time 4: " << time_facet_4 << endl;
-    cout << "Time 5: " << time_facet_5 << endl;
-    cout << "Time 6: " << time_facet_6 << endl;
 
     bool will_hit_facet_1 = is_point_within_square(point_list[4], point_list[0], point_list[2], point_list[6], r_vec+v_vec*time_facet_1);
     bool will_hit_facet_2 = is_point_within_square(point_list[1], point_list[5], point_list[7], point_list[3], r_vec+v_vec*time_facet_2);
@@ -157,7 +150,21 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !isnan(time_facet_6)) time_until_collision = time_facet_6;
 
     if( time_until_collision > 1000) {
-        cout << "Didn't collide with anything :/ " << endl;
+        cout << system->myid << " didn't collide with anything :/" << endl;
+        cout << "Time 1: " << time_facet_1 << endl;
+        cout << "Time 2: " << time_facet_2 << endl;
+        cout << "Time 3: " << time_facet_3 << endl;
+        cout << "Time 4: " << time_facet_4 << endl;
+        cout << "Time 5: " << time_facet_5 << endl;
+        cout << "Time 6: " << time_facet_6 << endl;
+        cout << "Particle at:" << endl;
+        cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
+        cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
+        cout << "with local i,j,k = " << i << ", " << j << ", " << k << ", " << endl;
+        cout << "which is local voxel index " << voxel_index << endl;
+
+        cout << "with global i,j,k = " << i-voxel_origin.x + system->topology->index_vector[0]*nx_per_cpu << ", " << j - voxel_origin.y + system->topology->index_vector[1]*ny_per_cpu<< ", " << k -voxel_origin.z + system->topology->index_vector[2]*nz_per_cpu << ", " << endl;
+
         exit(1);
     }
 

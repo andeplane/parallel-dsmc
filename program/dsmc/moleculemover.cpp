@@ -195,9 +195,8 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
 //    double nz_div_lz = grid->global_nz*system->one_over_length[2];
 //    int nx = grid->Nx;
 //    int nynx = grid->Nx*grid->Ny;
-
+    if(system->myid == 1) cout << system->myid << " " << molecule_index << " in step " << system->steps << endl;
     double tau = dt;
-    double r_prime[3];
     double *r = &system->r[3*molecule_index];
     double *v = &system->v[3*molecule_index];
 
@@ -236,7 +235,6 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
 
         while(voxels[idx] == voxel_type_boundary) {
             collision_voxel_index = idx;
-            // r_prime[0] = r[0] - v[0]*tau; r_prime[1] = r[1] - v[1]*tau; r_prime[2] = r[2] - v[2]*tau; // Move back, but don't care about periodic boundary conditions
             do_move(r, v, -tau); // Move back
             tau = grid->get_time_until_collision(r, v, collision_voxel_index); // Time until collision with voxel boundary
             do_move(r, v, tau); // Move over there
