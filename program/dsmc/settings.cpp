@@ -6,7 +6,6 @@ Settings::Settings(string filename) {
     load_previous_state = ini_file.getbool("load_previous_state");
     create_movie = ini_file.getbool("create_movie");
     maintain_pressure = ini_file.getbool("maintain_pressure");
-    visualize = ini_file.getbool("visualize");
     statistics_interval = ini_file.getint("statistics_interval");
     movie_every_n_frame = ini_file.getint("movie_every_n_frame");
     atoms_per_molecule = ini_file.getint("atoms_per_molecule");
