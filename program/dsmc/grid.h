@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <cvector.h>
 class System;
 class DSMC_IO;
-class CVector;
 
 using namespace std;
 
@@ -16,10 +16,16 @@ typedef enum {
 class Grid
 {
 public:
-    int Nx;
-    int Ny;
-    int Nz;
-    int points;
+    unsigned int nx;
+    unsigned int ny;
+    unsigned int nz;
+    unsigned int global_nx;
+    unsigned int global_ny;
+    unsigned int global_nz;
+    float nx_divided_by_global_nx;
+    float ny_divided_by_global_ny;
+    float nz_divided_by_global_nz;
+    unsigned int num_voxels;
 
     vector<double> voxel_size;
     vector<CVector> unit_normal_vectors;
@@ -30,6 +36,7 @@ public:
     float *normals;
     float *tangents1;
     float *tangents2;
+    CVector voxel_origin;
 
     Grid(string filename, System *system_);
     unsigned char *get_voxel(const int &i, const int &j, const int &k);

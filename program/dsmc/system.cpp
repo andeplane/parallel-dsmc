@@ -17,6 +17,7 @@
 #include <colliderthermal.h>
 #include <collidercercignanilampis.h>
 #include <collidermaxwell.h>
+#include <cvector.h>
 
 void System::step() {
     steps += 1;
@@ -92,9 +93,11 @@ void System::mpi_move() {
 
 void System::move() {
     timer->start_moving();
+    CVector system_length(length[0], length[1], length[2]);
     for(int n=0;n<num_molecules_local;n++) {
         // mover->move_molecule_cylinder(n,dt,rnd,0);
         mover->move_molecule(n,dt,rnd,0);
+        mover->apply_periodic_boundary_conditions(n, r, system_length);
         // mover->move_molecule_box(n,dt,rnd,0);
     }
     timer->end_moving();
@@ -380,16 +383,10 @@ void System::initialize(Settings *settings_, int myid_) {
     // First create all the cells
     if(myid==0) cout << "Creating cells..." << endl;
     setup_cells();
-    // Calculate porosity based on the world grid
-    if(myid==0) cout << "Calculating porosity..." << endl;
-    calculate_porosity();
 
     // Calculate cell volume 
     volume = length[0]*length[1]*length[2];
-    if(myid==0) {
-        calculate_global_porosity();
-        volume_global = volume*porosity_global;
-    }
+    volume_global = volume*porosity_global;
 
     if(myid==0) cout << "Updating cell volume..." << endl;
     update_cell_volume();
@@ -485,6 +482,25 @@ int System::cell_index_from_position(double *r) {
 }
 
 void System::update_cell_volume() {
+    int global_voxel_origin_x = topology->index_vector[0]*world_grid->nx;
+    int global_voxel_origin_y = topology->index_vector[1]*world_grid->ny;
+    int global_voxel_origin_z = topology->index_vector[2]*world_grid->nz;
+
+    for(int k=0;k<world_grid->nz;k++) {
+        int c_z = (float)(k + global_voxel_origin_z)/world_grid->global_nz*cells_z;
+        for(int j=0;j<world_grid->ny;j++) {
+            int c_y = (float)(j + global_voxel_origin_y)/world_grid->global_ny*cells_y;
+            for(int i=0;i<world_grid->nx;i++) {
+                int c_x = (float)(i + global_voxel_origin_x)/world_grid->global_nx*cells_x;
+                int cell_index = cell_index_from_ijk(c_x,c_y,c_z);
+                Cell *c = all_cells[cell_index];
+
+                c->total_pixels++;
+                c->pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
+            }
+        }
+    }
+
     active_cells.reserve(all_cells.size());
 
     for(int i=0;i<all_cells.size();i++) {
@@ -547,75 +563,6 @@ void System::setup_cells() {
             }
         }
     }
-}
-
-void System::calculate_global_porosity() {
-    int filled_pixels = 0;
-    int all_pixels = 0;
-    int i_start = 0;
-    int i_end   = world_grid->Nx;
-
-    int j_start = 0;
-    int j_end   = world_grid->Ny;
-
-    int k_start = 0;
-    int k_end   = world_grid->Nz;
-
-    for(int k=k_start;k<k_end;k++) {
-        for(int j=j_start;j<j_end;j++) {
-            for(int i=i_start;i<i_end;i++) {
-                all_pixels++;
-                filled_pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
-            }
-        }
-    }
-
-    porosity_global = (float)filled_pixels / all_pixels;
-}
-
-void System::calculate_porosity() {
-    int filled_pixels = 0;
-    int all_pixels = 0;
-    int cells_per_node_x = cells_x / topology->num_processors_vector[0];
-    int cells_per_node_y = cells_y / topology->num_processors_vector[1];
-    int cells_per_node_z = cells_z / topology->num_processors_vector[2];
-//    int i_start = float(topology->index_vector[0])*cells_per_node_x/cells_x*world_grid->Nx;
-//    int i_end   = float(topology->index_vector[0]+1)*cells_per_node_x/cells_x*world_grid->Nx;
-
-//    int j_start = float(topology->index_vector[1])*cells_per_node_y/cells_y*world_grid->Ny;
-//    int j_end   = float(topology->index_vector[1]+1)*cells_per_node_y/cells_y*world_grid->Ny;
-
-//    int k_start = float(topology->index_vector[2])*cells_per_node_z/cells_z*world_grid->Nz;
-//    int k_end   = float(topology->index_vector[2]+1)*cells_per_node_z/cells_z*world_grid->Nz;
-
-    int i_start = 0;
-    int i_end   = world_grid->Nx;
-
-    int j_start = 0;
-    int j_end   = world_grid->Ny;
-
-    int k_start = 0;
-    int k_end   = world_grid->Nz;
-
-    int cell_index, c_x, c_y, c_z;
-    for(int k=k_start;k<k_end;k++) {
-        c_z = (float)k/world_grid->Nz*cells_z;
-        for(int j=j_start;j<j_end;j++) {
-            c_y = (float)j/world_grid->Ny*cells_y;
-            for(int i=i_start;i<i_end;i++) {
-                c_x = (float)i/world_grid->Nx*cells_x;
-                cell_index = cell_index_from_ijk(c_x,c_y,c_z);
-                Cell *c = all_cells[cell_index];
-
-                c->total_pixels++;
-                all_pixels++;
-                c->pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
-                filled_pixels += *world_grid->get_voxel(i,j,k)<voxel_type_wall;
-            }
-        }
-    }
-
-    porosity = (float)filled_pixels / all_pixels;
 }
 
 void System::init_randoms() {

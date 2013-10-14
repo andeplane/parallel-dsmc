@@ -4,6 +4,7 @@
 #include <system.h>
 #include <dsmc_io.h>
 #include <cvector.h>
+#include <topology.h>
 
 #define min(a,b)                      (((a) < (b)) ? (a) : (b))
 #define max(a,b)                      (((a) > (b)) ? (a) : (b))
@@ -13,14 +14,17 @@ void Grid::read_matrix(string filename, DSMC_IO *io) {
     io->read_grid_matrix(filename, this);
 }
 
-Grid::Grid(string filename, System *system_)
+Grid::Grid(string foldername, System *system_)
 {
+    char filename[1000];
     system = system_;
+    sprintf(filename, "%s/%04d.bin",foldername.c_str(), system->myid);
+
     read_matrix(filename,system->io);
     voxel_size.resize(3);
-    voxel_size[0] = system->length[0] / Nx;
-    voxel_size[1] = system->length[1] / Ny;
-    voxel_size[2] = system->length[2] / Nz;
+    voxel_size[0] = system->length[0] / global_nx;
+    voxel_size[1] = system->length[1] / global_ny;
+    voxel_size[2] = system->length[2] / global_nz;
 
     // The unit normal vectors are 6 vectors pointing in the following directions
     // x-, x+, y-, y+, z-, z+
@@ -37,41 +41,38 @@ Grid::Grid(string filename, System *system_)
 }
 
 unsigned char *Grid::get_voxel(const int &i, const int &j, const int &k) {
-    if(i < 0 || i >= Nx || j < 0 || j >= Ny || k < 0 || k >= Nz) {
-        return &voxels[((i+Nx)%Nx) + ((j+Ny)%Ny)*Nx+ ((k+Nz)%Nz)*Nx*Ny];
-    }
 
-    return &voxels[i + j*Nx + k*Nx*Ny];
+    return &voxels[i + j*nx + k*nx*ny];
 }
 
 unsigned char *Grid::get_voxel(const double &x, const double &y, const double &z) {
-    int i =  x*system->one_over_length[0]*Nx;
-    int j =  y*system->one_over_length[1]*Ny;
-    int k =  z*system->one_over_length[2]*Nz;
+    int i =  (x-system->topology->origin[0])*system->one_over_length[0]*global_nx;
+    int j =  (y-system->topology->origin[1])*system->one_over_length[1]*global_ny;
+    int k =  (z-system->topology->origin[2])*system->one_over_length[2]*global_nz;
 
     return get_voxel(i,j,k);
 }
 
 unsigned char *Grid::get_voxel(double *r) {
-    int i =  r[0]*system->one_over_length[0]*Nx;
-    int j =  r[1]*system->one_over_length[1]*Ny;
-    int k =  r[2]*system->one_over_length[2]*Nz;
+    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx;
+    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny;
+    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz;
 
     return get_voxel(i,j,k);
 }
 
 int Grid::get_index_of_voxel(double *r) {
-    int i =  r[0]*system->one_over_length[0]*Nx;
-    int j =  r[1]*system->one_over_length[1]*Ny;
-    int k =  r[2]*system->one_over_length[2]*Nz;
+    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx;
+    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny;
+    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz;
 
-    return i + j*Nx + k*Nx*Ny;
+    return i + j*nx + k*nx*ny;
 }
 
 void Grid::get_index_vector_from_index(const int &index, int &i, int &j, int &k) {
-    i = index % Nx;
-    j = (index / Nx) % Ny;
-    k = index / (Nx*Ny);
+    i = index % nx;
+    j = (index / nx) % ny;
+    k = index / (nx*ny);
 }
 
 inline double time_until_collision_with_plane(CVector &r, CVector &v, CVector &point_in_plane, CVector &normal) {
@@ -123,6 +124,13 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     double time_facet_4 = time_until_collision_with_plane(r_vec, v_vec, point_list[4], unit_normal_vectors[3]);
     double time_facet_5 = time_until_collision_with_plane(r_vec, v_vec, point_list[0], unit_normal_vectors[4]);
     double time_facet_6 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[5]);
+
+    cout << "Time 1: " << time_facet_1 << endl;
+    cout << "Time 2: " << time_facet_2 << endl;
+    cout << "Time 3: " << time_facet_3 << endl;
+    cout << "Time 4: " << time_facet_4 << endl;
+    cout << "Time 5: " << time_facet_5 << endl;
+    cout << "Time 6: " << time_facet_6 << endl;
 
     bool will_hit_facet_1 = is_point_within_square(point_list[4], point_list[0], point_list[2], point_list[6], r_vec+v_vec*time_facet_1);
     bool will_hit_facet_2 = is_point_within_square(point_list[1], point_list[5], point_list[7], point_list[3], r_vec+v_vec*time_facet_2);

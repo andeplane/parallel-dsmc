@@ -160,27 +160,45 @@ void DSMC_IO::finalize() {
 }
 
 void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
+    cout << "I will read file " << filename << endl;
+
     ifstream file (filename.c_str(), ios::in | ios::binary);
     if(!file.is_open()) {
         cout << "Error, could not open file " << filename << endl;
         exit(1);
     }
-    int Nx, Ny, Nz, points;
+    float porosity_global = 0;
+    float porosity = 0;
+    file.read (reinterpret_cast<char*>(&porosity_global), sizeof(float));
+    file.read (reinterpret_cast<char*>(&porosity), sizeof(float));
+    system->porosity_global = porosity_global;
+    system->porosity = porosity;
+    cout << "Global porosity is " << system->porosity_global << endl;
+    cout << "Local porosity is " << system->porosity << endl;
+    file.read (reinterpret_cast<char*>(&grid->global_nx), sizeof(unsigned int));
+    file.read (reinterpret_cast<char*>(&grid->global_ny), sizeof(unsigned int));
+    file.read (reinterpret_cast<char*>(&grid->global_nz), sizeof(unsigned int));
+    file.read (reinterpret_cast<char*>(&grid->nx), sizeof(unsigned int));
+    file.read (reinterpret_cast<char*>(&grid->ny), sizeof(unsigned int));
+    file.read (reinterpret_cast<char*>(&grid->nz), sizeof(unsigned int));
+    cout << "Global num voxels " << grid->global_nx << " " << grid->global_ny << " " << grid->global_nz << endl;
+    cout << "Local voxels " << grid->nx << " " << grid->ny << " " << grid->nz << endl;
+    grid->num_voxels = grid->nx*grid->ny*grid->nz;
+    cout << "Num voxels: " << grid->num_voxels << endl;
 
-    file.read (reinterpret_cast<char*>(&Nx), sizeof(int));
-    file.read (reinterpret_cast<char*>(&Ny), sizeof(int));
-    file.read (reinterpret_cast<char*>(&Nz), sizeof(int));
-    points = Nx*Ny*Nz;
-    grid->Nx = Nx; grid->Ny = Ny; grid->Nz = Nz; grid->points = points;
+    grid->voxels = new unsigned char[grid->num_voxels];
+    grid->normals   = new float[3*grid->num_voxels];
+    grid->tangents1 = new float[3*grid->num_voxels];
+    grid->tangents2 = new float[3*grid->num_voxels];
+    grid->voxel_origin = CVector(grid->nx/3, grid->ny/3, grid->nz/3);
 
-    grid->voxels = new unsigned char[points];
-    grid->normals   = new float[3*points];
-    grid->tangents1 = new float[3*points];
-    grid->tangents2 = new float[3*points];
+    grid->nx_divided_by_global_nx = (float)grid->nx/grid->global_nx;
+    grid->ny_divided_by_global_ny = (float)grid->ny/grid->global_ny;
+    grid->nz_divided_by_global_nz = (float)grid->nz/grid->global_nz;
 
-    file.read (reinterpret_cast<char*>(grid->voxels), points*sizeof(unsigned char));
-    file.read (reinterpret_cast<char*>(grid->normals), 3*points*sizeof(float));
-    file.read (reinterpret_cast<char*>(grid->tangents1), 3*points*sizeof(float));
-    file.read (reinterpret_cast<char*>(grid->tangents2), 3*points*sizeof(float));
+    file.read (reinterpret_cast<char*>(grid->voxels), grid->num_voxels*sizeof(unsigned char));
+    file.read (reinterpret_cast<char*>(grid->normals), 3*grid->num_voxels*sizeof(float));
+    file.read (reinterpret_cast<char*>(grid->tangents1), 3*grid->num_voxels*sizeof(float));
+    file.read (reinterpret_cast<char*>(grid->tangents2), 3*grid->num_voxels*sizeof(float));
     file.close();
 }

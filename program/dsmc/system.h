@@ -52,8 +52,6 @@ private:
     void update_cell_volume();
     void setup_molecules();
     void setup_cells();
-    void calculate_porosity();
-    void calculate_global_porosity();
     void update_molecule_cells();
     void count_reservoir_particles();
 public:
