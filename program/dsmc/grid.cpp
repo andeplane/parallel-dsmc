@@ -45,7 +45,7 @@ unsigned char *Grid::get_voxel(const CVector &voxel_indices) {
 }
 
 unsigned char *Grid::get_voxel(const int &i, const int &j, const int &k) {
-    return &voxels[i + j*nx + k*nx*ny];
+    return &voxels[i*ny*nz + j*nz + k];
 }
 
 unsigned char *Grid::get_voxel(const double &x, const double &y, const double &z) {
@@ -69,27 +69,27 @@ int Grid::get_index_of_voxel(double *r) {
     int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
     int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
 
-    return i + j*nx + k*nx*ny;
+    return i*ny*nz + j*nz + k;
 }
 
 void Grid::get_index_vector_from_index(const int &index, int &i, int &j, int &k) {
-    i = index % nx;
-    j = (index / nx) % ny;
-    k = index / (nx*ny);
+    i = index/(ny*nz);
+    j = (index / nz) % ny;
+    k = index % nz;
 }
 
-inline double time_until_collision_with_plane(CVector &r, CVector &v, CVector &point_in_plane, CVector &normal) {
+double time_until_collision_with_plane(CVector &r, CVector &v, CVector &point_in_plane, CVector &normal) {
     return (point_in_plane - r).dot(normal) / v.dot(normal);
 }
 
-inline bool same_side(CVector &p1, CVector &p2, CVector &a, CVector &b) {
+bool same_side(CVector &p1, CVector &p2, CVector &a, CVector &b) {
     CVector cp1 = (b-a).cross(p1-a);
     CVector cp2 = (b-a).cross(p2-a);
     if(cp1.dot(cp2) >= 0) return true;
     else return false;
 }
 
-inline bool is_point_within_square(CVector &p1, CVector &p2, CVector &p3, CVector &p4, CVector point) {
+bool is_point_within_square(CVector &p1, CVector &p2, CVector &p3, CVector &p4, CVector point) {
     CVector center = (p1 + p2 + p3 + p4)*0.25;
 
     if (same_side(point, center, p1, p2) && same_side(point, center, p2, p3) &&
@@ -97,29 +97,36 @@ inline bool is_point_within_square(CVector &p1, CVector &p2, CVector &p3, CVecto
     else return false;
 }
 
-double Grid::get_time_until_collision(double *r, double *v, const int &voxel_index) {
+double Grid::get_time_until_collision(double *r, double *v, double dt, const int &voxel_index) {
     /*
      * Strategy:
      *          First calculate time until intersection with every facet of the voxel.
      *          Then, for each facet, check if collision point is inside the facet. Among those points that are inside a facet, choose the one with lowest collision time.
      */
 
-    CVector r_vec(r[0], r[1], r[2]);
+    CVector r_vec(r[0]-system->topology->origin[0], r[1]-system->topology->origin[1], r[2]-system->topology->origin[2]);
     CVector v_vec(v[0], v[1], v[2]);
+
+    float real_x = fmod(r[0] + v[0]*dt + system->length[0], system->length[0]);
+    float real_y = fmod(r[1] + v[1]*dt + system->length[1], system->length[1]);
+    float real_z = fmod(r[2] + v[2]*dt + system->length[2], system->length[2]);
 
     double time_until_collision = 1e9;
     // Voxel index vector
     int i,j,k;
     get_index_vector_from_index(voxel_index, i, j, k);
+    i -= nx_per_cpu;
+    j -= ny_per_cpu;
+    k -= nz_per_cpu;
 
-    point_list[0].x = (i-voxel_origin.x)*voxel_size[0]; point_list[0].y = (j-voxel_origin.y)*voxel_size[1]; point_list[0].z = (k-voxel_origin.z)*voxel_size[2];
-    point_list[1].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[1].y = (j-voxel_origin.y)*voxel_size[1]; point_list[1].z = (k-voxel_origin.z)*voxel_size[2];
-    point_list[2].x = (i-voxel_origin.x)*voxel_size[0]; point_list[2].y = (j-voxel_origin.y)*voxel_size[1]; point_list[2].z = ((k-voxel_origin.z)+1)*voxel_size[2];
-    point_list[3].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[3].y = (j-voxel_origin.y)*voxel_size[1]; point_list[3].z = ((k-voxel_origin.z)+1)*voxel_size[2];
-    point_list[4].x = (i-voxel_origin.x)*voxel_size[0]; point_list[4].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[4].z = (k-voxel_origin.z)*voxel_size[2];
-    point_list[5].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[5].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[5].z = (k-voxel_origin.z)*voxel_size[2];
-    point_list[6].x = (i-voxel_origin.x)*voxel_size[0]; point_list[6].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[6].z = ((k-voxel_origin.z)+1)*voxel_size[2];
-    point_list[7].x = ((i-voxel_origin.x)+1)*voxel_size[0]; point_list[7].y = ((j-voxel_origin.y)+1)*voxel_size[1]; point_list[7].z = ((k-voxel_origin.z)+1)*voxel_size[2];
+    point_list[0].x = i*voxel_size[0]; point_list[0].y = j*voxel_size[1]; point_list[0].z = k*voxel_size[2];
+    point_list[1].x = (i+1)*voxel_size[0]; point_list[1].y = j*voxel_size[1]; point_list[1].z = k*voxel_size[2];
+    point_list[2].x = i*voxel_size[0]; point_list[2].y = j*voxel_size[1]; point_list[2].z = (k+1)*voxel_size[2];
+    point_list[3].x = (i+1)*voxel_size[0]; point_list[3].y = j*voxel_size[1]; point_list[3].z = (k+1)*voxel_size[2];
+    point_list[4].x = i*voxel_size[0]; point_list[4].y = (j+1)*voxel_size[1]; point_list[4].z = k*voxel_size[2];
+    point_list[5].x = (i+1)*voxel_size[0]; point_list[5].y = (j+1)*voxel_size[1]; point_list[5].z = k*voxel_size[2];
+    point_list[6].x = i*voxel_size[0]; point_list[6].y = (j+1)*voxel_size[1]; point_list[6].z = (k+1)*voxel_size[2];
+    point_list[7].x = (i+1)*voxel_size[0]; point_list[7].y = (j+1)*voxel_size[1]; point_list[7].z = (k+1)*voxel_size[2];
 
     double time_facet_1 = time_until_collision_with_plane(r_vec, v_vec, point_list[2], unit_normal_vectors[0]);
     double time_facet_2 = time_until_collision_with_plane(r_vec, v_vec, point_list[1], unit_normal_vectors[1]);
@@ -149,7 +156,7 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
     if( time_facet_5 > 0 && time_facet_5 < time_until_collision && will_hit_facet_5 && !isnan(time_facet_5)) time_until_collision = time_facet_5;
     if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !isnan(time_facet_6)) time_until_collision = time_facet_6;
 
-    if( time_until_collision > 1000) {
+    if(time_until_collision > 1000) {
         cout << system->myid << " didn't collide with anything :/" << endl;
         cout << "Time 1: " << time_facet_1 << endl;
         cout << "Time 2: " << time_facet_2 << endl;
@@ -162,8 +169,6 @@ double Grid::get_time_until_collision(double *r, double *v, const int &voxel_ind
         cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
         cout << "with local i,j,k = " << i << ", " << j << ", " << k << ", " << endl;
         cout << "which is local voxel index " << voxel_index << endl;
-
-        cout << "with global i,j,k = " << i-voxel_origin.x + system->topology->index_vector[0]*nx_per_cpu << ", " << j - voxel_origin.y + system->topology->index_vector[1]*ny_per_cpu<< ", " << k -voxel_origin.z + system->topology->index_vector[2]*nz_per_cpu << ", " << endl;
 
         exit(1);
     }

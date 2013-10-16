@@ -40,12 +40,12 @@ void MoleculeMover::do_move(double *r, double *v, double dt) {
     r[2] += v[2]*dt;
 }
 
-inline int get_index_of_voxel(double *r, const double &nx_div_lx,const double &ny_div_ly,const double &nz_div_lz, const int &Nx, const int &NyNx) {
+inline int get_index_of_voxel(double *r, const double &nx_div_lx,const double &ny_div_ly,const double &nz_div_lz, const int &Nz, const int &NyNz) {
     int i =  r[0]*nx_div_lx;
     int j =  r[1]*ny_div_ly;
     int k =  r[2]*nz_div_lz;
 
-    return i + j*Nx + k*NyNx;
+    return i*NyNz + j*Nz + k;
 }
 
 int sign(double a) {
@@ -179,15 +179,19 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
 }
 
 void MoleculeMover::apply_periodic_boundary_conditions(int &molecule_index, double *r, const CVector &system_length) {
-        if(r[3*molecule_index + 0] > system_length.x)  { r[3*molecule_index + 0] -= system_length.x; count_periodic[0]++; }
+        if(r[3*molecule_index + 0] >= system_length.x)  { r[3*molecule_index + 0] -= system_length.x; count_periodic[0]++; }
         else if(r[3*molecule_index + 0] < 0)         { r[3*molecule_index + 0] += system_length.x; count_periodic[0]--; }
 
-        if(r[3*molecule_index + 1] > system_length.y) { r[3*molecule_index + 1] -= system_length.y; count_periodic[1]++;}
+        if(r[3*molecule_index + 1] >= system_length.y) { r[3*molecule_index + 1] -= system_length.y; count_periodic[1]++;}
         else if(r[3*molecule_index + 1] < 0)         { r[3*molecule_index + 1] += system_length.y; count_periodic[1]--; }
 
-        if(r[3*molecule_index + 2] > system_length.z) { r[3*molecule_index + 2] -= system_length.z; count_periodic[2]++; }
+        if(r[3*molecule_index + 2] >= system_length.z) { r[3*molecule_index + 2] -= system_length.z; count_periodic[2]++; }
         else if(r[3*molecule_index + 2] < 0)         { r[3*molecule_index + 2] += system_length.z; count_periodic[2]--; }
 }
+
+int interesting_molecule = 3686;
+int interesting_step = 1;
+int interesting_node = 1;
 
 void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
 //    double nx_div_lx = grid->global_nx*system->one_over_length[0];
@@ -195,13 +199,22 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
 //    double nz_div_lz = grid->global_nz*system->one_over_length[2];
 //    int nx = grid->Nx;
 //    int nynx = grid->Nx*grid->Ny;
-    if(system->myid == 1) cout << system->myid << " " << molecule_index << " in step " << system->steps << endl;
+    // if(system->myid == 1) cout << system->myid << " " << molecule_index << " in step " << system->steps << endl;
     double tau = dt;
     double *r = &system->r[3*molecule_index];
     double *v = &system->v[3*molecule_index];
 
     int idx = grid->get_index_of_voxel(r);
-    if(voxels[idx] != voxel_type_empty) {
+
+    if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+        cout << "Molecue is at" << endl;
+        cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
+        cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
+        cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
+        cout << "Moving molecule with timestep " << tau << endl << endl;
+    }
+
+    if(voxels[idx] != voxel_type_empty && depth==0) {
         cout << "We have fucked up SUPER BIG TIME with molecule " << molecule_index << " at timestep " << system->steps << endl;
         exit(1);
     }
@@ -209,15 +222,46 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
     do_move(r, v, tau);
     idx = grid->get_index_of_voxel(r);
 
+    if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+        cout << "Molecue is now at" << endl;
+        cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
+        cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
+        cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
+    }
+
     // We now have three possible outcomes
     if(voxels[idx] >= voxel_type_wall) {
+        if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+            cout << "Molecue did hit a wall" << endl << endl;
+        }
+
         // We hit a wall. First, move back to find
         while(voxels[idx] != voxel_type_boundary) {
+            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                cout << "Molecue hit a voxel with index " << idx << " which is not a boundary." << endl;
+            }
+
             if(voxels[idx] == voxel_type_wall) {
                 tau /= 2;
+
+                if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                    cout << "Moving molecule with tau=" << tau << endl << endl;
+                }
+
                 do_move(r, v, -tau); // Move back
                 idx = grid->get_index_of_voxel(r);
+
+                if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                    cout << "Molecue is now at" << endl;
+                    cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
+                    cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
+                    cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
+                }
             } else {
+                if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                    cout << "Molecue is now at voxel " << idx << " which is an empty voxel" << endl;
+                }
+
                 dt -= tau;
                 if(dt > 1e-5 && depth < 10) {
                     move_molecule(molecule_index,dt,rnd,depth+1);
@@ -234,11 +278,29 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         int collision_voxel_index = idx;
 
         while(voxels[idx] == voxel_type_boundary) {
+            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                cout << endl << "Molecue is at voxel " << idx << " which is a boundary, moving back with tau=" << -tau << endl;
+            }
             collision_voxel_index = idx;
             do_move(r, v, -tau); // Move back
-            tau = grid->get_time_until_collision(r, v, collision_voxel_index); // Time until collision with voxel boundary
+
+            tau = grid->get_time_until_collision(r, v, tau, collision_voxel_index); // Time until collision with voxel boundary
+            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                cout << "Molecue is now at" << endl;
+                cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
+                cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
+                cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
+                cout << "which gives time until collision: " << tau << endl;
+            }
             do_move(r, v, tau); // Move over there
             idx = grid->get_index_of_voxel(r);
+
+            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
+                cout << "Molecue is now at" << endl;
+                cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
+                cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
+                cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
+            }
         }
 
         // We're not at the boundary anymore, so we can move over here and do happy colliding

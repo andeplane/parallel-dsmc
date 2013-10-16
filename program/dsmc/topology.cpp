@@ -27,36 +27,36 @@ Topology::Topology(int myid_, int nx, int ny, int nz, System *system_)
                 int dj = j - index_vector[1];
                 int dk = k - index_vector[2];
 
-                if(di == -1 || di - num_processors_vector[0] == -1 && num_processors_vector[0] > 1) {
+                if(di == -1 || (di - num_processors_vector[0] == -1 && num_processors_vector[0] > 1)) {
                     // The node is to our left in x-dir
                     node_id_to_facet_id_list[index] = 0;
                     continue;
                 }
 
-                if(di == 1 || di + num_processors_vector[0] == 1 && num_processors_vector[0] > 1) {
+                if(di == 1 || (di + num_processors_vector[0] == 1 && num_processors_vector[0] > 1)) {
                     // The node is to our right in x-dir
                     node_id_to_facet_id_list[index] = 1;
                     continue;
                 }
 
-                if(dj == -1 || dj - num_processors_vector[1] == -1 && num_processors_vector[1] > 1) {
+                if(dj == -1 || (dj - num_processors_vector[1] == -1 && num_processors_vector[1] > 1)) {
                     // The node is to our left in y-dir
                     node_id_to_facet_id_list[index] = 2;
                     continue;
                 }
 
-                if(dj == 1 || dj + num_processors_vector[1] == 1 && num_processors_vector[1] > 1) {
+                if(dj == 1 || (dj + num_processors_vector[1] == 1 && num_processors_vector[1] > 1)) {
                     // The node is to our right in y-dir
                     node_id_to_facet_id_list[index] = 3;
                     continue;
                 }
 
-                if(dk == -1 || dk - num_processors_vector[2] == -1 && num_processors_vector[2] > 1) {
+                if(dk == -1 || (dk - num_processors_vector[2] == -1 && num_processors_vector[2] > 1)) {
                     // The node is to our left in z-dir
                     node_id_to_facet_id_list[index] = 4;
                     continue;
                 }
-                if(dk == 1 || dk + num_processors_vector[2] == 1 && num_processors_vector[2] > 1) {
+                if(dk == 1 || (dk + num_processors_vector[2] == 1 && num_processors_vector[2] > 1)) {
                     // The node is to our right in z-dir
                     node_id_to_facet_id_list[index] = 5;
                     continue;
