@@ -6,6 +6,7 @@
 #include <random.h>
 #include <fstream>
 #include <cvector.h>
+#include <cstring>
 
 using std::ifstream;
 using std::ofstream;
