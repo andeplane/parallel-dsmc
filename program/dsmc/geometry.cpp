@@ -28,9 +28,9 @@ int main(int argc, char **argv)
     double threshold = ini.getdouble("threshold");
 
     ComplexGeometry cg;
-    cg.create_perlin_geometry(100, 100, 100, 1,1,1,3, threshold, true, 1);
+    cg.create_perlin_geometry(128, 128, 128, 1,1,1,3, threshold, true, 1);
     // cg.create_sphere(128, 128, 128, 0.8, false, true, 1);
-    cg.save_to_file("./balle2/",CVector(2,2,2));
+    // cg.save_to_file("./balle2/",CVector(2,2,2));
 
     #ifdef OPENGL
     CVector system_length = CVector(10*Lx, 10*Ly, 10*Lz);

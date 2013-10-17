@@ -18,8 +18,7 @@ Cell::Cell(System *_system) {
     collision_rest = 0;
     average_velocity.resize(3,0);
 
-    int molecules_per_cell = MAX_MOLECULE_NUM / (system->cells_x*system->cells_y*system->cells_z);
-    num_molecules_allocated_memory = 10*molecules_per_cell;
+    num_molecules_allocated_memory = 100;
 
     molecules = new int[num_molecules_allocated_memory];
 }
