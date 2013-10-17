@@ -450,9 +450,9 @@ inline void System::find_position(double *r) {
     bool did_collide = true;
     bool is_inside = false;
     while(did_collide || !is_inside) {
-        r[0] = length[0]*rnd->next_double();
-        r[1] = length[1]*rnd->next_double();
-        r[2] = length[2]*rnd->next_double();
+        r[0] = topology->origin[0] + topology->length[0]*length[0]*rnd->next_double();
+        r[1] = topology->origin[1] + topology->length[1]*length[1]*rnd->next_double();
+        r[2] = topology->origin[2] + topology->length[2]*length[2]*rnd->next_double();
 
         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
         is_inside = topology->is_position_inside(r);
@@ -541,13 +541,13 @@ void System::setup_cells() {
     int num_cells = cells_x*cells_y*cells_z;
     all_cells.reserve(num_cells);
     int idx[3];
-
     for(idx[0]=0;idx[0]<cells_x;idx[0]++) {
         for(idx[1]=0;idx[1]<cells_y;idx[1]++) {
             for(idx[2]=0;idx[2]<cells_z;idx[2]++) {
                 Cell *cell = new Cell(this);
 
                 cell->index = cell_index_from_ijk(idx[0],idx[1],idx[2]);
+                
                 cell->vr_max = 3*most_probable_velocity;
                 cell->Lx = cell_length_x; cell->Ly = cell_length_y; cell->Lz = cell_length_z;
                 cell->origin[0] = idx[0]*cell_length_x; cell->origin[1] = idx[1]*cell_length_y; cell->origin[2] = idx[2]*cell_length_z;

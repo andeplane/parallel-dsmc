@@ -29,8 +29,8 @@ int main(int argc, char **argv)
 
     ComplexGeometry cg;
     // cg.create_perlin_geometry(100, 100, 100, 1,1,1,3, threshold, false, 1);
-    cg.create_sphere(100, 100, 100, 0.8, false, true, 1);
-    cg.save_to_file("./sphere_world",CVector(2,2,2));
+    cg.create_sphere(128, 128, 128, 0.8, false, true, 1);
+    cg.save_to_file("./sphere_world",CVector(1,1,8));
 
     #ifdef OPENGL
     CVector system_length = CVector(10*Lx, 10*Ly, 10*Lz);
