@@ -376,17 +376,17 @@ void System::initialize(Settings *settings_, int myid_) {
     node_num_new_molecules.resize(topology->num_processors,0);
     node_molecule_data.resize(topology->num_processors);
     for(int i=0; i<topology->num_processors; i++) node_molecule_data[i].resize(MAX_MPI_DATA,0);
-
+    MPI_Barrier(MPI_COMM_WORLD);
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
-
+    MPI_Barrier(MPI_COMM_WORLD);
     // First create all the cells
     if(myid==0) {
         int num_cells = cells_x*cells_y*cells_z;
         cout << "Creating " << num_cells << " cells..." << endl;
     }
     setup_cells();
-
+    MPI_Barrier(MPI_COMM_WORLD);
     // Calculate cell volume 
     volume = length[0]*length[1]*length[2];
     volume_global = volume*porosity_global;
@@ -406,7 +406,9 @@ void System::initialize(Settings *settings_, int myid_) {
         cout << "Creating/loading " << num_molecules_global_calculated << " molecules (" << num_molecules_per_cpu_calculated << " per cpu)" << endl;
 
     }
+    MPI_Barrier(MPI_COMM_WORLD);
     setup_molecules();
+    MPI_Barrier(MPI_COMM_WORLD);
     num_molecules_global = 0;
 
     MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
