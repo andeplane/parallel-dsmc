@@ -4,7 +4,7 @@ using namespace std;
 
 
 #include <math.h>
-#include <CMatrix.h>
+#include <cmatrix.h>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
