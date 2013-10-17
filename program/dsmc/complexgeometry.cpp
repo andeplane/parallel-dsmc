@@ -357,7 +357,7 @@ void ComplexGeometry::create_perlin_geometry(int nx_, int ny_, int nz_, int octa
                 int index = i*ny*nz + j*nz + k; //new
                 // int index = i + j*nx + k*ny*nx; //old
                 double val = 0;
-                for (int a=0; a<5  ; a++) {
+                for (int a=0; a<4  ; a++) {
                     // s = 3.13531*a + 2.2513531;
                     s = 8.134246*a + 7.136537345314;
 

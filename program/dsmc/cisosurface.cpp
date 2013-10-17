@@ -341,8 +341,11 @@ template <class T> void CIsoSurface<T>::GenerateSurface(const T* ptScalarField, 
 	m_fCellLengthZ = fCellLengthZ;
 	m_ptScalarField = ptScalarField;
 
-    unsigned int nPointsInZDirection = (m_nCellsZ + 1);
-    unsigned int nPointsInSlice = nPointsInZDirection*(m_nCellsY + 1);
+//    unsigned int nPointsInZDirection = (m_nCellsZ + 1);
+//    unsigned int nPointsInSlice = nPointsInZDirection*(m_nCellsY + 1);
+
+    unsigned int nPointsInXDirection = (m_nCellsX + 1);
+    unsigned int nPointsInSlice = nPointsInXDirection*(m_nCellsY + 1);
 
 	// Generate isosurface.
 
@@ -353,24 +356,44 @@ template <class T> void CIsoSurface<T>::GenerateSurface(const T* ptScalarField, 
 				// Calculate table lookup index from those
 				// vertices which are below the isolevel.
 				unsigned int tableIndex = 0;
+//                if(large_than) {
+//                    if (m_ptScalarField[z + y*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 1;
+//                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 2;
+//                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 4;
+//                    if (m_ptScalarField[z + y*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 8;
+//                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 16;
+//                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 32;
+//                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 64;
+//                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 128;
+//                } else {
+//                    if (m_ptScalarField[z + y*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 1;
+//                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 2;
+//                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 4;
+//                    if (m_ptScalarField[z + y*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 8;
+//                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 16;
+//                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 32;
+//                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 64;
+//                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 128;
+//                }
+
                 if(large_than) {
-                    if (m_ptScalarField[z + y*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 1;
-                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 2;
-                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 4;
-                    if (m_ptScalarField[z + y*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 8;
-                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 16;
-                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + x*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 32;
-                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 64;
-                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + (x+1)*nPointsInSlice] >= m_tIsoLevel) tableIndex |= 128;
+                    if (m_ptScalarField[z*nPointsInSlice + y*nPointsInXDirection + x] >= m_tIsoLevel) tableIndex |= 1;
+                    if (m_ptScalarField[z*nPointsInSlice + (y+1)*nPointsInXDirection + x] >= m_tIsoLevel) tableIndex |= 2;
+                    if (m_ptScalarField[z*nPointsInSlice + (y+1)*nPointsInXDirection + (x+1)] >= m_tIsoLevel) tableIndex |= 4;
+                    if (m_ptScalarField[z*nPointsInSlice + y*nPointsInXDirection + (x+1)] >= m_tIsoLevel) tableIndex |= 8;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + y*nPointsInXDirection + x] >= m_tIsoLevel) tableIndex |= 16;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + (y+1)*nPointsInXDirection + x] >= m_tIsoLevel) tableIndex |= 32;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + (y+1)*nPointsInXDirection + (x+1)] >= m_tIsoLevel) tableIndex |= 64;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + y*nPointsInXDirection + (x+1)] >= m_tIsoLevel) tableIndex |= 128;
                 } else {
-                    if (m_ptScalarField[z + y*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 1;
-                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 2;
-                    if (m_ptScalarField[z + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 4;
-                    if (m_ptScalarField[z + y*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 8;
-                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 16;
-                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + x*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 32;
-                    if (m_ptScalarField[(z+1) + (y+1)*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 64;
-                    if (m_ptScalarField[(z+1) + y*nPointsInZDirection + (x+1)*nPointsInSlice] <= m_tIsoLevel) tableIndex |= 128;
+                    if (m_ptScalarField[z*nPointsInSlice + y*nPointsInXDirection + x] <= m_tIsoLevel) tableIndex |= 1;
+                    if (m_ptScalarField[z*nPointsInSlice + (y+1)*nPointsInXDirection + x] <= m_tIsoLevel) tableIndex |= 2;
+                    if (m_ptScalarField[z*nPointsInSlice + (y+1)*nPointsInXDirection + (x+1)] <= m_tIsoLevel) tableIndex |= 4;
+                    if (m_ptScalarField[z*nPointsInSlice + y*nPointsInXDirection + (x+1)] <= m_tIsoLevel) tableIndex |= 8;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + y*nPointsInXDirection + x] <= m_tIsoLevel) tableIndex |= 16;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + (y+1)*nPointsInXDirection + x] <= m_tIsoLevel) tableIndex |= 32;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + (y+1)*nPointsInXDirection + (x+1)] <= m_tIsoLevel) tableIndex |= 64;
+                    if (m_ptScalarField[(z+1)*nPointsInSlice + y*nPointsInXDirection + (x+1)] <= m_tIsoLevel) tableIndex |= 128;
                 }
 
 
