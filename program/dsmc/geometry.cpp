@@ -32,11 +32,10 @@ int main(int argc, char **argv)
     cg.create_sphere(100, 100, 100, 0.8, false, true, 1);
     cg.save_to_file("./sphere_world",CVector(2,2,2));
 
+    #ifdef OPENGL
     CVector system_length = CVector(10*Lx, 10*Ly, 10*Lz);
     MarchingCubes c;
     c.create_marching_cubes_from_complex_geometry(cg, system_length, threshold, false);
-
-    #ifdef OPENGL
     char *window_title = new char[1000];
     sprintf(window_title, "DSMC Geometry Visualizer (DSMCGV) - [%.2f fps]", 60.0);
     Visualizer v(screen_width, screen_height, string(window_title), false, 0.1);
