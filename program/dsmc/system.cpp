@@ -67,16 +67,16 @@ void System::mpi_move() {
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
                 // 6 doubles per molecule
-                if(num_send) MPI_Send(&node_molecule_data[node_id][0], 6*num_send,MPI_DOUBLE,node_id,100+facet_index, MPI_COMM_WORLD);
-                if(num_recieve) MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
+                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,MPI_DOUBLE,node_id,100+facet_index, MPI_COMM_WORLD);
+                if(num_recieve) MPI_Recv(mpi_receive_buffer, 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
                 // cout << steps << " - " << myid << " sent " << node_num_new_molecules[node_id] << " and received " << num_recieve << " particles from " << node_id << endl;
             } else if (topology->my_parity[dimension] == 1){
                 // cout << steps << " - " << myid << " with parity 1 will send to " << node_id << endl;
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 // 6 doubles per molecule
-                if(num_recieve) MPI_Recv(&mpi_receive_buffer[0], 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
-                if(num_send) MPI_Send(&node_molecule_data[node_id][0], 6*num_send,MPI_DOUBLE,node_id,100+facet_index, MPI_COMM_WORLD);
+                if(num_recieve) MPI_Recv(mpi_receive_buffer, 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
+                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,MPI_DOUBLE,node_id,100+facet_index, MPI_COMM_WORLD);
                 // cout << steps << " - " << myid << " sent " << node_num_new_molecules[node_id] << " and received " << num_recieve << " particles from " << node_id << endl;
             }
             node_num_new_molecules[node_id] = 0; // We have sent everything we wanted to this node now.
@@ -148,7 +148,7 @@ void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
     num_molecules_local++;
 }
 
-void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules) {
+void System::add_molecules_from_mpi(double *data, const int &num_new_molecules) {
     for(int i=0; i<num_new_molecules; i++) {
         int node_id = topology->index_from_position(&data[6*i+0]);
         if(node_id != myid) {
@@ -373,9 +373,9 @@ void System::initialize(Settings *settings_, int myid_) {
     num_cells_vector[2] = cells_z;
     io = new DSMC_IO(this);
     topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
-    node_num_new_molecules.resize(topology->num_processors,0);
-    node_molecule_data.resize(topology->num_processors);
-    for(int i=0; i<topology->num_processors; i++) node_molecule_data[i].resize(MAX_MPI_DATA,0);
+    node_num_new_molecules = new int[topology->num_processors];
+    node_molecule_data = new double*[topology->num_processors];
+    for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new double[MAX_MPI_DATA]; }
     MPI_Barrier(MPI_COMM_WORLD);
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
@@ -413,7 +413,7 @@ void System::initialize(Settings *settings_, int myid_) {
 
     MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
 
-    mpi_receive_buffer.resize(MAX_MPI_DATA,0);
+    mpi_receive_buffer = new double[MAX_MPI_DATA];
 
     if(myid==0) cout << "Creating surface collider..." << endl;
     double sqrt_wall_temp_over_mass = sqrt(wall_temperature/settings->mass);
@@ -528,9 +528,9 @@ void System::update_cell_volume() {
 void System::setup_molecules() {
     r = new double[3*MAX_MOLECULE_NUM];
     v = new double[3*MAX_MOLECULE_NUM];
+    molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
 
-    molecule_index_in_cell.resize(MAX_MOLECULE_NUM);
-    molecule_cell_index.resize(MAX_MOLECULE_NUM);
+    molecule_cell_index = new unsigned long[MAX_MOLECULE_NUM];
 
     if(settings->load_previous_state) {
         io->load_state_from_file_binary();
@@ -543,7 +543,8 @@ void System::setup_molecules() {
         v[3*n+1] = rnd->next_gauss()*sqrt_temp_over_mass;
         v[3*n+2] = rnd->next_gauss()*sqrt_temp_over_mass;
         find_position(&r[3*n]);
-        Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
+        int cell_index = cell_index_from_position(&r[3*n]);
+        Cell *cell = all_cells.at(cell_index);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
     }
 }
