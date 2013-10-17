@@ -4,10 +4,10 @@
 #include <visualizer.h>
 #include <copengl.h>
 #include <ctexture.h>
-#include <complexgeometry.h>
 #include <testshader.h>
 #include <camera.h>
 #endif
+#include <complexgeometry.h>
 #include <cinifile.h>
 #include <marchingcubes.h>
 #include <cvector.h>
