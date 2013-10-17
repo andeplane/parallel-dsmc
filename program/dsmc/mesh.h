@@ -20,8 +20,8 @@ class Mesh {
 public:
     #ifdef OPENGL
     GLuint vbo_buffers[3];
-    #endif
     TestShader testshader;
+    #endif
 	vector<float> vertices;
 	vector<int>   indices;
 	vector<float> normals;
