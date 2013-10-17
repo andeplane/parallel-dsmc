@@ -219,8 +219,8 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
 
     calculate_global_porosity();
     char filename[1000];
+    ProgressBar p(num_processors_total,"Saving world files");
     for(int index = 0; index<num_processors_total; index++) {
-
         sprintf(filename,"%s/%04d.bin",foldername.c_str(), index);
         ofstream file (filename, ios::out | ios::binary);
         if(!file.is_open()) {
@@ -239,8 +239,6 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
         int output_data_array_index = 0;
         int num_empty_voxels = 0;
         int num_local_voxels = 0;
-        cout << "nx*ny*nz global is " << nx*ny*nz << endl;
-        cout << "On " << num_processors_total << " cpus, we will create " << num_voxels_total_per_node << " voxels." << endl;
         for(int di = -num_voxels_vector_per_node.x; di < 2*num_voxels_vector_per_node.x; di++) {
             for(int dj = -num_voxels_vector_per_node.y; dj < 2*num_voxels_vector_per_node.y; dj++) {
                 for(int dk = -num_voxels_vector_per_node.z; dk < 2*num_voxels_vector_per_node.z; dk++) {
@@ -253,11 +251,6 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
                     int global_voxel_index = index_from_ijk(global_voxel_index_vector, num_voxels);
 
                     local_voxels[output_data_array_index]  = vertices_unsigned_char[global_voxel_index];
-
-                    if(output_data_array_index == 8484458) {
-                        cout << i << " " << j << " " << k << endl;
-                        cout << "Value: " << int(local_voxels[output_data_array_index]) << endl;
-                    }
 
                     for(int a=0; a<3; a++) {
                         local_normals[3*output_data_array_index + a] = normals[3*global_voxel_index + a];
@@ -284,8 +277,6 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
         unsigned int local_nx = 3*num_voxels_vector_per_node.x;
         unsigned int local_ny = 3*num_voxels_vector_per_node.y;
         unsigned int local_nz = 3*num_voxels_vector_per_node.z;
-        cout << "Global porosity: " << global_porosity << endl;
-        cout << "Local porosity: " << porosity << endl;
 
         file.write (reinterpret_cast<char*>(&global_porosity), sizeof(float));
         file.write (reinterpret_cast<char*>(&porosity), sizeof(float));
@@ -302,6 +293,8 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
         file.write (reinterpret_cast<char*>(local_tangents2), 3*output_data_array_index*sizeof(float));
 
         file.close();
+
+        p.update(index);
     }
 }
 
