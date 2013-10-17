@@ -30,7 +30,7 @@ int main(int args, char* argv[]) {
 
     System system;
     system.initialize(settings, myid);
-    
+
     ifstream to_continue("Tocontinue");
     double t = 0;
     unsigned long steps = 0;

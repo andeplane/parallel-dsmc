@@ -44,3 +44,5 @@ public:
     double calculate_kinetic_energy();
     static bool cmp(Cell *c1, Cell *c2);
 };
+
+
