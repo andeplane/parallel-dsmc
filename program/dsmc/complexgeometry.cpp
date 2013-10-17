@@ -219,6 +219,11 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
 
     calculate_global_porosity();
     char filename[1000];
+    unsigned char *local_voxels = new unsigned char[num_voxels_total_per_node];
+    float *local_normals = new float[3*num_voxels_total_per_node];
+    float *local_tangents1 = new float[3*num_voxels_total_per_node];
+    float *local_tangents2 = new float[3*num_voxels_total_per_node];
+
     ProgressBar p(num_processors_total,"Saving world files");
     for(int index = 0; index<num_processors_total; index++) {
         sprintf(filename,"%s/%04d.bin",foldername.c_str(), index);
@@ -230,11 +235,6 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
 
         CVector index_vector = index_vector_from_index(index, num_processors_vector);
         CVector voxel_origo = index_vector*num_voxels_vector_per_node;
-
-        unsigned char *local_voxels = new unsigned char[num_voxels_total_per_node];
-        float *local_normals = new float[3*num_voxels_total_per_node];
-        float *local_tangents1 = new float[3*num_voxels_total_per_node];
-        float *local_tangents2 = new float[3*num_voxels_total_per_node];
 
         int output_data_array_index = 0;
         int num_empty_voxels = 0;
