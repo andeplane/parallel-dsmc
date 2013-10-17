@@ -1,5 +1,67 @@
 #include <cvector.h>
 
+CVector CVector::gl_mat_mul(float* pm) {
+
+      CVector res;
+
+      res.x = pm[0] * x +
+              pm[1] * y +
+              pm[2] * z;
+
+      res.y = pm[4] * x +
+              pm[5] * y +
+              pm[6] * z;
+
+      res.z = pm[8] * x +
+              pm[9] * y +
+              pm[10] * z;
+      return res;
+}
+
+CVector CVector::gl_mat_mul(float* pm, float& w) {
+
+      CVector res;
+
+      res.x = pm[0] * x +
+              pm[1] * y +
+              pm[2] * z;
+
+      res.y = pm[4] * x +
+              pm[5] * y +
+              pm[6] * z;
+
+      res.z = pm[8] * x +
+              pm[9] * y +
+              pm[10] * z;
+
+      w = pm[12] * (float)x +
+      pm[13] * (float)y +
+      pm[14] * (float)z +
+      (float)(pm[15] * 1.0f);
+
+    return res;
+}
+
+
+CVector CVector::gl_mat_mul_flip(float* pm) {
+
+      CVector res;
+
+      res.x = pm[0] * x +
+              pm[4] * y +
+              pm[8] * z;
+
+      res.y = pm[1] * x +
+              pm[5] * y +
+              pm[9] * z;
+
+      res.z = pm[2] * x +
+              pm[6] * y +
+              pm[10] * z;
+
+      return res;
+}
+
 bool CVector::get_plane_equation(CVector p0, CVector p1, CVector p2, double* eq)
 {
 	// following two expressions order of arguments is very important 

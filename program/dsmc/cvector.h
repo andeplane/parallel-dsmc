@@ -36,6 +36,10 @@ class CVector  {
      return CVector(a.x +x, a.y+y, a.z+z);
    }
 
+  inline CVector operator*(const CVector& a) const {
+     return CVector(a.x*x, a.y*y, a.z*z);
+   }
+
   inline CVector operator-(const CVector& a) const {
      return CVector(x - a.x, y - a.y, z - a.z);
    }
@@ -204,6 +208,9 @@ class CVector  {
    return CVector( cos(y)*sin(x), sin(y)*sin(x), cos(x)).normalize() * z;
  }
 
+   CVector gl_mat_mul(float* pm);
+   CVector gl_mat_mul(float* pm, float& w);
+   CVector gl_mat_mul_flip(float* pm);
   static bool get_plane_equation(CVector p0, CVector p1, CVector p2, double* eq);
   static CVector interpolate(CVector& v1, CVector& v2, CVector& v3, const double& val);
   double distance_from_plane(CVector& plane_normal, CVector& V);

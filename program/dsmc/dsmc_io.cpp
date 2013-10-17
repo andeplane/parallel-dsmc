@@ -40,8 +40,8 @@ void DSMC_IO::save_state_to_movie_file() {
             sprintf(filename,"movie_files/movie%04d.bin",system->myid);
             movie_file = new ofstream(filename,ios::out | ios::binary);
             movie_file_open = true;
-            data = new float[3*MAX_MOLECULE_NUM];
-            memset(data,0,3*MAX_MOLECULE_NUM*sizeof(float));
+            data = new float[6*MAX_MOLECULE_NUM];
+            memset(data,0,6*MAX_MOLECULE_NUM*sizeof(float));
             delete filename;
         }
 
@@ -50,13 +50,16 @@ void DSMC_IO::save_state_to_movie_file() {
             data[count++] = system->r[3*n+0];
             data[count++] = system->r[3*n+1];
             data[count++] = system->r[3*n+2];
+            data[count++] = system->v[3*n+0];
+            data[count++] = system->v[3*n+1];
+            data[count++] = system->v[3*n+2];
         }
 
-        count /= 4; // This should represent the number of particles, 4 doubles per particle
+        count /= 6; // This should represent the number of particles, 4 doubles per particle
         int actual_movie_molecules = settings->movie_molecules / system->topology->num_processors;
 
         movie_file->write (reinterpret_cast<char*>(&actual_movie_molecules), sizeof(int));
-        movie_file->write (reinterpret_cast<char*>(data), 3*actual_movie_molecules*sizeof(float));
+        movie_file->write (reinterpret_cast<char*>(data), 6*actual_movie_molecules*sizeof(float));
     }
     system->timer->end_io();
 }
@@ -160,8 +163,6 @@ void DSMC_IO::finalize() {
 }
 
 void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
-    cout << "I will read file " << filename << endl;
-
     ifstream file (filename.c_str(), ios::in | ios::binary);
     if(!file.is_open()) {
         cout << "Error, could not open file " << filename << endl;
@@ -173,8 +174,7 @@ void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
     file.read (reinterpret_cast<char*>(&porosity), sizeof(float));
     system->porosity_global = porosity_global;
     system->porosity = porosity;
-    cout << "Global porosity is " << system->porosity_global << endl;
-    cout << "Local porosity is " << system->porosity << endl;
+
     file.read (reinterpret_cast<char*>(&grid->global_nx), sizeof(unsigned int));
     file.read (reinterpret_cast<char*>(&grid->global_ny), sizeof(unsigned int));
     file.read (reinterpret_cast<char*>(&grid->global_nz), sizeof(unsigned int));
@@ -183,11 +183,6 @@ void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {
     file.read (reinterpret_cast<char*>(&grid->nz), sizeof(unsigned int));
     grid->num_voxels = grid->nx*grid->ny*grid->nz;
     grid->nx_per_cpu = grid->nx / 3; grid->ny_per_cpu = grid->ny / 3; grid->nz_per_cpu = grid->nz / 3;
-
-    cout << "Global num voxels " << grid->global_nx << " " << grid->global_ny << " " << grid->global_nz << endl;
-    cout << "Local voxels " << grid->nx << " " << grid->ny << " " << grid->nz << endl;
-    cout << "Local unique voxels " << grid->nx_per_cpu << " " << grid->ny_per_cpu << " " << grid->nz_per_cpu << endl;
-    cout << "Num voxels: " << grid->num_voxels << endl;
 
     grid->voxels = new unsigned char[grid->num_voxels];
     grid->normals   = new float[3*grid->num_voxels];

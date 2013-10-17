@@ -26,7 +26,28 @@ SOURCES += main.cpp \
     collidercercignanilampis.cpp \
     collidermaxwell.cpp \
     cvector.cpp \
-    topology.cpp
+    topology.cpp \
+    visualizer.cpp \
+    testshader.cpp \
+    solver.cpp \
+    progressbar.cpp \
+    perlin.cpp \
+    oglshader.cpp \
+    moviedata.cpp \
+    movie.cpp \
+    mesh.cpp \
+    marchingcubes.cpp \
+    ctexture.cpp \
+    cshaders.cpp \
+    copengl.cpp \
+    complexgeometry.cpp \
+    combined.cpp \
+    cmath.cpp \
+    citmap.cpp \
+    cisosurface.cpp \
+    cbitmap.cpp \
+    camera.cpp \
+    geometry.cpp
 
 HEADERS += \
     system.h \
@@ -47,7 +68,27 @@ HEADERS += \
     collidercercignanilampis.h \
     collidermaxwell.h \
     cvector.h \
-    topology.h
+    topology.h \
+    fpsmanager.hpp \
+    visualizer.h \
+    testshader.h \
+    solver.h \
+    progressbar.h \
+    perlin.h \
+    oglshader.h \
+    moviedata.h \
+    mesh.h \
+    marchingcubes.h \
+    defines.h \
+    ctexture.h \
+    cshaders.h \
+    copengl.h \
+    complexgeometry.h \
+    cmatrix.h \
+    cmath.h \
+    cisosurface.h \
+    cbitmap.h \
+    camera.h
 
 
 OTHER_FILES += \

@@ -206,14 +206,6 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
 
     int idx = grid->get_index_of_voxel(r);
 
-    if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-        cout << "Molecue is at" << endl;
-        cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
-        cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
-        cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
-        cout << "Moving molecule with timestep " << tau << endl << endl;
-    }
-
     if(voxels[idx] != voxel_type_empty && depth==0) {
         cout << "We have fucked up SUPER BIG TIME with molecule " << molecule_index << " at timestep " << system->steps << endl;
         exit(1);
@@ -222,46 +214,15 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
     do_move(r, v, tau);
     idx = grid->get_index_of_voxel(r);
 
-    if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-        cout << "Molecue is now at" << endl;
-        cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
-        cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
-        cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
-    }
-
     // We now have three possible outcomes
     if(voxels[idx] >= voxel_type_wall) {
-        if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-            cout << "Molecue did hit a wall" << endl << endl;
-        }
-
         // We hit a wall. First, move back to find
         while(voxels[idx] != voxel_type_boundary) {
-            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                cout << "Molecue hit a voxel with index " << idx << " which is not a boundary." << endl;
-            }
-
             if(voxels[idx] == voxel_type_wall) {
                 tau /= 2;
-
-                if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                    cout << "Moving molecule with tau=" << tau << endl << endl;
-                }
-
                 do_move(r, v, -tau); // Move back
                 idx = grid->get_index_of_voxel(r);
-
-                if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                    cout << "Molecue is now at" << endl;
-                    cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
-                    cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
-                    cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
-                }
             } else {
-                if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                    cout << "Molecue is now at voxel " << idx << " which is an empty voxel" << endl;
-                }
-
                 dt -= tau;
                 if(dt > 1e-5 && depth < 10) {
                     move_molecule(molecule_index,dt,rnd,depth+1);
@@ -278,29 +239,12 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         int collision_voxel_index = idx;
 
         while(voxels[idx] == voxel_type_boundary) {
-            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                cout << endl << "Molecue is at voxel " << idx << " which is a boundary, moving back with tau=" << -tau << endl;
-            }
             collision_voxel_index = idx;
             do_move(r, v, -tau); // Move back
 
             tau = grid->get_time_until_collision(r, v, tau, collision_voxel_index); // Time until collision with voxel boundary
-            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                cout << "Molecue is now at" << endl;
-                cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
-                cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
-                cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
-                cout << "which gives time until collision: " << tau << endl;
-            }
             do_move(r, v, tau); // Move over there
             idx = grid->get_index_of_voxel(r);
-
-            if(molecule_index == interesting_molecule && system->steps == interesting_step && system->myid == interesting_node) {
-                cout << "Molecue is now at" << endl;
-                cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
-                cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
-                cout << "at voxel index " << idx << " which has value " << int(voxels[idx]) << endl;
-            }
         }
 
         // We're not at the boundary anymore, so we can move over here and do happy colliding

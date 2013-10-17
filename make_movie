@@ -1,0 +1,41 @@
+
+# target might be WINDOWS, OS_X or LINUX
+TARGET = OS_X
+
+# Home directory of the acw program
+
+# point to the inclue directory
+INCLUDE = program/dsmc
+SOURCEDIR = program/dsmc
+DEFINES = OPENGL
+INCLUDES = -I$(SOURCEDIR) -I/usr/local/Cellar/open-mpi/1.6.4/include
+# library dir
+LIBDIR = -L/usr/local/Cellar/open-mpi/1.6.4/lib 
+
+# compiler specific flags
+CFLAGS =  -D$(TARGET) -ipo -O3 -std=c++11
+#CFLAGS =  -D$(TARGET) -Wall -g -DDEBUG
+# CFLAGS = -D$(TARGET)
+FFLAGS = -framework GLUT -lglew -lGLFW -framework OpenGL -lmpi_cxx -lmpi
+
+PROJECT = movie
+
+_obj 	= movie.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o moviedata.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o
+
+obj_     = $(patsubst %,$(SOURCEDIR)/%, $(_obj))
+
+CC 	= icpc
+#CC 	= mpic++
+
+default: $(PROJECT)
+
+$(PROJECT):  $(obj_) 
+	$(CC)  $(INCLUDES) -o $(PROJECT) $(obj_) $(FFLAGS)  
+
+%.o: %.cpp
+	$(CC) -c -o $@ $^ $(INCLUDES) $(CFLAGS)   
+
+clean:	
+	rm program/dsmc/*.o
+
+all: default
