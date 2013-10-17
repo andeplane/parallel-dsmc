@@ -381,7 +381,10 @@ void System::initialize(Settings *settings_, int myid_) {
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
 
     // First create all the cells
-    if(myid==0) cout << "Creating cells..." << endl;
+    if(myid==0) {
+        int num_cells = cells_x*cells_y*cells_z;
+        cout << "Creating " << num_cells << " cells..." << endl;
+    }
     setup_cells();
 
     // Calculate cell volume 
@@ -396,7 +399,13 @@ void System::initialize(Settings *settings_, int myid_) {
     volume = volume_per_cpu*porosity;
     num_molecules_local = density*volume/atoms_per_molecule;
 
-    if(myid==0) cout << "Creating/loading molecules..." << endl;
+    if(myid==0) {
+        int num_molecules_global_calculated = density*volume_global/atoms_per_molecule;
+        int num_molecules_per_cpu_calculated = num_molecules_global_calculated/topology->num_processors;
+
+        cout << "Creating/loading " << num_molecules_global_calculated << " molecules (" << num_molecules_per_cpu_calculated << " per cpu)" << endl;
+
+    }
     setup_molecules();
     num_molecules_global = 0;
 
