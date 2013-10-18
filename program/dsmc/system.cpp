@@ -22,14 +22,24 @@
 void System::step() {
     steps += 1;
     t += dt;
-    accelerate();
-    move();
-    if(topology->num_processors>1) mpi_move();
-    timer->start_moving();
-    update_molecule_cells();
-    timer->end_moving();
+    string step_state = " accelerate()";
+    try {
+        accelerate();
+        step_state = " move()";
+        move();
+        step_state = " mpi_move()";
+        if(topology->num_processors>1) mpi_move();
+        timer->start_moving();
+        step_state = " update_molecule_cells()";
+        update_molecule_cells();
+        timer->end_moving();
 
-    collide();
+        collide();
+    } catch (string ex) {
+        cout << "Got exception: " << ex << endl;
+        cout << "while doing " << step_state << endl;
+    }
+
     if(settings->maintain_pressure) maintain_pressure();
 }
 
@@ -41,6 +51,8 @@ void System::mpi_move() {
         int node_id = topology->index_from_position(&r[3*n]);
         if(node_id != myid) {
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
+            if(node_id < 0 || node_id >= topology->num_processors) throw "Moved existing molecule to a node that doesn't exists";
+
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = r[3*n+0];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = r[3*n+1];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = r[3*n+2];
@@ -132,8 +144,8 @@ void System::update_molecule_cells() {
         int cell_index_new = cell_index_from_position(&r[3*n]);
         int cell_index_old = molecule_cell_index[n];
 
-        Cell *new_cell = all_cells[cell_index_new];
-        Cell *old_cell = all_cells[cell_index_old];
+        Cell *new_cell = all_cells.at(cell_index_new);
+        Cell *old_cell = all_cells.at(cell_index_old);
 
         if(cell_index_new != cell_index_old) {
             // We changed cell
@@ -152,6 +164,7 @@ void System::add_molecules_from_mpi(double *data, const int &num_new_molecules) 
     for(int i=0; i<num_new_molecules; i++) {
         int node_id = topology->index_from_position(&data[6*i+0]);
         if(node_id != myid) {
+            if(node_id < 0 || node_id >= topology->num_processors) throw "Moved new molecule to a node that doesn't exists";
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = data[6*i+0];
             node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = data[6*i+1];
@@ -169,8 +182,8 @@ void System::add_molecules_from_mpi(double *data, const int &num_new_molecules) 
         v[3*n+0] = data[6*i+3];
         v[3*n+1] = data[6*i+4];
         v[3*n+2] = data[6*i+5];
-
-        Cell *cell = all_cells[cell_index_from_position(&r[3*n])];
+        int cell_index = cell_index_from_position(&r[3*n]);
+        Cell *cell = all_cells.at(cell_index);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
         num_molecules_local++;
     }
