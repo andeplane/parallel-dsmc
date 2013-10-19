@@ -7,6 +7,7 @@ CTexture::CTexture(COpenGL *ogl)
 {
     opengl = ogl;
     v_absolute_value_average = 0;
+    average_velocity.resize(3,1);
 }
 
 
@@ -100,6 +101,8 @@ void CTexture::render_billboards(double *positions, double *velocities, vector<i
 
     glNormal3f(direction.x, direction.y, direction.z);
     double average_this_time_step = 0;
+    vector<float> new_average_values(3,0);
+
     for(int index=0; index<num_particles; index++) {
         float x = positions[3*index+0]*position_scale;
         float y = positions[3*index+1]*position_scale;
@@ -120,6 +123,16 @@ void CTexture::render_billboards(double *positions, double *velocities, vector<i
         double velocity_divided_by_average = v_abs / v_absolute_value_average*0.5;
         double collision_factor = 4.0/steps_since_collision[index];
         float color = 0.3 + 0.7*collision_factor;
+
+        new_average_values[0] += velocities[3*index + 0];
+        new_average_values[1] += velocities[3*index + 1];
+        new_average_values[2] += velocities[3*index + 2];
+
+        float red = velocities[3*index + 0] / average_velocity[0];
+        float green = velocities[3*index + 1] / average_velocity[1];
+        float blue = velocities[3*index + 2] / average_velocity[2];
+        color = 0.3 + 0.7*velocity_divided_by_average + collision_factor;
+
         glColor4f(color, color, color, 1.0);
 
         glTexCoord2f(0,0);
@@ -133,6 +146,10 @@ void CTexture::render_billboards(double *positions, double *velocities, vector<i
     }
     average_this_time_step /= num_particles;
     v_absolute_value_average = average_this_time_step;
+    average_velocity[0] = new_average_values[0]/num_particles;
+    average_velocity[1] = new_average_values[1]/num_particles;
+    average_velocity[2] = new_average_values[2]/num_particles;
+    new_average_values.clear();
 
     glEnd();
     glDisable(GL_BLEND);

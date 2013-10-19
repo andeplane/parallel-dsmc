@@ -105,7 +105,6 @@ int Cell::collide(Random *rnd) {
 		//* Accept or reject candidate pair according to relative speed
         if( v_rel > rnd->next_double()*vr_max ) {
 			//* If pair accepted, select post-collision velocities
-
 			collisions++;
             collide_molecules(v0, v1, v_rel, rnd);
 		} // Loop over pairs

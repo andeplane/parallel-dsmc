@@ -102,6 +102,4 @@ CVector CVector::interpolate(CVector& v1, CVector& v2, CVector& v3, const double
 
     return v1 * sc0 +v2 * sc1 + v3 * sc2;
 
-}  
-
-
+}

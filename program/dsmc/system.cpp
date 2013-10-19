@@ -21,6 +21,7 @@
 #include <stdexcept>      // std::out_of_range
 
 void System::step() {
+    for(int n=0; n<num_molecules_local; n++) steps_since_collision[n]++;
     steps += 1;
     t += dt;
     string step_state = " accelerate()";
@@ -523,6 +524,7 @@ void System::setup_molecules() {
     v = new double[3*MAX_MOLECULE_NUM];
     molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
     molecule_cell_index = new unsigned long[MAX_MOLECULE_NUM];
+    steps_since_collision.resize(MAX_MOLECULE_NUM,0);
 
     if(settings->load_previous_state) {
         io->load_state_from_file_binary();

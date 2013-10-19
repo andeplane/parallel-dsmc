@@ -34,14 +34,16 @@ int main(int args, char* argv[]) {
     double Lx = ini.getdouble("Lx");
     double Ly = ini.getdouble("Ly");
     double Lz = ini.getdouble("Lz");
+    double scale = ini.getdouble("scale");
     double threshold = ini.getdouble("threshold");
 
     ComplexGeometry cg;
-    cg.create_perlin_geometry(100, 100, 100, 1,1,1,3, threshold, true, 1);
+    cg.create_box(128,128,128,0.9,true,1);
     // cg.create_sphere(300, 300, 300, 0.9, true, true, 1);
     // cg.save_to_file("perlin.bin");
-    cg.save_to_file_2("../geometry_generator/perlin4/", CVector(1,1,1));
-    CVector system_length = CVector(10*Lx, 10*Ly, 10*Lz);
+
+    scale *= 10; // To map system size to particles
+    CVector system_length = CVector(scale*Lx, scale*Ly,scale*Lz);
     MarchingCubes c;
     c.create_marching_cubes_from_complex_geometry(cg, system_length, threshold*1.1, false);
 
@@ -75,7 +77,7 @@ int main(int args, char* argv[]) {
         if(v.opengl->bool1) c.render_vbo();
         shader.End();
         
-        sphere.render_billboards(solver->system.r, solver->system.v, solver->system.steps_since_collision, solver->system.num_molecules_local, 30.0);
+        sphere.render_billboards(solver->system.r, solver->system.v, solver->system.steps_since_collision, solver->system.num_molecules_local, scale);
         // sphere.render_billboards(solver->system.r, solver->system.v, balle, solver->system.num_molecules_local, 30.0);
         v.render_end();
         solver->step();

@@ -35,6 +35,7 @@ public:
     void load_text_files(string base_filename, CVector matrix_size, double threshold);
     void create_perlin_geometry(int nx, int ny, int nz, int octave, int frequency, int amplitude , int seed, float threshold, bool do_calculate_normals_tangents_and_boundary, int number_of_neighbor_averages);
     void create_sphere(int nx_, int ny_, int nz_, float radius, bool inverse, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages);
+    void create_box(int nx_, int ny_, int nz_, float porosity, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages);
     void create_empty_space(int nx_, int ny_, int nz_, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages);
     void calculate_normals_tangents_and_inner_points(int number_of_neighbor_averages);
     void calculate_global_porosity();

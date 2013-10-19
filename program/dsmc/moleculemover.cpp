@@ -255,6 +255,7 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
             exit(1);
         }
 
+        system->steps_since_collision[molecule_index] = 0;
         surface_collider->collide(rnd, v, &grid->normals[3*collision_voxel_index], &grid->tangents1[3*collision_voxel_index], &grid->tangents2[3*collision_voxel_index]);
     } else dt = 0;
 

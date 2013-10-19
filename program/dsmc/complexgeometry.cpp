@@ -341,6 +341,30 @@ void ComplexGeometry::create_empty_space(int nx_, int ny_, int nz_, bool do_calc
     }
 }
 
+void ComplexGeometry::create_box(int nx_, int ny_, int nz_, float porosity, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages) {
+    allocate(nx_, ny_, nz_);
+    int mid_y = ny/2;
+    for(int i=0;i<nx;i++) {
+        for(int j=0;j<ny;j++) {
+            for(int k=0;k<nz;k++) {
+                int index = i + j*nx + k*nx*ny;
+                int dy = abs(j-mid_y);
+                if(dy > mid_y*porosity) {
+                    vertices_unsigned_char[index] = 1;
+                    vertices[index] = 1;
+                } else {
+                    vertices_unsigned_char[index] = 0;
+                    vertices[index] = 0;
+                }
+            }
+        }
+    }
+
+    if(do_calculate_normals_tangents_and_inner_points) {
+        calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+    }
+}
+
 void ComplexGeometry::create_perlin_geometry(int nx_, int ny_, int nz_, int octave, int frequency, int amplitude , int seed, float threshold, bool do_calculate_normals_tangents_and_boundary, int number_of_neighbor_averages) {
     Perlin p(octave, frequency, amplitude, seed);
     allocate(nx_, ny_, nz_);

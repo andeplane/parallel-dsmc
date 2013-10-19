@@ -28,6 +28,7 @@ public:
     vector<COpenGLTexture> textures;
     vector<string> names;
     double v_absolute_value_average;
+    vector<float> average_velocity;
     CTexture(COpenGL *ogl);
     void create_sphere1(string name, int w);
     void load_texture(CBitMap* bmp, COpenGLTexture* texture, bool has_alpha);
