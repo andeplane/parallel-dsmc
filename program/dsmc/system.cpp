@@ -597,6 +597,8 @@ void System::setup_cells() {
             delete cell;
         }
     }
+
+    temp_cell_vector.clear();
 }
 
 void System::init_randoms() {
