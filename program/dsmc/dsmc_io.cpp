@@ -132,8 +132,8 @@ void DSMC_IO::load_state_from_file_binary() {
         v[0] = tmp_data[6*n+3];
         v[1] = tmp_data[6*n+4];
         v[2] = tmp_data[6*n+5];
-
-        Cell *cell = system->all_cells[system->cell_index_from_position(r)];
+        int mapped_cell_index = system->cell_index_map[system->cell_index_from_position(r)];
+        Cell *cell = system->active_cells.at(mapped_cell_index);
         cell->add_molecule(n,system->molecule_index_in_cell,system->molecule_cell_index);
     }
 

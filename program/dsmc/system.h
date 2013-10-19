@@ -49,7 +49,6 @@ private:
     inline void find_position(double *r);
     inline void find_position_in_cell(Cell *cell, double *r);
     inline int cell_index_from_ijk(const int &i, const int &j, const int &k);
-    void update_cell_volume();
     void setup_molecules();
     void setup_cells();
     void update_molecule_cells();
@@ -67,9 +66,9 @@ public:
     Topology *topology;
 
     vector<Cell*> active_cells;
-    vector<Cell*> all_cells;
-    vector<Cell*> reservoir_A_cells;
-    vector<Cell*> reservoir_B_cells;
+    // vector<Cell*> all_cells;
+//    vector<Cell*> reservoir_A_cells;
+//    vector<Cell*> reservoir_B_cells;
 
     double *mpi_receive_buffer;
     // vector<double> mpi_receive_buffer;
@@ -79,6 +78,7 @@ public:
     // vector<unsigned long> molecule_cell_index;
     unsigned long *molecule_cell_index;
     int *node_num_new_molecules;
+    int *cell_index_map;
     // vector<int> node_num_new_molecules;
     double **node_molecule_data;
     // vector<vector<double> > node_molecule_data;

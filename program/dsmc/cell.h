@@ -31,6 +31,10 @@ public:
     int num_molecules;
 
     Cell(System *system);
+    ~Cell() {
+        average_velocity.clear();
+        delete molecules;
+    }
 	void reset();
     unsigned long prepare();
     void resize(int n);

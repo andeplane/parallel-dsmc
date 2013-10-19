@@ -277,7 +277,6 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
         unsigned int local_nx = 3*num_voxels_vector_per_node.x;
         unsigned int local_ny = 3*num_voxels_vector_per_node.y;
         unsigned int local_nz = 3*num_voxels_vector_per_node.z;
-
         file.write (reinterpret_cast<char*>(&global_porosity), sizeof(float));
         file.write (reinterpret_cast<char*>(&porosity), sizeof(float));
         file.write (reinterpret_cast<char*>(&nx), sizeof(unsigned int));
