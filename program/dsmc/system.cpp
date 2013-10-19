@@ -119,7 +119,7 @@ void System::move() {
 void System::collide() {
     timer->start_colliding();
     for(int i=0;i<active_cells.size();i++) {
-        Cell *cell = active_cells[i];
+        Cell *cell = active_cells.at(i);
 
         cell->prepare();
         collisions += cell->collide(rnd);
