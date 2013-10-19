@@ -124,16 +124,17 @@ void CTexture::render_billboards(double *positions, double *velocities, vector<i
         double collision_factor = 4.0/steps_since_collision[index];
         float color = 0.3 + 0.7*collision_factor;
 
-        new_average_values[0] += velocities[3*index + 0];
-        new_average_values[1] += velocities[3*index + 1];
-        new_average_values[2] += velocities[3*index + 2];
+        new_average_values[0] += abs(velocities[3*index + 0]);
+        new_average_values[1] += abs(velocities[3*index + 1]);
+        new_average_values[2] += abs(velocities[3*index + 2]);
 
-        float red = velocities[3*index + 0] / average_velocity[0];
-        float green = velocities[3*index + 1] / average_velocity[1];
-        float blue = velocities[3*index + 2] / average_velocity[2];
+        float red = abs(velocities[3*index + 0]) / average_velocity[0] * 0.1;
+        float green = abs(velocities[3*index + 1]) / average_velocity[1] * 0.1;
+        float blue = abs(velocities[3*index + 2]) / average_velocity[2] * 0.1;
         color = 0.3 + 0.7*velocity_divided_by_average + collision_factor;
 
-        glColor4f(color, color, color, 1.0);
+        glColor4f(color+red, color+green, color+blue, 1.0);
+        // glColor4f(red, green, blue, 1.0);
 
         glTexCoord2f(0,0);
         glVertex3f(v0.x*scale + x,v0.y*scale + y,v0.z*scale + z);
