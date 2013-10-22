@@ -95,6 +95,7 @@ public:
     double most_probable_velocity; 	// Most probable velocity
 	double dt;
 	double t;
+    double t0;
     double temperature;
     double diam, density;
     double wall_temperature;

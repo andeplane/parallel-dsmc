@@ -93,11 +93,12 @@ void StatisticsSampler::sample_flux() {
     if(system->steps == flux_sampled_at) return;
     flux_sampled_at = system->steps;
     double flux_local = 0;
+    double elapsed_time_this_run = system->t - system->t0;
     // Either, the gas is pressure driven or gravity driven. We measure flux different in these two cases.
     if(settings->maintain_pressure) {
-        flux_local = system->flux_count / system->t;
+        flux_local = system->flux_count / elapsed_time_this_run;
     } else {
-        flux_local = system->mover->count_periodic[settings->flow_direction] / system->t;
+        flux_local = system->mover->count_periodic[settings->flow_direction] / elapsed_time_this_run;
     }
 
     MPI_Reduce(&flux_local, &flux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);

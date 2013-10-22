@@ -36,12 +36,17 @@ int main(int args, char* argv[]) {
     unsigned long steps = 0;
     unsigned long collisions = 0;
     unsigned long wall_collisions = 0;
-    to_continue >> t;
-    to_continue >> steps;
-    to_continue >> collisions;
-    to_continue >> wall_collisions;
+
+    if(settings->load_previous_state) {
+        to_continue >> t;
+        to_continue >> steps;
+        to_continue >> collisions;
+        to_continue >> wall_collisions;
+    }
+
     to_continue.close();
     system.t = t;
+    system.t0 = t;
     system.steps = steps;
     system.collisions = collisions;
     system.mover->surface_collider->num_collisions = wall_collisions;
