@@ -29,6 +29,13 @@ public:
     void end_mpi();
     double fraction_mpi();
 
+    double mpi_reduce_t0;
+    double mpi_reduce;
+    double mpi_reduce_global;
+    void start_mpi_reduce();
+    void end_mpi_reduce();
+    double fraction_mpi_reduce();
+
     double system_initialize_t0;
     double system_initialize;
     double system_initialize_global;

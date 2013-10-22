@@ -101,8 +101,11 @@ void System::mpi_move() {
     }
 
     num_molecules_global = 0;
-    MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
     timer->end_mpi();
+
+    timer->start_mpi_reduce();
+    MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
+    timer->end_mpi_reduce();
 }
 
 void System::move() {
@@ -438,8 +441,9 @@ void System::initialize(Settings *settings_, int myid_) {
     setup_molecules();
     MPI_Barrier(MPI_COMM_WORLD);
     num_molecules_global = 0;
-
+    timer->start_mpi_reduce();
     MPI_Reduce(&num_molecules_local, &num_molecules_global, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD) ;
+    timer->end_mpi_reduce();
 
     mpi_receive_buffer = new double[MAX_MPI_DATA];
 

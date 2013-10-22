@@ -14,6 +14,7 @@ DSMCTimer::DSMCTimer() {
     moving = 0;
     colliding = 0;
     mpi = 0;
+    mpi_reduce = 0;
     sample = 0;
     accelerate = 0;
     pressure = 0;
@@ -44,6 +45,19 @@ void DSMCTimer::end_colliding() {
 double DSMCTimer::fraction_colliding() {
     double t1 = MPI_Wtime();
     return colliding_global/(t1-t0);
+}
+
+void DSMCTimer::start_mpi_reduce() {
+    mpi_reduce_t0 = MPI_Wtime();
+}
+
+void DSMCTimer::end_mpi_reduce() {
+    mpi_reduce += MPI_Wtime() - mpi_reduce_t0;
+}
+
+double DSMCTimer::fraction_mpi_reduce() {
+    double t1 = MPI_Wtime();
+    return mpi_reduce_global/(t1-t0);
 }
 
 void DSMCTimer::start_mpi() {
@@ -128,6 +142,7 @@ void DSMCTimer::gather_all_nodes(System &system) {
     colliding_global = 0;
     moving_global = 0;
     mpi_global = 0;
+    mpi_reduce_global = 0;
     system_initialize_global = 0;
     accelerate_global = 0;
     pressure_global = 0;
@@ -142,7 +157,9 @@ void DSMCTimer::gather_all_nodes(System &system) {
     MPI_Reduce(&pressure,&pressure_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&sample,&sample_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&io,&io_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(&mpi_reduce,&mpi_reduce_global,1,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     colliding_global /= system.topology->num_processors;
+    mpi_reduce_global /= system.topology->num_processors;
     moving_global /= system.topology->num_processors;
     mpi_global /= system.topology->num_processors;
     system_initialize_global /= system.topology->num_processors;
@@ -162,8 +179,8 @@ void DSMCTimer::save_to_file(System &system) {
     sample_global = sample;
     io_global = io;
 
-    double fraction_total = (fraction_moving() + fraction_colliding() + fraction_io() + fraction_mpi() + fraction_sample() + fraction_accelerate() + fraction_pressure() + fraction_system_initialize());
-    double time_total = system_initialize + moving + colliding + io + mpi + sample + accelerate + pressure;
+    double fraction_total = (fraction_moving() + fraction_colliding() + fraction_io() + fraction_mpi() + fraction_sample() + fraction_accelerate() + fraction_pressure() + fraction_system_initialize() + fraction_mpi_reduce());
+    double time_total = system_initialize + moving + colliding + io + mpi + sample + accelerate + pressure + mpi_reduce;
 
     double total_time = MPI_Wtime() - t0;
     system.io->time_statistics_file->precision(2);
@@ -176,7 +193,8 @@ void DSMCTimer::save_to_file(System &system) {
          << "      Sampling          : " << system.timer->sample << " s ( " << 100*fraction_sample() << "% )" <<  endl
          << "      Disk IO           : " << system.timer->io << " s ( " << 100*fraction_io() << "% )" <<  endl
          << "      System initialize : " << system.timer->system_initialize << " s ( " << 100*fraction_system_initialize() << "% )" <<  endl
-         << "      MPI communication : " << system.timer->mpi << " s ( " << 100*fraction_mpi() << "% )" <<  endl << endl
+         << "      MPI communication : " << system.timer->mpi << " s ( " << 100*fraction_mpi() << "% )" <<  endl
+         << "      MPI reduce        : " << system.timer->mpi_reduce << " s ( " << 100*fraction_mpi_reduce() << "% )" <<  endl << endl
          << "      TOTAL             : " << time_total << " s ( " << 100*fraction_total << "% )" <<  endl;
     *system.io->time_statistics_file << endl << system.settings->timesteps / total_time << " timesteps / second. " << endl;
     *system.io->time_statistics_file << (double)system.num_molecules_local*system.settings->timesteps / (1000*total_time) << "k atom-timesteps / second. (this processor)" << endl;

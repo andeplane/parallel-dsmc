@@ -9,7 +9,7 @@
 #include <settings.h>
 #include <moleculemover.h>
 #include <colliderbase.h>
-
+#include <dsmctimer.h>
 StatisticsSampler::StatisticsSampler(System *system_) {
     system = system_;
     settings = system->settings;
@@ -50,8 +50,10 @@ void StatisticsSampler::sample() {
     double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
     collisions = 0;
     wall_collisions = 0;
+    system->timer->start_mpi_reduce();
     MPI_Reduce(&system->collisions,&collisions,1,MPI_UNSIGNED_LONG, MPI_SUM,0, MPI_COMM_WORLD);
     MPI_Reduce(&system->mover->surface_collider->num_collisions,&wall_collisions,1,MPI_UNSIGNED_LONG, MPI_SUM,0, MPI_COMM_WORLD);
+    system->timer->end_mpi_reduce();
 
 
     if(system->myid==0) {
@@ -59,7 +61,9 @@ void StatisticsSampler::sample() {
         cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  collisions <<   "   Wall collisions: " << wall_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_global << endl ;
         fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
         fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
+        fprintf(system->io->flux_file, "%f %E\n",t_in_nano_seconds, flux);
         fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_global);
+        fprintf(system->io->temperature_file, "%f %f\n",t_in_nano_seconds, system->unit_converter->temperature_to_SI(temperature));
         fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
     }
     num_samples++;
@@ -76,7 +80,9 @@ void StatisticsSampler::sample_kinetic_energy() {
     }
     kinetic_energy_local *= 0.5*settings->mass*system->atoms_per_molecule;
     kinetic_energy = 0;
+    system->timer->start_mpi_reduce();
     MPI_Reduce(&kinetic_energy_local, &kinetic_energy,1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    system->timer->end_mpi_reduce();
 
 }
 
@@ -163,9 +169,10 @@ void StatisticsSampler::sample_velocity_distribution_cylinder() {
     vector<int> velocity_distribution_count_global;
     velocity_distribution_global.resize(N,0);
     velocity_distribution_count_global.resize(N,0);
-
+    system->timer->start_mpi_reduce();
     MPI_Reduce(&velocity_distribution[0],&velocity_distribution_global[0],N,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&velocity_distribution_count[0],&velocity_distribution_count_global[0],N,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+    system->timer->end_mpi_reduce();
 
     if(system->myid==0) {
         for(int i=0;i<N;i++) {
@@ -197,9 +204,10 @@ void StatisticsSampler::sample_velocity_distribution_box() {
     vector<int> velocity_distribution_count_global;
     velocity_distribution_global.resize(N,0);
     velocity_distribution_count_global.resize(N,0);
-
+    system->timer->start_mpi_reduce();
     MPI_Reduce(&velocity_distribution[0],&velocity_distribution_global[0],N,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&velocity_distribution_count[0],&velocity_distribution_count_global[0],N,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+    system->timer->end_mpi_reduce();
 
     if(system->myid==0) {
         for(int i=0;i<N;i++) {
@@ -241,7 +249,9 @@ void StatisticsSampler::sample_linear_density() {
     vector<unsigned long> linear_density_count_global;
     linear_density_count_global.resize(num_bins_per_dimension,0);
 
+    system->timer->start_mpi_reduce();
     MPI_Reduce(&linear_density_count[0],&linear_density_count_global[0],num_bins_per_dimension,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
+    system->timer->end_mpi_reduce();
 
     if(system->myid == 0) {
         double volume_per_bin = system->volume_global / num_bins_per_dimension;
@@ -283,9 +293,10 @@ void StatisticsSampler::finalize() {
         int *velocity_distribution_count_global = new int[num_bins];
         memset(velocity_distribution_global,0,num_bins);
         memset(velocity_distribution_count_global,0,num_bins);
-
+        system->timer->start_mpi_reduce();
         MPI_Reduce(&velocity_distribution[0],velocity_distribution_global,num_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
         MPI_Reduce(&velocity_distribution_count[0],velocity_distribution_count_global,num_bins,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        system->timer->end_mpi_reduce();
 
         if(system->myid==0) {
             for(int i=0;i<num_bins;i++) {

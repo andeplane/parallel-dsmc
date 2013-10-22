@@ -27,7 +27,8 @@ DSMC_IO::DSMC_IO(System *system_) {
         density_file = fopen("statistics/density.txt","w");
         linear_density_file = fopen("statistics/linear_density.txt","w");
         num_molecules_file = fopen("statistics/num_molecules_file.txt","w");
-        pressure_file = fopen("statistics/num_molecules_file.txt","w");
+        pressure_file = fopen("statistics/pressure.txt","w");
+        temperature_file = fopen("statistics/temperature.txt","w");
         linear_pressure_file = fopen("statistics/linear_pressure.txt","w");
     }
 }
@@ -156,6 +157,7 @@ void DSMC_IO::finalize() {
     fclose(flux_file);
     fclose(permeability_file);
     fclose(num_molecules_file);
+    fclose(temperature_file);
     fclose(linear_density_file);
     fclose(density_file);
     fclose(pressure_file);

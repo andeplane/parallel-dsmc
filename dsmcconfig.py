@@ -31,7 +31,7 @@ class DSMC:
 		self.surface_interaction = "thermal"
 		self.alpha_t = 0.8
 		self.alpha_n = 0.5
-
+		
 		self.atoms_per_molecule = 1000
 		self.timesteps = 10000
 		self.temperature = 300

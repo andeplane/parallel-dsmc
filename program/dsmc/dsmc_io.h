@@ -32,6 +32,7 @@ public:
     FILE *linear_density_file;
     FILE *num_molecules_file;
     FILE *pressure_file;
+    FILE *temperature_file;
     FILE *linear_pressure_file;
     ofstream *time_statistics_file;
     ofstream *movie_file;
