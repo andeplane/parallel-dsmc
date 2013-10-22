@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cvector.h>
 #include <cstring>
+#include <cinifile.h>
 
 using std::ifstream;
 using std::ofstream;
@@ -183,18 +184,6 @@ void ComplexGeometry::calculate_normals_tangents_and_inner_points(int number_of_
     has_normals_tangents_and_boundary = true;
 }
 
-//void ComplexGeometry::save_to_file(string filename) {
-//    ofstream file (filename.c_str(), ios::out | ios::binary);
-//    file.write (reinterpret_cast<char*>(&nx), sizeof(unsigned int));
-//    file.write (reinterpret_cast<char*>(&ny), sizeof(unsigned int));
-//    file.write (reinterpret_cast<char*>(&nz), sizeof(unsigned int));
-//    file.write (reinterpret_cast<char*>(vertices_unsigned_char), num_vertices*sizeof(unsigned char));
-//    file.write (reinterpret_cast<char*>(normals),   3*num_vertices*sizeof(float));
-//    file.write (reinterpret_cast<char*>(tangents1), 3*num_vertices*sizeof(float));
-//    file.write (reinterpret_cast<char*>(tangents2), 3*num_vertices*sizeof(float));
-//    file.close();
-//}
-
 CVector index_vector_from_index(const int &index, CVector num_processors) {
     CVector index_vector(0,0,0);
     int num_proc_x = num_processors.x;
@@ -212,7 +201,10 @@ int index_from_ijk(CVector voxel_index_vector, CVector num_voxels) {
     return voxel_index_vector.x*num_voxels.y*num_voxels.z + voxel_index_vector.y*num_voxels.z + voxel_index_vector.z;
 }
 
-void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vector) {
+void ComplexGeometry::save_to_file(CIniFile &ini) {
+    string foldername = ini.getstring("binary_output_folder");
+    CVector num_processors_vector(ini.getint("num_processors_x"), ini.getint("num_processors_y"), ini.getint("num_processors_z"));
+
     int num_processors_total = num_processors_vector.x*num_processors_vector.y*num_processors_vector.z;
     CVector num_voxels_vector_per_node = CVector(nx,ny,nz)/num_processors_vector;
     int num_voxels_total_per_node = 3*3*3*num_voxels_vector_per_node.x*num_voxels_vector_per_node.y*num_voxels_vector_per_node.z;
@@ -224,6 +216,7 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
     float *local_tangents1 = new float[3*num_voxels_total_per_node];
     float *local_tangents2 = new float[3*num_voxels_total_per_node];
 
+    cout << "Saving geometry to " << foldername << " on cpus=(" << num_processors_vector.x << ", " << num_processors_vector.y << ", " << num_processors_vector.z << ")" << endl;
     ProgressBar p(num_processors_total,"Saving world files");
     for(int index = 0; index<num_processors_total; index++) {
         sprintf(filename,"%s/%04d.bin",foldername.c_str(), index);
@@ -297,8 +290,16 @@ void ComplexGeometry::save_to_file(string foldername, CVector num_processors_vec
     }
 }
 
-void ComplexGeometry::create_sphere(int nx_, int ny_, int nz_, float radius, bool inverse, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages) {
+void ComplexGeometry::create_sphere(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    float radius = ini.getdouble("sphere_radius");
+    bool inverse = ini.getbool("sphere_inverse");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     allocate(nx_, ny_, nz_);
+
+    cout << "Creating sphere with radius=" << radius<< ", inverse=" << inverse << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
@@ -318,14 +319,16 @@ void ComplexGeometry::create_sphere(int nx_, int ny_, int nz_, float radius, boo
             }
         }
     }
-
-    if(do_calculate_normals_tangents_and_inner_points) {
-        calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
-    }
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
-void ComplexGeometry::create_empty_space(int nx_, int ny_, int nz_, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages) {
+void ComplexGeometry::create_empty_space(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     allocate(nx_, ny_, nz_);
+    cout << "Creating empty space on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
@@ -336,13 +339,17 @@ void ComplexGeometry::create_empty_space(int nx_, int ny_, int nz_, bool do_calc
         }
     }
 
-    if(do_calculate_normals_tangents_and_inner_points) {
-        calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
-    }
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
-void ComplexGeometry::create_box(int nx_, int ny_, int nz_, float porosity, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages) {
+void ComplexGeometry::create_box(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    float porosity = ini.getdouble("box_porosity");
     allocate(nx_, ny_, nz_);
+    cout << "Creating box with porosity=" << porosity << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
     int mid_y = ny/2;
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
@@ -360,14 +367,36 @@ void ComplexGeometry::create_box(int nx_, int ny_, int nz_, float porosity, bool
         }
     }
 
-    if(do_calculate_normals_tangents_and_inner_points) {
-        calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
-    }
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
-void ComplexGeometry::create_perlin_geometry(int nx_, int ny_, int nz_, int octave, int frequency, int amplitude , int seed, float threshold, bool do_calculate_normals_tangents_and_boundary, int number_of_neighbor_averages) {
+void ComplexGeometry::create_perlin_geometry(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    int octave = ini.getint("perlin_octave");
+    int frequency = ini.getint("perlin_frequency");
+    int amplitude = ini.getint("perlin_amplitude");
+    int seed = ini.getint("perlin_seed");
+    int num_scales = ini.getint("perlin_num_scales");
+    int constant = ini.getdouble("perlin_constant");
+    float scale_factor = ini.getdouble("perlin_scale_factor");
+    float threshold = ini.getdouble("perlin_threshold");
+
     Perlin p(octave, frequency, amplitude, seed);
     allocate(nx_, ny_, nz_);
+
+    cout << "Creating perlin noise with " << endl;
+    cout << "octave=" << octave << endl;
+    cout << "frequency=" << frequency << endl;
+    cout << "amplitude=" << amplitude << endl;
+    cout << "seed=" << seed << endl;
+    cout << "num_scales=" << num_scales << endl;
+    cout << "constant=" << constant << endl;
+    cout << "scale_factor=" << scale_factor << endl;
+    cout << "threshold=" << threshold << endl;
+    cout << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
 
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
@@ -378,21 +407,14 @@ void ComplexGeometry::create_perlin_geometry(int nx_, int ny_, int nz_, int octa
                 float s = 1.0;
 
                 int index = i*ny*nz + j*nz + k; //new
-                // int index = i + j*nx + k*ny*nx; //old
+
                 double val = 0;
-                for (int a=0; a<4  ; a++) {
-                    // s = 3.13531*a + 2.2513531;
-                    s = 8.134246*a + 7.136537345314;
+                for (int a=0; a<num_scales  ; a++) {
+                    s = scale_factor*a + constant;
 
                     val += p.Get(x*s, y*s, z*s);
                 }
-                // val = p.Get(val,1.0/(val+0.01), val);
 
-
-                // val = pow(val,4.0);
-                // val = p.Get(val,val,val);
-                // val = pow(1.0/(val+0.01),3.0);
-                // val = exp(cos(val));
                 vertices[index] = val;
                 if(val >= threshold) vertices_unsigned_char[index] = 1;
                 else vertices_unsigned_char[index] = 0;
@@ -400,9 +422,7 @@ void ComplexGeometry::create_perlin_geometry(int nx_, int ny_, int nz_, int octa
         }
     }
 
-    if(do_calculate_normals_tangents_and_boundary) {
-        calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
-    }
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
 void ComplexGeometry::calculate_normals(int number_of_neighbor_average) {
@@ -427,7 +447,6 @@ void ComplexGeometry::calculate_normals(int number_of_neighbor_average) {
                     for(int dj=-1;dj<=1;dj++) {
                         for(int dk=-1;dk<=1;dk++) {
                             int idx2 = ((i+di+nx)%nx)*ny*nz + ((j+dj+ny)%ny)*nz + ((k+dk+nz) % nz); //new
-                            // int idx2 = ((i+di+nx)%nx) + ((j+dj+ny)%ny)*nx+ ((k+dk+nz)%nz)*nx*ny;
 
                             if(vertices_unsigned_char[idx2]>0) {
                                 // If at least one wall neighbor, this is not a single wall voxel
@@ -455,7 +474,6 @@ void ComplexGeometry::calculate_normals(int number_of_neighbor_average) {
                         for(int dj=-number_of_neighbor_average; dj<=number_of_neighbor_average; dj++) {
                             for(int dk=-number_of_neighbor_average; dk<=number_of_neighbor_average; dk++) {
                                 int idx2 = ((i+di+nx)%nx)*ny*nz + ((j+dj+ny)%ny)*nz + ((k+dk+nz) % nz); //new
-                                // int idx2 = ((i+di+nx)%nx) + ((j+dj+ny)%ny)*nx+ ((k+dk+nz)%nz)*nx*ny;
 
                                 normals[3*idx+0] -= vertices_unsigned_char[idx2]*di;
                                 normals[3*idx+1] -= vertices_unsigned_char[idx2]*dj;
@@ -488,7 +506,6 @@ void ComplexGeometry::calculate_tangents() {
         progress_bar.update(i);
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                // int idx = i + j*nx + k*nx*ny;
                 int idx = i*ny*nz + j*nz + k; //new
 
                 tangents1[3*idx+0] = rnd->next_double();
