@@ -8,6 +8,7 @@ import subprocess
 import os
 import logging
 from datetime import datetime
+from math import sqrt
 
 class DSMC:
 	def __init__(self, compiler = "icpc", dt=0.001, nx=1, ny=1, nz=1):
@@ -251,3 +252,6 @@ class DSMC:
 		self.run_command(self.compiler + " program/tools/create_xyz.cpp -o ./create_xyz")
 		self.run_command("./create_xyz %d %s %s" % (1, state, xyz_file))
 	
+	def get_mean_free_path(self):
+		pi = 3.141592653586
+		return 1.0/(sqrt(2)*pi*self.diam**2*self.density*1e-18)*1e-6

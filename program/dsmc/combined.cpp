@@ -38,7 +38,8 @@ int main(int args, char* argv[]) {
     double threshold = ini.getdouble("threshold");
 
     ComplexGeometry cg;
-    cg.create_box(128,128,128,0.9,true,1);
+    // cg.create_box(128,128,128,0.9,true,1);
+    cg.create_perlin_geometry(128, 128, 128, 1,1,1,3, threshold, true, 1);
     // cg.create_sphere(300, 300, 300, 0.9, true, true, 1);
     // cg.save_to_file("perlin.bin");
 
