@@ -104,6 +104,11 @@ class DSMC_unit_converter:
 		'''
 		return self.acceleration_to_si(g)*self.dsmc.density*self.mass_to_si(self.dsmc.mass)*self.length_to_si(length)
 
+	def pressure_difference_to_gravity(self, delta_p, length):
+		''' Converts gravity driven force to equivalent pressure difference
+		'''
+		return delta_p / (self.length_to_si(length)*self.dsmc.density*self.mass_to_si(self.dsmc.mass))
+
 	def density_from_knudsen_number(self, knudsen_number, length):
 		''' Calculates required density to get a specific Knudsen number through
 				Kn=mean_free_path/length

@@ -42,7 +42,7 @@ class Visualizer():
 		os.system("rm tmp.pdf tmp-nup.pdf tmp-nup-crop.pdf")
 		return combined_fig
 
-	def plot_velocity_distribution_box(self, state_path, height=1.0, output = None, show_plot=False, skip_zeros = True, factor=1.0):
+	def plot_velocity_distribution_box(self, state_path="./", height=1.0, output = None, show_plot=False, skip_zeros = True, factor=1.0):
 		"""
 		Reads a file containing several timesteps with average velocity profile across two parallel plates.
 		Function will take average of all timesteps in order to get good statistics.
