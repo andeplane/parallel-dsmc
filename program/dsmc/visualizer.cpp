@@ -13,6 +13,8 @@ void Visualizer::render_begin()
 
     // Clear the screen and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    float c = 179/255.0;
+    glClearColor(c,c,c, 0.0f);
 
     // Reset the matrix
     glMatrixMode(GL_MODELVIEW);

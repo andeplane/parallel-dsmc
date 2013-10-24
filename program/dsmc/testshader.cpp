@@ -42,7 +42,7 @@ TestShader::TestShader() {
     "void main(void)\n"
     "{\n "
     // "  vec4 val = vec4(0.5+myPos.x*0.1,0.5+myPos.y*0.1,0.5,1.0);"
-    "  vec4 val = vec4(1.0, 0.6, 0.3, 1.0);"
+    "  vec4 val = vec4(89.0/255.0, 193.0/255.0, 235.0/255.0, 1.0);"
     // "  if(myPos.z > 1.1) {"
     // "      val = vec4(10.0*(myPos.z-1.0),10.0*(myPos.z-1.0),10.0*(myPos.z-1.0),1.0);"
     // "  }                  "

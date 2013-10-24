@@ -38,9 +38,9 @@ void MarchingCubes::create_marching_cubes_from_array(const T* scalar_field, CVec
     Random *rnd = new Random(-time(NULL), 0, 0);
 
 
-    float r = 0.5 + 0.5*rnd->next_double();
-    float g = 0.4 + 0.6*rnd->next_double();
-    float b = 0.3 + 0.7*rnd->next_double();
+    float r = 89/255.0;
+    float g = 193/255.0;
+    float b = 235/255.0;
 
 //    float r = rnd->next_double();
 //    float g = rnd->next_double();
