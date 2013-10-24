@@ -29,6 +29,8 @@ int main(int argc, char **argv)
 
     if(type.compare("box") == 0) {
         cg.create_box(ini);
+    } else if(type.compare("poiseuille") == 0) {
+        cg.create_poiseuille(ini);
     } else if(type.compare("sphere") == 0) {
         cg.create_sphere(ini);
     } else if(type.compare("perlin") == 0) {

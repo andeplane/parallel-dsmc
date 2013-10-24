@@ -32,6 +32,7 @@ class DSMC:
 		self.alpha_t = 0.8
 		self.alpha_n = 0.5
 
+		self.max_molecules_per_node = 1e6
 		self.atoms_per_molecule = 1000
 		self.timesteps = 10000
 		self.temperature = 300
@@ -47,7 +48,6 @@ class DSMC:
 		self.velocity_profile_type = "other"
 		self.movie_every_n_frame = 1
 		self.movie_molecules = 10000
-		self.max_molecules_per_node = 1e6
 
 		# Gravity direction also determins which dimension we measure flux in
 		self.gravity = 0

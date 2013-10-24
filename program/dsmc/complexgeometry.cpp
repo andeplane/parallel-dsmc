@@ -370,6 +370,34 @@ void ComplexGeometry::create_box(CIniFile &ini) {
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
+void ComplexGeometry::create_poiseuille(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+
+    allocate(nx_, ny_, nz_);
+    cout << "Creating Poiseuille plates on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    int mid_y = ny/2;
+    for(int i=0;i<nx;i++) {
+        for(int j=0;j<ny;j++) {
+            for(int k=0;k<nz;k++) {
+                int index = i + j*nx + k*nx*ny;
+
+                if(j == 0 || j == ny-1) {
+                    vertices_unsigned_char[index] = 1;
+                    vertices[index] = 1;
+                } else {
+                    vertices_unsigned_char[index] = 0;
+                    vertices[index] = 0;
+                }
+            }
+        }
+    }
+
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
 void ComplexGeometry::create_perlin_geometry(CIniFile &ini) {
     int nx_ = ini.getint("num_voxels_x");
     int ny_ = ini.getint("num_voxels_y");

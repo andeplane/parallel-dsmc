@@ -48,6 +48,10 @@ class DSMC_geometry:
 		self.type = "box"
 		self.create_config_file()
 		self.run()
+	def create_poiseuille(self):
+		self.type = "poiseuille"
+		self.create_config_file()
+		self.run()
 
 	def create_sphere(self, radius = 0.9, inverse=True):
 		self.sphere_inverse = inverse
