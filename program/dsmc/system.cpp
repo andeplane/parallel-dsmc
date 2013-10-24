@@ -526,6 +526,13 @@ int System::cell_index_from_position(double *r) {
 }
 
 void System::setup_molecules() {
+    if(myid == 0) cout << "Creating " << num_molecules_local << " molecules with MAX_MOLECULE_NUM=" << MAX_MOLECULE_NUM << endl;
+    if(num_molecules_local > MAX_MOLECULE_NUM) {
+        char error[1000];
+        sprintf(error, "Node %d wants to create %ld molecules (MAX_MOLECULE_NUM=%d)",myid, num_molecules_local, MAX_MOLECULE_NUM);
+        throw(string(error));
+    }
+
     r = new double[3*MAX_MOLECULE_NUM];
     v = new double[3*MAX_MOLECULE_NUM];
     molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
