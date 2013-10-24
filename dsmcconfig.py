@@ -47,6 +47,7 @@ class DSMC:
 		self.velocity_profile_type = "other"
 		self.movie_every_n_frame = 1
 		self.movie_molecules = 10000
+		self.max_molecules_per_node = 1e6
 
 		# Gravity direction also determins which dimension we measure flux in
 		self.gravity = 0
@@ -170,6 +171,7 @@ class DSMC:
 			line = line.replace('__nx__',str(self.nx) )
 			line = line.replace('__ny__',str(self.ny) )
 			line = line.replace('__nz__',str(self.nz) )
+			line = line.replace('__max_molecules_per_node__',str(self.max_molecules_per_node) )
 			line = line.replace('__atoms_per_molecule__',str(self.atoms_per_molecule) )
 			line = line.replace('__timesteps__',str(self.timesteps) )
 			line = line.replace('__surface_interaction_model__',str(self.surface_interaction).lower() )

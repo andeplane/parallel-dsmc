@@ -19,7 +19,6 @@ class Topology;
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
 #define BOX_FRACTION 0.2
-#define MAX_MOLECULE_NUM 1000000
 #define MAX_MPI_DATA 100000
 
 using namespace std;
@@ -84,6 +83,7 @@ public:
     vector<int> steps_since_collision;
     // vector<vector<double> > node_molecule_data;
 
+    int MAX_MOLECULE_NUM;
     long num_molecules_local;
     long num_molecules_global;
 

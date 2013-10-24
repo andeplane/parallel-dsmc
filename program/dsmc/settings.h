@@ -28,6 +28,7 @@ public:
     int velocity_bins;
     int nx, ny, nz;
     int seed;
+    int max_molecules_per_node;
 
     double viscosity;
     double mass;

@@ -41,8 +41,8 @@ void DSMC_IO::save_state_to_movie_file() {
             sprintf(filename,"movie_files/movie%04d.bin",system->myid);
             movie_file = new ofstream(filename,ios::out | ios::binary);
             movie_file_open = true;
-            data = new float[6*MAX_MOLECULE_NUM];
-            memset(data,0,6*MAX_MOLECULE_NUM*sizeof(float));
+            data = new float[6*system->MAX_MOLECULE_NUM];
+            memset(data,0,6*system->MAX_MOLECULE_NUM*sizeof(float));
             delete filename;
         }
 

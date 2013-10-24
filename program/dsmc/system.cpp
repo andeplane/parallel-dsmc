@@ -368,6 +368,7 @@ void System::remove_molecule_from_system(const long &molecule_index) {
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
     settings = settings_;
+    MAX_MOLECULE_NUM = settings->max_molecules_per_node;
     timer = new DSMCTimer();
     timer->start_system_initialize();
     steps = 0;

@@ -12,6 +12,7 @@ Settings::Settings(string filename) {
     timesteps = ini_file.getint("timesteps");
     movie_molecules = ini_file.getint("movie_molecules");
     velocity_bins = ini_file.getint("velocity_bins");
+    max_molecules_per_node = ini_file.getint("max_molecules_per_node");
 
     nx = ini_file.getint("nx");
     ny = ini_file.getint("ny");
