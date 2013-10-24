@@ -491,10 +491,11 @@ void System::initialize(Settings *settings_, int myid_) {
 inline void System::find_position(double *r) {
     bool did_collide = true;
     bool is_inside = false;
+
     while(did_collide || !is_inside) {
-        r[0] = topology->origin[0] + topology->length[0]*length[0]*rnd->next_double();
-        r[1] = topology->origin[1] + topology->length[1]*length[1]*rnd->next_double();
-        r[2] = topology->origin[2] + topology->length[2]*length[2]*rnd->next_double();
+        r[0] = topology->origin[0] + topology->length[0]*rnd->next_double();
+        r[1] = topology->origin[1] + topology->length[1]*rnd->next_double();
+        r[2] = topology->origin[2] + topology->length[2]*rnd->next_double();
 
         did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
         is_inside = topology->is_position_inside(r);
