@@ -47,7 +47,8 @@ SOURCES += main.cpp \
     cisosurface.cpp \
     cbitmap.cpp \
     camera.cpp \
-    geometry.cpp
+    geometry.cpp \
+    diamondsquare.cpp
 
 HEADERS += \
     system.h \
@@ -88,7 +89,8 @@ HEADERS += \
     cmath.h \
     cisosurface.h \
     cbitmap.h \
-    camera.h
+    camera.h \
+    diamondsquare.h
 
 
 OTHER_FILES += \

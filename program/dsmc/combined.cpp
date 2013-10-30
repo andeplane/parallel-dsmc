@@ -26,34 +26,42 @@ int main(int args, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &num_processors);
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     
-    cout << "Controls: Use WSAD and the mouse to move around!" << endl;
     CIniFile ini;
-    ini.load("settings.ini");
+    ini.load("geometry_settings.ini");
     int screen_width = ini.getint("screen_width");
     int screen_height = ini.getint("screen_height");
     double Lx = ini.getdouble("Lx");
     double Ly = ini.getdouble("Ly");
     double Lz = ini.getdouble("Lz");
-    double scale = ini.getdouble("scale");
-    double threshold = ini.getdouble("threshold");
-
+    string type = ini.getstring("type");
     ComplexGeometry cg;
-    // cg.create_box(128,128,128,0.9,true,1);
-    cg.create_perlin_geometry(ini);
-    // cg.create_sphere(300, 300, 300, 0.9, true, true, 1);
-    // cg.save_to_file("perlin.bin");
 
-    scale *= 10; // To map system size to particles
-    CVector system_length = CVector(scale*Lx, scale*Ly,scale*Lz);
+    if(type.compare("box") == 0) {
+        cg.create_box(ini);
+    } else if(type.compare("poiseuille") == 0) {
+        cg.create_poiseuille(ini);
+    } else if(type.compare("sphere") == 0) {
+        cg.create_sphere(ini);
+    } else if(type.compare("perlin") == 0) {
+        cg.create_perlin_geometry(ini);
+    } else if(type.compare("empty") == 0) {
+        cg.create_empty_space(ini);
+    } else if(type.compare("diamond_square") == 0) {
+        cg.create_diamond_square(ini);
+    }
+
+    if(ini.getbool("save_file")) cg.save_to_file(ini);
+
+    cout << "Controls: Use WSAD and the mouse to move around!" << endl;
+    CVector system_length = CVector(10*Lx, 10*Ly, 10*Lz);
     MarchingCubes c;
-    c.create_marching_cubes_from_complex_geometry(cg, system_length, threshold*1.1, false);
+    c.create_marching_cubes_from_complex_geometry(cg, system_length, ini.getdouble("marching_cubes_threshold"), false);
 
     char *window_title = new char[1000];
     sprintf(window_title, "DSMC Geometry Visualizer (DSMCGV) - [%.2f fps]", 60.0);
     Visualizer v(screen_width, screen_height, string(window_title), false, 0.1);
     c.build_vbo();
 
-    string state_folder = "/projects/master/code/base_code";
     CTexture sphere(v.opengl);
     sphere.create_sphere1("balle",512);
 
@@ -66,23 +74,33 @@ int main(int args, char* argv[]) {
         cout << ex << endl;
     }
 
-    CVector lightpos = CVector(1,1,1);//v.opengl->camera->position;
-    vector<int> balle;
-    balle.resize(100000,0);
+    float t = 0;
+    float dt = 0.1;
+    float omega = 0.1;
+
     while(true) {
         v.render_begin();
+        CVector lightpos = CVector(10 + sin(omega*t),10 + cos(omega*t),10);
+        lightpos.x = v.opengl->camera->position.x;
+        lightpos.y = v.opengl->camera->position.y;
+        lightpos.z = v.opengl->camera->position.z;
         shader.lightpos = lightpos;
         shader.targetdir = v.opengl->camera->target;
+
+        glBegin(GL_POINTS);
+        glVertex3f(lightpos.x, lightpos.y, lightpos.z);
+        glEnd();
         
         shader.Start();
         if(v.opengl->bool1) c.render_vbo();
         shader.End();
         
-        sphere.render_billboards(solver->system.r, solver->system.v, solver->system.steps_since_collision, solver->system.num_molecules_local, scale);
-        // sphere.render_billboards(solver->system.r, solver->system.v, balle, solver->system.num_molecules_local, 30.0);
+        if(v.opengl->bool2) sphere.render_billboards(solver->system.r, solver->system.v, solver->system.steps_since_collision, solver->system.num_molecules_local, 10.0);
         v.render_end();
         solver->step();
         if(!v.is_running) break;
+        v.update_window_title();
+        t += dt;
     }
 
     return 0;

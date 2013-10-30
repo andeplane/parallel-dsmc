@@ -20,7 +20,7 @@ FFLAGS = -framework GLUT -lglew -lGLFW -framework OpenGL -lmpi_cxx -lmpi
 
 PROJECT = combined
 
-_obj = combined.o cell.o cmath.o colliderbase.o collidercercignanilampis.o collidermaxwell.o colliderspecular.o colliderthermal.o cutil.o dsmc_io.o dsmctimer.o grid.o moleculemover.o random.o settings.o statisticssampler.o system.o topology.o unitconverter.o cvector.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o moviedata.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o solver.o
+_obj = combined.o cell.o cmath.o colliderbase.o collidercercignanilampis.o collidermaxwell.o colliderspecular.o colliderthermal.o cutil.o dsmc_io.o dsmctimer.o grid.o moleculemover.o random.o settings.o statisticssampler.o system.o topology.o unitconverter.o cvector.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o moviedata.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o solver.o diamondsquare.o
 
 obj_ = $(patsubst %,$(SOURCEDIR)/%, $(_obj))
 

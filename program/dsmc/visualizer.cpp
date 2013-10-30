@@ -13,8 +13,8 @@ void Visualizer::render_begin()
 
     // Clear the screen and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    float c = 179/255.0;
-    glClearColor(c,c,c, 0.0f);
+    // float c = 179/255.0;
+    // glClearColor(c,c,c, 0.0f);
 
     // Reset the matrix
     glMatrixMode(GL_MODELVIEW);
@@ -66,6 +66,18 @@ void handle_keypress(int theKey, int theAction) {
             break;
         case '1':
             ogl->bool1 = !ogl->bool1;
+            break;
+        case '2':
+            ogl->bool2 = !ogl->bool2;
+            break;
+        case '3':
+            ogl->bool3 = !ogl->bool3;
+            break;
+        case '4':
+            ogl->bool4 = !ogl->bool4;
+            break;
+        case '5':
+            ogl->bool5 = !ogl->bool5;
             break;
         }
     }

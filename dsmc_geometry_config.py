@@ -25,6 +25,10 @@ class DSMC_geometry:
 		self.sphere_radius = 0.8
 		self.sphere_inverse = True
 
+		# Diamond square settings
+		self.hurst_exponent = 0.5
+		self.diamond_square_h0 = 1.0
+
 		# Perlin settings
 		self.perlin_octave = 1
 		self.perlin_frequency = 1
@@ -60,6 +64,13 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
+	def create_diamond_square(self, hurst_exponent = 0.5, seed = 1):
+		self.hurst_exponent = hurst_exponent
+		self.perlin_seed = seed
+		self.type = "diamond_square"
+		self.create_config_file()
+		self.run()
+
 	def create_empty(self):
 		self.type = "empty"
 		self.create_config_file()
@@ -88,6 +99,7 @@ class DSMC_geometry:
 			line = line.replace('__num_voxels_y__',str(self.num_voxels_x) )
 			line = line.replace('__num_voxels_z__',str(self.num_voxels_x) )
 			line = line.replace('__number_of_neighbor_averages__',str(self.number_of_neighbor_averages) )
+			line = line.replace('__diamond_square_h0__',str(self.diamond_square_h0) )
 			line = line.replace('__save_file__',str(self.save_file).lower() )
 			line = line.replace('__binary_output_folder__',str(self.binary_output_folder) )
 			line = line.replace('__num_processors_x__',str(self.num_processors_x) )
@@ -102,6 +114,7 @@ class DSMC_geometry:
 			line = line.replace('__perlin_seed__',str(self.perlin_seed) )
 			line = line.replace('__perlin_num_scales__',str(self.perlin_num_scales) )
 			line = line.replace('__perlin_constant__',str(self.perlin_constant) )
+			line = line.replace('__hurst_exponent__',str(self.hurst_exponent) )
 			line = line.replace('__perlin_scale_factor__',str(self.perlin_scale_factor) )
 			line = line.replace('__perlin_threshold__',str(self.perlin_threshold) )
 			line = line.replace('__screen_width__',str(self.screen_width) )

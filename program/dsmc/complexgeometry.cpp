@@ -8,6 +8,7 @@
 #include <cvector.h>
 #include <cstring>
 #include <cinifile.h>
+#include <diamondSquare.h>
 
 using std::ifstream;
 using std::ofstream;
@@ -315,6 +316,66 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
                 } else {
                     vertices_unsigned_char[index] = 0;
                     vertices[index] = 0;
+                }
+            }
+        }
+    }
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
+void ComplexGeometry::create_diamond_square(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    float hurst_exponent = ini.getdouble("hurst_exponent");
+    long seed = ini.getdouble("perlin_seed");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    float h0 = ini.getdouble("diamond_square_h0");
+    allocate(nx_, ny_, nz_);
+
+    if(nx != nz) {
+        cout << "Warning, nx != ny, this will cause problems with the diamond square algorithm" << endl;
+    }
+
+    float power2_x = log2(nx);
+    float power2_z = log2(nz);
+
+    if(pow(2.0f,power2_x) != nx) cout << "Warning, nx is not a power of 2" << endl;
+    if(pow(2.0f,power2_z) != nz) cout << "Warning, nx is not a power of 2" << endl;
+
+    cout << "Creating diamond square with hurst exponent " << hurst_exponent << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+
+    float sigma = 0.3;
+    long seed_1 = -(seed + 1);
+    long seed_2 = -(seed + 2);
+    bool addition = true;
+    bool periodic_boundary_conditions = true;
+    int rng = 2;
+    vector<double> corners(4,h0);
+
+    DiamondSquare generator;
+    vector<vector<double> > height_map_1 = generator.generate(power2_x, hurst_exponent, corners, seed_1, sigma, addition, periodic_boundary_conditions, rng);
+    vector<vector<double> > height_map_2 = generator.generate(power2_x, hurst_exponent, corners, seed_2, sigma, addition, periodic_boundary_conditions, rng);
+
+    for(int i=0;i<nx;i++) {
+        for(int j=0;j<ny;j++) {
+            for(int k=0;k<nz;k++) {
+                int index = i + j*nx + k*nx*ny;
+
+                float h1 = 5*float(j) / ny;
+                float h2 = 5*float(ny - j) / ny;
+
+                if( h1 < height_map_1[k][i] || h2 < height_map_2[k][i] ) {
+                    vertices_unsigned_char[index] = 1;
+                    vertices[index] = 1;
+                } else {
+                    vertices_unsigned_char[index] = 0;
+                    vertices[index] = 0;
+                }
+
+                if(j == 0 || j == ny-1) {
+                    vertices_unsigned_char[index] = 1;
+                    vertices[index] = 1;
                 }
             }
         }

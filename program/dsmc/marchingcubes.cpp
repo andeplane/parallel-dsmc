@@ -99,7 +99,18 @@ void MarchingCubes::create_marching_cubes_from_complex_geometry(ComplexGeometry 
 //        field[n] = cg.vertices_unsigned_char[n];
 //    }
     CVector mesh_dimensions(cg.nx, cg.ny, cg.nz);
-    create_marching_cubes_from_array(cg.vertices, mesh_dimensions, box_length, threshold, larger_than);
+    int num_vertices = cg.nx*cg.ny*cg.nz;
+    float *vertices = new float[num_vertices];
+    for(int i=0; i<cg.nx; i++) {
+        for(int j=0; j<cg.ny; j++) {
+            for(int k=0; k<cg.nz; k++) {
+                int idx1 = i*cg.nz*cg.ny + j*cg.nz + k;
+                int idx2 = i + j*cg.nx + k*cg.nx*cg.ny;
+                vertices[idx2] = cg.vertices[idx1];
+            }
+        }
+    }
+    create_marching_cubes_from_array(vertices, mesh_dimensions, box_length, threshold, larger_than);
 }
 
 void MarchingCubes::create_marching_cubes_from_positions(vector<float> &positions, CVector num_points, CVector system_length, double threshold) {
