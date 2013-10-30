@@ -8,7 +8,7 @@
 #include <cvector.h>
 #include <cstring>
 #include <cinifile.h>
-#include <diamondSquare.h>
+#include <diamondsquare.h>
 
 using std::ifstream;
 using std::ofstream;
