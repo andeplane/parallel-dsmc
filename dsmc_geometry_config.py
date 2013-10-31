@@ -64,9 +64,10 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_diamond_square(self, hurst_exponent = 0.5, seed = 1):
+	def create_diamond_square(self, hurst_exponent = 0.5, seed = 1, diamond_square_h0 = 1):
 		self.hurst_exponent = hurst_exponent
 		self.perlin_seed = seed
+		self.diamond_square_h0 = diamond_square_h0
 		self.type = "diamond_square"
 		self.create_config_file()
 		self.run()
