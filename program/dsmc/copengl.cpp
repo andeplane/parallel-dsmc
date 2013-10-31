@@ -24,7 +24,7 @@ void COpenGL::initialize(int w, int h, string window_title_, GLFWkeyfun handle_k
 
     field_of_view = 60.0f;            // Define our field of view (i.e. how quickly foreshortening occurs)
     near        = 0.01f;             // The near (Z Axis) point of our viewing frustum (default 2.0f)
-    far         = 1500.0f;          // The far  (Z Axis) point of our viewing frustum (default 1500.0f)
+    far         = 10000.0f;          // The far  (Z Axis) point of our viewing frustum (default 1500.0f)
     bool1 = true;
     bool2 = true;
     bool3 = true;

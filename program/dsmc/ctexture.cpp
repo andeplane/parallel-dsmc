@@ -97,7 +97,7 @@ void CTexture::render_billboards(double *positions, double *velocities, vector<i
     v2 = (right*-1 + up*-1);
     v3 = (right + up*-1);
     float one_over_color_cutoff = 1.0/1000;
-    float scale = 0.05;
+    float scale = 0.01;
 
     glNormal3f(direction.x, direction.y, direction.z);
     double average_this_time_step = 0;

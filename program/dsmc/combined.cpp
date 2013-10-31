@@ -80,10 +80,8 @@ int main(int args, char* argv[]) {
 
     while(true) {
         v.render_begin();
-        CVector lightpos = CVector(10 + sin(omega*t),10 + cos(omega*t),10);
-        lightpos.x = v.opengl->camera->position.x;
-        lightpos.y = v.opengl->camera->position.y;
-        lightpos.z = v.opengl->camera->position.z;
+        // CVector lightpos = CVector(10 + sin(omega*t),10 + cos(omega*t),10);
+        CVector lightpos = CVector(10, 10, 10);
         shader.lightpos = lightpos;
         shader.targetdir = v.opengl->camera->target;
 
