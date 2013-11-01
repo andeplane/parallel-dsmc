@@ -23,6 +23,7 @@ class DSMC:
 
 		self.dt = dt
 		self.compiler = compiler
+		self.mpi_hostfile = None
 		self.constants = dict()
 		self.constants['boltzmann'] = 1.3806488e-23
 
@@ -230,8 +231,10 @@ class DSMC:
 		self.log("Running executable "+executable)
 		now = datetime.now()
 		num_procs = self.nx*self.ny*self.nz
-		self.run_command("mpirun -n %d %s | tee log" % (num_procs, executable))
-		#self.run_command("./"+executable+" | tee log")
+		if self.mpi_hostfile is None:
+			self.run_command("mpirun -n %d %s | tee log" % (num_procs, executable))
+		else:
+			self.run_command("mpirun -n %d --hostfile %s %s | tee log" % (num_procs, self.mpi_hostfile, executable))
 		t1 = (datetime.now() - now).seconds
 		steps_per_second = self.timesteps / max(t1,1)
 
