@@ -265,7 +265,6 @@ void StatisticsSampler::sample_velocity_distribution() {
 }
 
 void StatisticsSampler::finalize() {
-    cout << "Finalizing sampler..." << endl;
     if(settings->velocity_profile_type.compare("other") == 0) {
         double *velocity_distribution_global = new double[num_bins];
         int *velocity_distribution_count_global = new int[num_bins];
@@ -317,8 +316,6 @@ void StatisticsSampler::finalize() {
         fprintf(system->io->linear_pressure_file,"\n");
         fprintf(system->io->linear_temperature_file,"\n");
     }
-
-    cout << "Done finalizing sampler..." << endl;
 }
 
 /*
