@@ -26,12 +26,12 @@ CC      = mpic++
 default: $(PROJECT)
 
 $(PROJECT):  $(obj_)
-        $(CC)  $(INCLUDES) -o $(PROJECT) $(obj_) $(FFLAGS)
+		$(CC)  $(INCLUDES) -o $(PROJECT) $(obj_) $(FFLAGS)
 
 %.o: %.cpp
-        $(CC) -c -o $@ $^ $(INCLUDES) $(CFLAGS)
+		$(CC) -c -o $@ $^ $(INCLUDES) $(CFLAGS)
 
 clean:
-        rm program/dsmc/*.o
+		rm program/dsmc/*.o
 
 all: default
