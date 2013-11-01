@@ -17,7 +17,7 @@ FFLAGS =
 
 PROJECT = geometry
 
-_obj    = geometry.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o cutil.o cisosurface.o
+_obj    = geometry.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o cutil.o cisosurface.o diamondsquare.o
 
 obj_     = $(patsubst %,$(SOURCEDIR)/%, $(_obj))
 
