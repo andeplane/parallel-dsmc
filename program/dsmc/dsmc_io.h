@@ -34,6 +34,7 @@ public:
     FILE *pressure_file;
     FILE *temperature_file;
     FILE *linear_pressure_file;
+    FILE *linear_temperature_file;
     ofstream *time_statistics_file;
     ofstream *movie_file;
 };

@@ -24,6 +24,8 @@ private:
     int num_bins;
     vector<double> velocity_distribution;
     vector<int> velocity_distribution_count;
+    vector<double> kinetic_energy_across_channel;
+    vector<unsigned long> count_across_channel;
 
 public:
     StatisticsSampler(System *system);
@@ -36,7 +38,7 @@ public:
     void sample_flux();
     void sample_permeability();
     void sample_density();
-    void sample_linear_density();
+    void sample_stats_across_channel();
     void finalize();
 
     unsigned long collisions;

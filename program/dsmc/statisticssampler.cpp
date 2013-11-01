@@ -29,6 +29,9 @@ StatisticsSampler::StatisticsSampler(System *system_) {
 
     velocity_distribution.resize(num_bins,0);
     velocity_distribution_count.resize(num_bins,0);
+
+    count_across_channel.resize(num_bins_per_dimension,0);
+    kinetic_energy_across_channel.resize(num_bins_per_dimension,0);
 }
 
 void StatisticsSampler::sample() {
@@ -44,7 +47,7 @@ void StatisticsSampler::sample() {
     }
     sample_temperature();
     sample_density();
-    sample_linear_density();
+    sample_stats_across_channel();
     sample_permeability();
 
     double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
@@ -235,37 +238,12 @@ void StatisticsSampler::sample_density() {
     }
 }
 
-void StatisticsSampler::sample_linear_density() {
-    sample_temperature();
-    vector<unsigned long> linear_density_count;
-    linear_density_count.resize(num_bins_per_dimension,0);
-
+void StatisticsSampler::sample_stats_across_channel() {
     for(int i=0;i<system->num_molecules_local;i++) {
-        double pos_in_flow_direction = system->r[3*i + settings->flow_direction];
-        int bin_index = num_bins_per_dimension*(pos_in_flow_direction/system->length[settings->flow_direction]);
-        linear_density_count[bin_index]++;
-    }
-
-    vector<unsigned long> linear_density_count_global;
-    linear_density_count_global.resize(num_bins_per_dimension,0);
-
-    system->timer->start_mpi_reduce();
-    MPI_Reduce(&linear_density_count[0],&linear_density_count_global[0],num_bins_per_dimension,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
-    system->timer->end_mpi_reduce();
-
-    if(system->myid == 0) {
-        double volume_per_bin = system->volume_global / num_bins_per_dimension;
-
-        for(int i=0;i<num_bins_per_dimension;i++) {
-            double density = system->atoms_per_molecule*linear_density_count_global[i]/volume_per_bin;
-            double pressure = density*temperature; // Ideal gas law
-
-            fprintf(system->io->linear_density_file,"%E ", system->unit_converter->number_density_to_SI(density));
-            fprintf(system->io->linear_pressure_file,"%E ",system->unit_converter->pressure_to_SI(pressure));
-        }
-
-        fprintf(system->io->linear_density_file,"\n");
-        fprintf(system->io->linear_pressure_file,"\n");
+        double pos_across_the_channel = system->r[3*i + 1];
+        int bin_index = num_bins_per_dimension*(pos_across_the_channel/system->length[1]);
+        count_across_channel[bin_index]++;
+        kinetic_energy_across_channel[bin_index] += 0.5*settings->mass*(system->v[3*i+0]*system->v[3*i+0] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+2]*system->v[3*i+2]);
     }
 }
 
@@ -279,7 +257,6 @@ void StatisticsSampler::sample_velocity_distribution() {
         int bin_y = system->r[3*i+1]*system->one_over_length[1]*num_bins_per_dimension;
         int bin_z = system->r[3*i+2]*system->one_over_length[2]*num_bins_per_dimension;
 
-        // int index = bin_x*num_bins_per_dimension + bin_y;
         int index = bin_x*num_bins_per_dimension + bin_y;
 
         velocity_distribution[index] += system->v[3*i+2];
@@ -288,6 +265,7 @@ void StatisticsSampler::sample_velocity_distribution() {
 }
 
 void StatisticsSampler::finalize() {
+    cout << "Finalizing sampler..." << endl;
     if(settings->velocity_profile_type.compare("other") == 0) {
         double *velocity_distribution_global = new double[num_bins];
         int *velocity_distribution_count_global = new int[num_bins];
@@ -309,6 +287,38 @@ void StatisticsSampler::finalize() {
             fprintf(system->io->velocity_file,"\n");
         }
     }
+
+    sample_temperature();
+    vector<double> kinetic_energy_across_channel_global;
+    vector<unsigned long> count_across_channel_global;
+    kinetic_energy_across_channel_global.resize(num_bins_per_dimension, 0);
+    count_across_channel_global.resize(num_bins_per_dimension, 0);
+
+    system->timer->start_mpi_reduce();
+    MPI_Reduce(&kinetic_energy_across_channel[0],&kinetic_energy_across_channel_global[0],num_bins_per_dimension,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(&count_across_channel[0],&count_across_channel_global[0],num_bins_per_dimension,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
+    system->timer->end_mpi_reduce();
+
+    if(system->myid == 0) {
+        double volume_per_bin = system->volume_global / num_bins_per_dimension;
+
+        for(int i=0; i<num_bins_per_dimension; i++) {
+            double temperature_in_bin = 0;
+            if(count_across_channel_global[i] > 0) temperature_in_bin = kinetic_energy_across_channel_global[i]*2.0/(3*count_across_channel_global[i]);
+            double density = system->atoms_per_molecule*count_across_channel_global[i]/volume_per_bin;
+            double pressure = density*temperature_in_bin; // Ideal gas law
+
+            fprintf(system->io->linear_density_file,"%E ", system->unit_converter->number_density_to_SI(density));
+            fprintf(system->io->linear_pressure_file,"%E ",system->unit_converter->pressure_to_SI(pressure));
+            fprintf(system->io->linear_temperature_file,"%E ",system->unit_converter->temperature_to_SI(temperature_in_bin));
+        }
+
+        fprintf(system->io->linear_density_file,"\n");
+        fprintf(system->io->linear_pressure_file,"\n");
+        fprintf(system->io->linear_temperature_file,"\n");
+    }
+
+    cout << "Done finalizing sampler..." << endl;
 }
 
 /*
