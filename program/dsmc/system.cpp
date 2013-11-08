@@ -25,6 +25,7 @@ void System::step() {
     steps += 1;
     t += dt;
     string step_state = " accelerate()";
+
     try {
         accelerate();
         step_state = " move()";
@@ -365,6 +366,26 @@ void System::remove_molecule_from_system(const long &molecule_index) {
 //    timer->end_pressure();
 //}
 
+bool System::validate_number_of_cells() {
+    double num_voxels_per_cell_x = double(world_grid->global_nx) / cells_x;
+    double num_voxels_per_cell_y = double(world_grid->global_ny) / cells_y;
+    double num_voxels_per_cell_z = double(world_grid->global_nz) / cells_z;
+
+    if(fmod(num_voxels_per_cell_x, 1.0) > 0) return false;
+    if(fmod(num_voxels_per_cell_y, 1.0) > 0) return false;
+    if(fmod(num_voxels_per_cell_z, 1.0) > 0) return false;
+
+    double num_cells_per_cpu_x = double(cells_x)/topology->num_processors_vector[0];
+    double num_cells_per_cpu_y = double(cells_y)/topology->num_processors_vector[1];
+    double num_cells_per_cpu_z = double(cells_z)/topology->num_processors_vector[2];
+
+    if(fmod(num_cells_per_cpu_x, 1.0) > 0) return false;
+    if(fmod(num_cells_per_cpu_y, 1.0) > 0) return false;
+    if(fmod(num_cells_per_cpu_z, 1.0) > 0) return false;
+
+    return true;
+}
+
 void System::initialize(Settings *settings_, int myid_) {
     myid = myid_;
     settings = settings_;
@@ -417,6 +438,25 @@ void System::initialize(Settings *settings_, int myid_) {
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
     MPI_Barrier(MPI_COMM_WORLD);
+
+    if(myid == 0) {
+        cout << "Validating voxel-cell-cpu configuration..." << endl;
+        if(validate_number_of_cells()) {
+            cout << "Nubmer of cells OK" << endl;
+        } else {
+            cout << "Error: voxel-cell-cpu configuration not good." << endl;
+            cout << "Num voxels x: " << world_grid->global_nx << endl;
+            cout << "Num voxels y: " << world_grid->global_ny << endl;
+            cout << "Num voxels z: " << world_grid->global_nz << endl;
+            cout << "Num cells x: " << cells_x << endl;
+            cout << "Num cells y: " << cells_y << endl;
+            cout << "Num cells z: " << cells_z << endl;
+            cout << "Num processors x: " << topology->num_processors_vector[0] << endl;
+            cout << "Num processors y: " << topology->num_processors_vector[1] << endl;
+            cout << "Num processors z: " << topology->num_processors_vector[2] << endl;
+            exit(1);
+        }
+    }
 
     // Calculate cell volume 
     volume = length[0]*length[1]*length[2];
@@ -526,11 +566,11 @@ int System::cell_index_from_position(double *r) {
 }
 
 void System::setup_molecules() {
-    if(myid == 0) cout << "Creating " << num_molecules_local << " molecules with MAX_MOLECULE_NUM=" << MAX_MOLECULE_NUM << endl;
     if(num_molecules_local > MAX_MOLECULE_NUM) {
         char error[1000];
         sprintf(error, "Node %d wants to create %ld molecules (MAX_MOLECULE_NUM=%d)",myid, num_molecules_local, MAX_MOLECULE_NUM);
-        throw(string(error));
+        cout << error << endl;
+        exit(1);
     }
 
     r = new double[3*MAX_MOLECULE_NUM];

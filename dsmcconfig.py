@@ -260,3 +260,21 @@ class DSMC:
 	def get_mean_free_path(self):
 		pi = 3.141592653586
 		return 1.0/(sqrt(2)*pi*self.diam**2*self.density*1e-18)*1e-6
+
+	def validate_number_of_cells(self, num_voxels_x, num_voxels_y, num_voxels_z):
+		num_voxels_per_cell_x = float(num_voxels_x) / self.cells_x
+		num_voxels_per_cell_y = float(num_voxels_y) / self.cells_y
+		num_voxels_per_cell_z = float(num_voxels_z) / self.cells_z
+		if(num_voxels_per_cell_x % 1 > 0): return False
+		if(num_voxels_per_cell_y % 1 > 0): return False
+		if(num_voxels_per_cell_z % 1 > 0): return False
+
+		num_cells_per_cpu_x = float(self.cells_x)/self.nx
+		num_cells_per_cpu_y = float(self.cells_y)/self.ny
+		num_cells_per_cpu_z = float(self.cells_z)/self.nz
+
+		if(num_cells_per_cpu_x % 1 > 0): return False
+		if(num_cells_per_cpu_y % 1 > 0): return False
+		if(num_cells_per_cpu_z % 1 > 0): return False
+
+		return True

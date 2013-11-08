@@ -217,7 +217,7 @@ void ComplexGeometry::save_to_file(CIniFile &ini) {
     float *local_tangents1 = new float[3*num_voxels_total_per_node];
     float *local_tangents2 = new float[3*num_voxels_total_per_node];
 
-    cout << "Saving geometry to " << foldername << " on cpus=(" << num_processors_vector.x << ", " << num_processors_vector.y << ", " << num_processors_vector.z << ")" << endl;
+    cout << "Saving geometry with global porosity=" << global_porosity << " to " << foldername << " on cpus=(" << num_processors_vector.x << ", " << num_processors_vector.y << ", " << num_processors_vector.z << ")" << endl;
     ProgressBar p(num_processors_total,"Saving world files");
     for(int index = 0; index<num_processors_total; index++) {
         sprintf(filename,"%s/%04d.bin",foldername.c_str(), index);

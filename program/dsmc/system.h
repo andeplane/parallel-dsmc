@@ -45,6 +45,7 @@ private:
     void add_molecule_to_cell(Cell *cell, const int &molecule_index);
     void add_molecules_from_mpi(double *data, const int &num_new_molecules);
     void remove_molecule_from_system(const long &molecule_index);
+    bool validate_number_of_cells();
     inline void find_position(double *r);
     inline void find_position_in_cell(Cell *cell, double *r);
     inline int cell_index_from_ijk(const int &i, const int &j, const int &k);
