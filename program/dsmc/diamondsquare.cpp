@@ -17,7 +17,7 @@ vector<vector<double > >&DiamondSquare::generate(const uint power2,
     this->PBC = PBC;
     this->RNG = RNG;
     systemSize = pow(2.0, double(power2)) + 1;
-    rnd = new Random(-(abs(seed)),0,0);
+    rnd = new Random(-(double(abs(seed))),0,0);
     R.resize(systemSize);
     for(int i=0; i<systemSize; i++) R[i].resize(systemSize,0);
 

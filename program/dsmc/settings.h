@@ -25,7 +25,7 @@ public:
     int cells_y;
     int cells_z;
     int flow_direction;
-    int velocity_bins;
+    int sampling_bins;
     int nx, ny, nz;
     int seed;
     int max_molecules_per_node;

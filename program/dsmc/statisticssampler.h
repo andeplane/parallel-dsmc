@@ -20,10 +20,9 @@ private:
     long permeability_sampled_at;
     long num_samples;
 
-    int num_bins_per_dimension;
     int num_bins;
     vector<double> velocity_distribution;
-    vector<int> velocity_distribution_count;
+    vector<unsigned long> velocity_distribution_count;
     vector<double> kinetic_energy_across_channel;
     vector<unsigned long> count_across_channel;
 
@@ -33,12 +32,11 @@ public:
     void sample_kinetic_energy();
     void sample_temperature();
     void sample_velocity_distribution();
-    void sample_velocity_distribution_box();
-    void sample_velocity_distribution_cylinder();
     void sample_flux();
     void sample_permeability();
-    void sample_density();
     void sample_stats_across_channel();
+    void gather_velocity_distribution();
+    void gather_stats_across_channel();
     void finalize();
 
     unsigned long collisions;

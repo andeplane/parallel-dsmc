@@ -49,11 +49,9 @@ class Visualizer():
 		"""
 
 		velocities = pylab.loadtxt(state_path+"/statistics/velocity.txt")
-		num_timesteps = len(velocities) # Number of lines equals number of timesteps
-		num_bins = len(velocities[0])   # Number of elements on first line equals number of bins
-		velocities = factor*sum(velocities,0) / num_timesteps  # Sum each column and normalize to take time average
-		print "Plotting velocity profile with "+str(num_timesteps)+" timesteps and "+str(num_bins)+" bins."
-
+		num_bins = len(velocities)   # Number of elements on first line equals number of bins
+		velocities = factor*velocities
+		print "Plotting velocity profile with "+str(num_bins)+" bins."
 
 		x_axis = linspace(0,height,num_bins) # Create x_axis with possible real channel height
 		if skip_zeros:
