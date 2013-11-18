@@ -174,5 +174,7 @@ double MeasurePermeability::get_current_value() {
 }
 
 void MeasurePermeability::finalize(UnitConverter *unit_converter) {
+    if(myid!=0) return;
+
     fprintf(file, "%E\n",unit_converter->permeability_to_SI(value.get_current_value()[0]));
 }

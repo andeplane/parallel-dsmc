@@ -81,7 +81,6 @@ HEADERS += \
     moviedata.h \
     mesh.h \
     marchingcubes.h \
-    defines.h \
     ctexture.h \
     cshaders.h \
     copengl.h \

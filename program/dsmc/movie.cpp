@@ -1,5 +1,3 @@
-#include <defines.h>
-
 #ifdef OPENGL
 #include <visualizer.h>
 #include <copengl.h>

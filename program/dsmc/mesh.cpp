@@ -1,7 +1,6 @@
 #include <mesh.h>
 #include <cvector.h>
 #include <iomanip>
-#include <defines.h>
 #include <progressbar.h>
 
 Mesh::Mesh() {

@@ -1,4 +1,3 @@
-#include <defines.h>
 #include <mpi.h>
 #include <solver.h>
 
