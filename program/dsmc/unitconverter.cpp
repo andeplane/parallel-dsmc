@@ -56,6 +56,9 @@ double UnitConverter::viscosity_from_SI(double v) { return v/visc0; }
 double UnitConverter::permeability_to_SI(double k) { return k*perm0; }
 double UnitConverter::permeability_from_SI(double k) { return k/perm0; }
 
+double UnitConverter::permeability_to_darcy(double k) { return k*perm0*1e4; }
+double UnitConverter::permeability_from_darcy(double k) { return k/(perm0*1e4); }
+
 double UnitConverter::diffusion_to_SI(double d) { return d*diff0; }
 double UnitConverter::diffusion_from_SI(double d) { return d/diff0; }
 

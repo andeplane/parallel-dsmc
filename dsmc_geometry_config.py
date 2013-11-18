@@ -26,6 +26,10 @@ class DSMC_geometry:
 		self.sphere_radius = 0.8
 		self.sphere_inverse = True
 
+		# Cylinder settings
+		self.cylinder_radius = 0.8
+		self.num_cylinders_per_dimension = 1
+
 		# Diamond square settings
 		self.hurst_exponent = 0.5
 		self.diamond_square_h0 = 1.0
@@ -65,9 +69,10 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_cylinder(self, radius = 0.9):
-		self.sphere_radius = radius
-		self.type = "cylinder"
+	def create_cylinders(self, radius = 0.9, num_cylinders_per_dimension = 1):
+		self.cylinder_radius = radius
+		self.num_cylinders_per_dimension = num_cylinders_per_dimension
+		self.type = "cylinders"
 		self.create_config_file()
 		self.run()
 
@@ -115,6 +120,8 @@ class DSMC_geometry:
 			line = line.replace('__num_processors_z__',str(self.num_processors_z) )
 			line = line.replace('__box_porosity__',str(self.box_porosity) )
 			line = line.replace('__sphere_radius__', str(self.sphere_radius))
+			line = line.replace('__cylinder_radius__', str(self.cylinder_radius))
+			line = line.replace('__num_cylinders_per_dimension__', str(self.num_cylinders_per_dimension))
 			line = line.replace('__sphere_inverse__',str(self.sphere_inverse).lower() )
 			line = line.replace('__create_border__',str(self.create_border).lower() )
 			line = line.replace('__perlin_octave__', str(self.perlin_octave) )

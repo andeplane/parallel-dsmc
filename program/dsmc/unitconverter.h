@@ -63,6 +63,9 @@ public:
     double permeability_to_SI(double d);
     double permeability_from_SI(double d);
 
+    double permeability_to_darcy(double d);
+    double permeability_from_darcy(double d);
+
     double number_density_to_SI(double d);
     double number_density_from_SI(double d);
 };

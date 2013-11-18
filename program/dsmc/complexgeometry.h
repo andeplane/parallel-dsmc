@@ -40,7 +40,7 @@ public:
     void create_diamond_square(CIniFile &ini);
     void create_empty_space(CIniFile &ini);
     void create_border();
-    void create_cylinder(CIniFile &ini);
+    void create_cylinders(CIniFile &ini);
     void create_poiseuille(CIniFile &ini);
     void calculate_normals_tangents_and_inner_points(int number_of_neighbor_averages);
     void calculate_global_porosity();

@@ -176,7 +176,7 @@ double MeasurePermeability::get_current_value() {
 void MeasurePermeability::finalize(UnitConverter *unit_converter) {
     if(myid!=0) return;
 
-    fprintf(file, "%E\n",unit_converter->permeability_to_SI(value.get_current_value()[0]));
+    fprintf(file, "%E\n",unit_converter->permeability_to_darcy(value.get_current_value()[0]));
 }
 
 MeasureCount::MeasureCount(FILE *file_, int myid_, int interval_, int number_of_bins) :

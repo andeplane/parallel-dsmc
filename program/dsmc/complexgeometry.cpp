@@ -337,25 +337,42 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
-void ComplexGeometry::create_cylinder(CIniFile &ini) {
+void ComplexGeometry::create_cylinders(CIniFile &ini) {
     int nx_ = ini.getint("num_voxels_x");
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
-    float radius = ini.getdouble("sphere_radius");
+    float cylinder_radius = ini.getdouble("cylinder_radius");
+    int num_cylinders_per_dimension = ini.getint("num_cylinders_per_dimension");
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     allocate(nx_, ny_, nz_);
+    cout << "Creating " << num_cylinders_per_dimension*num_cylinders_per_dimension << " cylinders with radius=" << cylinder_radius << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    float voxel_size_x = 1.0 / nx;
+    float voxel_size_y = 1.0 / ny;
+    float cylinder_center_displacement = 1.0 / num_cylinders_per_dimension;
 
-    cout << "Creating cylinder with radius=" << radius<< " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                double x = 2*(i-nx/2.0)/(double)nx;
-                double y = 2*(j-ny/2.0)/(double)ny;
-                double z = 2*(k-nz/2.0)/(double)nz;
-                double r2 = x*x + y*y;
+                double x = j/double(ny) + voxel_size_x/2.0;
+                double y = k/double(nz) + voxel_size_y/2.0;
+                bool is_wall = true;
+
+                for(int cylinder_x=0; cylinder_x<num_cylinders_per_dimension; cylinder_x++) {
+                    for(int cylinder_y=0; cylinder_y<num_cylinders_per_dimension; cylinder_y++) {
+                        double cylinder_center_x = cylinder_x * cylinder_center_displacement + cylinder_center_displacement/2.0;
+                        double cylinder_center_y = cylinder_y * cylinder_center_displacement + cylinder_center_displacement/2.0;
+                        double dx = 2.0*(x - cylinder_center_x);
+                        double dy = 2.0*(y - cylinder_center_y);
+                        double dr2 = dx*dx + dy*dy;
+
+                        if(dr2 < cylinder_radius*cylinder_radius) {
+                            is_wall = false;
+                        }
+                    }
+                }
                 int index = i + j*nx + k*nx*ny;
 
-                if(r2 > radius*radius) {
+                if(is_wall) {
                     vertices_unsigned_char[index] = 1;
                     vertices[index] = 1;
                 } else {
@@ -365,6 +382,7 @@ void ComplexGeometry::create_cylinder(CIniFile &ini) {
             }
         }
     }
+
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 

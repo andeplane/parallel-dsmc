@@ -47,6 +47,8 @@ int main(int args, char* argv[]) {
         cg.create_empty_space(ini);
     } else if(type.compare("diamond_square") == 0) {
         cg.create_diamond_square(ini);
+    } else if(type.compare("cylinders") == 0) {
+        cg.create_cylinders(ini);
     }
 
     if(ini.getbool("save_file")) cg.save_to_file(ini);
