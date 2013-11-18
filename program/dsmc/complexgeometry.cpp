@@ -123,6 +123,20 @@ void ComplexGeometry::load_vtk(string filename) {
 //    file.close();
 }
 
+void ComplexGeometry::create_border() {
+    for(int i=0; i<nx; i++) {
+        for(int j=0; j<ny; j++) {
+            for(int k=0; k<nz;k++) {
+                if(i == 0 || j == 0 || k == 0 || i == nx-1 || j == ny-1 || k == nz-1) {
+                    int index = i + j*nx + k*nx*ny;
+                    vertices_unsigned_char[index] = 0;
+                    vertices[index] = 0;
+                }
+            }
+        }
+    }
+}
+
 void ComplexGeometry::save_vtk(string filename) {
     ofstream ofile(filename.c_str());
 
@@ -311,6 +325,37 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
                 int index = i + j*nx + k*nx*ny;
 
                 if( (!inverse && r2 > radius*radius) || (inverse && r2 < radius*radius)) {
+                    vertices_unsigned_char[index] = 1;
+                    vertices[index] = 1;
+                } else {
+                    vertices_unsigned_char[index] = 0;
+                    vertices[index] = 0;
+                }
+            }
+        }
+    }
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
+void ComplexGeometry::create_cylinder(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    float radius = ini.getdouble("sphere_radius");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    allocate(nx_, ny_, nz_);
+
+    cout << "Creating cylinder with radius=" << radius<< " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    for(int i=0;i<nx;i++) {
+        for(int j=0;j<ny;j++) {
+            for(int k=0;k<nz;k++) {
+                double x = 2*(i-nx/2.0)/(double)nx;
+                double y = 2*(j-ny/2.0)/(double)ny;
+                double z = 2*(k-nz/2.0)/(double)nz;
+                double r2 = x*x + y*y;
+                int index = i + j*nx + k*nx*ny;
+
+                if(r2 > radius*radius) {
                     vertices_unsigned_char[index] = 1;
                     vertices[index] = 1;
                 } else {

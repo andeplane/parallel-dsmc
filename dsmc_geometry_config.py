@@ -17,6 +17,7 @@ class DSMC_geometry:
 		self.num_processors_x = dsmc.nx
 		self.num_processors_y = dsmc.ny
 		self.num_processors_z = dsmc.nz
+		self.create_border = False
 
 		# Box settings
 		self.box_porosity = 0.9
@@ -61,6 +62,12 @@ class DSMC_geometry:
 		self.sphere_inverse = inverse
 		self.sphere_radius = radius
 		self.type = "sphere"
+		self.create_config_file()
+		self.run()
+
+	def create_cylinder(self, radius = 0.9):
+		self.sphere_radius = radius
+		self.type = "cylinder"
 		self.create_config_file()
 		self.run()
 
@@ -109,6 +116,7 @@ class DSMC_geometry:
 			line = line.replace('__box_porosity__',str(self.box_porosity) )
 			line = line.replace('__sphere_radius__', str(self.sphere_radius))
 			line = line.replace('__sphere_inverse__',str(self.sphere_inverse).lower() )
+			line = line.replace('__create_border__',str(self.create_border).lower() )
 			line = line.replace('__perlin_octave__', str(self.perlin_octave) )
 			line = line.replace('__perlin_frequency__',str(self.perlin_frequency) )
 			line = line.replace('__perlin_amplitude__',str(self.perlin_amplitude) )

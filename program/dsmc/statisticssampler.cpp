@@ -1,238 +1,62 @@
 #include <statisticssampler.h>
-
-#include <cell.h>
-#include <math.h>
-#include <unitconverter.h>
-#include <dsmc_io.h>
 #include <system.h>
-#include <mpi.h>
+#include <statisticalproperty.h>
+#include <dsmc_io.h>
 #include <settings.h>
-#include <moleculemover.h>
-#include <colliderbase.h>
 #include <dsmctimer.h>
+#include <colliderbase.h>
+#include <moleculemover.h>
+
+using std::iterator;
+using std::vector;
+
 StatisticsSampler::StatisticsSampler(System *system_) {
     system = system_;
-    settings = system->settings;
-    temperature_sampled_at = -1;
-    kinetic_energy_sampled_at = -1;
-    velocity_distribution_sampled_at = -1;
-    flux_sampled_at = -1;
-    permeability_sampled_at = -1;
-    density_sampled_at = -1;
-    linear_density_sampled_at = -1;
-    permeability = 0;
-    flux = 0;
-    num_samples = 0;
 
-    num_bins = settings->sampling_bins;
+    energy = new MeasureEnergy(system->io->energy_file,system->myid,system->settings->statistics_interval);
+    temperature = new MeasureTemperature(system->io->temperature_file,system->myid, system->settings->statistics_interval, energy);
+    flux = new MeasureFlux(system->io->flux_file,system->myid,system->settings->statistics_interval);
+    pressure = new MeasurePressure(system->io->pressure_file,system->myid,system->settings->statistics_interval, temperature);
+    permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, flux);
 
-    if(settings->velocity_profile_type.compare("area") == 0) {
-        velocity_distribution.resize(num_bins*num_bins,0);
-        velocity_distribution_count.resize(num_bins*num_bins,0);
-    } else {
-        velocity_distribution.resize(num_bins,0);
-        velocity_distribution_count.resize(num_bins,0);
-    }
-
-    count_across_channel.resize(num_bins,0);
-    kinetic_energy_across_channel.resize(num_bins,0);
+    statistical_properties.push_back(energy);
+    statistical_properties.push_back(temperature);
+    statistical_properties.push_back(flux);
+    statistical_properties.push_back(pressure);
+    statistical_properties.push_back(permeability);
 }
 
+
 void StatisticsSampler::sample() {
-    if(settings->statistics_interval && system->steps % settings->statistics_interval != 0) return;
-    double t_in_nano_seconds = system->unit_converter->time_to_SI(system->t)*1e9;
-    sample_velocity_distribution();
+    system->timer->start_sample();
 
-    sample_temperature();
-    sample_stats_across_channel();
-    sample_permeability();
+    for(int i=0; i<statistical_properties.size(); i++) {
+        StatisticalProperty *value = statistical_properties[i];
+        value->update(system);
+    }
 
-    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
-    collisions = 0;
-    wall_collisions = 0;
+    if(system->steps % system->settings->statistics_interval > 0) return;
+
+    unsigned long collisions = 0;
+    unsigned long wall_collisions = 0;
+
     system->timer->start_mpi_reduce();
     MPI_Reduce(&system->collisions,&collisions,1,MPI_UNSIGNED_LONG, MPI_SUM,0, MPI_COMM_WORLD);
     MPI_Reduce(&system->mover->surface_collider->num_collisions,&wall_collisions,1,MPI_UNSIGNED_LONG, MPI_SUM,0, MPI_COMM_WORLD);
     system->timer->end_mpi_reduce();
 
-
-    if(system->myid==0) {
-        double pressure = system->num_molecules_global*system->atoms_per_molecule / system->volume_global * temperature;
-        cout << system->steps << "   t=" << t_in_nano_seconds << "   T=" << system->unit_converter->temperature_to_SI(temperature) << "   Collisions: " <<  collisions <<   "   Wall collisions: " << wall_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure) <<  "   Molecules: " << system->num_molecules_global << endl ;
-        fprintf(system->io->energy_file, "%f %f %f\n",t_in_nano_seconds, system->unit_converter->energy_to_eV(kinetic_energy_per_molecule), system->unit_converter->temperature_to_SI(temperature));
-        fprintf(system->io->pressure_file, "%f %E\n",t_in_nano_seconds, pressure);
-        fprintf(system->io->flux_file, "%f %E\n",t_in_nano_seconds, flux);
-        fprintf(system->io->num_molecules_file, "%f %ld\n",t_in_nano_seconds, system->num_molecules_global);
-        fprintf(system->io->temperature_file, "%f %f\n",t_in_nano_seconds, system->unit_converter->temperature_to_SI(temperature));
-        fprintf(system->io->permeability_file, "%f %E\n",t_in_nano_seconds, system->unit_converter->permeability_to_SI(permeability));
-    }
-    num_samples++;
-}
-
-void StatisticsSampler::sample_kinetic_energy() {
-    if(system->steps == kinetic_energy_sampled_at) return;
-    kinetic_energy_sampled_at = system->steps;
-
-    double kinetic_energy_local = 0;
-
-    for(unsigned int i=0;i<system->num_molecules_local;i++) {
-        kinetic_energy_local += (system->v[3*i+0]*system->v[3*i+0] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+2]*system->v[3*i+2]);
-    }
-    kinetic_energy_local *= 0.5*settings->mass*system->atoms_per_molecule;
-    kinetic_energy = 0;
-    system->timer->start_mpi_reduce();
-    MPI_Reduce(&kinetic_energy_local, &kinetic_energy,1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    system->timer->end_mpi_reduce();
-
-}
-
-void StatisticsSampler::sample_temperature() {
-    if(system->steps == temperature_sampled_at) return;
-    temperature_sampled_at = system->steps;
-
-    sample_kinetic_energy();
-    double kinetic_energy_per_molecule = kinetic_energy / (system->num_molecules_global*system->atoms_per_molecule);
-    temperature = 2.0/3*kinetic_energy_per_molecule;
-}
-
-void StatisticsSampler::sample_flux() {
-    if(system->steps == flux_sampled_at) return;
-    flux_sampled_at = system->steps;
-    double flux_local = 0;
-    double elapsed_time_this_run = system->t - system->t0;
-    // Either, the gas is pressure driven or gravity driven. We measure flux different in these two cases.
-    if(settings->maintain_pressure) {
-        flux_local = system->flux_count / elapsed_time_this_run;
-    } else {
-        flux_local = system->mover->count_periodic[settings->flow_direction] / elapsed_time_this_run;
+    if(system->myid==0) {        
+        cout << system->steps << "   t=" << system->t_in_nano_seconds() << "ns   T=" << system->unit_converter->temperature_to_SI(temperature->get_current_value()) << "K   Collisions: " <<  collisions <<   "   Wall collisions: " << wall_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure->get_current_value()) <<  "Pa   Molecules: " << system->num_molecules_global << endl ;
     }
 
-    MPI_Reduce(&flux_local, &flux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-}
-
-void StatisticsSampler::sample_permeability() {
-    if(system->steps == permeability_sampled_at) return;
-    permeability_sampled_at = system->steps;
-    if(settings->flow_direction<0) return;
-
-    sample_flux();
-    if(system->myid == 0) {
-        double volume_per_molecule = system->volume / system->num_molecules_global;
-        double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(settings->viscosity);
-        double volume_flux = flux*volume_per_molecule;
-        double L = system->length[settings->flow_direction];
-        double mass_density = system->density*settings->mass;
-
-        double area = 1;
-        for(int a=0;a<3;a++) {
-            if(a != settings->flow_direction) area *= system->length[a];
-        }
-
-        if(settings->maintain_pressure) {
-            // Expression from Darcy's law of gases
-            double pressure_in_reservoir_a = system->unit_converter->pressure_from_SI(settings->pressure_A);
-            double pressure_in_reservoir_b = system->unit_converter->pressure_from_SI(settings->pressure_B);
-            permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
-        } else {
-            double pressure_in_reservoir_b = system->density*system->temperature;
-            double pressure_in_reservoir_a = pressure_in_reservoir_b + mass_density*settings->gravity*system->length[settings->flow_direction];
-            permeability = 2*pressure_in_reservoir_b*volume_flux*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
-            // permeability = volume_flux*L*viscosity_dsmc_units / (mass_density*system->length[settings->flow_direction]*settings->gravity*area);
-        }
-    }
-}
-
-void StatisticsSampler::sample_stats_across_channel() {
-    for(int i=0;i<system->num_molecules_local;i++) {
-        double pos_across_the_channel = system->r[3*i + 1];
-        int bin_index = num_bins*(pos_across_the_channel/system->length[1]);
-        count_across_channel[bin_index]++;
-        kinetic_energy_across_channel[bin_index] += 0.5*settings->mass*(system->v[3*i+0]*system->v[3*i+0] + system->v[3*i+1]*system->v[3*i+1] + system->v[3*i+2]*system->v[3*i+2]);
-    }
-}
-
-void StatisticsSampler::sample_velocity_distribution() {
-    if(system->steps == velocity_distribution_sampled_at) return;
-    velocity_distribution_sampled_at = system->steps;
-    density_sampled_at = system->steps;
-
-    for(unsigned int i=0; i<system->num_molecules_local; i++) {
-        int bin_x = system->r[3*i+0]*system->one_over_length[0]*num_bins;
-        int bin_y = system->r[3*i+1]*system->one_over_length[1]*num_bins;
-        int bin_z = system->r[3*i+2]*system->one_over_length[2]*num_bins;
-
-        int index = bin_y;
-
-        if(settings->velocity_profile_type.compare("area") == 0) {
-            index = bin_x*num_bins + bin_y;
-        }
-
-        velocity_distribution[index] += system->v[3*i+2];
-        velocity_distribution_count[index]++;
-    }
-}
-
-void StatisticsSampler::gather_velocity_distribution() {
-    double *velocity_distribution_global = new double[velocity_distribution.size()];
-    unsigned long *velocity_distribution_count_global = new unsigned long[velocity_distribution.size()];
-    memset(velocity_distribution_global,0,velocity_distribution.size());
-    memset(velocity_distribution_count_global,0,velocity_distribution.size());
-
-    system->timer->start_mpi_reduce();
-    MPI_Reduce(&velocity_distribution[0],velocity_distribution_global,velocity_distribution.size(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-    MPI_Reduce(&velocity_distribution_count[0],velocity_distribution_count_global,velocity_distribution.size(),MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
-    system->timer->end_mpi_reduce();
-
-    if(system->myid==0) {
-        for(int i=0; i<velocity_distribution.size(); i++) {
-            // If we sample the 2d field, the averages are done in cpp code
-            if(velocity_distribution_count_global[i]>0) velocity_distribution_global[i] /= velocity_distribution_count_global[i];
-            fprintf(system->io->velocity_file,"%f ",system->unit_converter->velocity_to_SI(velocity_distribution_global[i]));
-            fprintf(system->io->density_file,"%f ",(double)velocity_distribution_count_global[i] / num_samples);
-        }
-
-        fprintf(system->io->velocity_file,"\n");
-    }
-
-    delete velocity_distribution_global;
-    delete velocity_distribution_count_global;
-}
-
-void StatisticsSampler::gather_stats_across_channel() {
-    sample_temperature();
-    vector<double> kinetic_energy_across_channel_global;
-    vector<unsigned long> count_across_channel_global;
-    kinetic_energy_across_channel_global.resize(num_bins, 0);
-    count_across_channel_global.resize(num_bins, 0);
-
-    system->timer->start_mpi_reduce();
-    MPI_Reduce(&kinetic_energy_across_channel[0],&kinetic_energy_across_channel_global[0],kinetic_energy_across_channel_global.size(),MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-    MPI_Reduce(&count_across_channel[0],&count_across_channel_global[0],count_across_channel_global.size(),MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
-    system->timer->end_mpi_reduce();
-
-    if(system->myid == 0) {
-        double volume_per_bin = system->volume_global / count_across_channel_global.size();
-
-        for(int i=0; i<count_across_channel_global.size(); i++) {
-            double temperature_in_bin = 0;
-            if(count_across_channel_global[i] > 0) temperature_in_bin = kinetic_energy_across_channel_global[i]*2.0/(3*count_across_channel_global[i]);
-            double density = system->atoms_per_molecule*count_across_channel_global[i]/volume_per_bin;
-            double pressure = density*temperature_in_bin; // Ideal gas law
-
-            fprintf(system->io->linear_density_file,"%E ", system->unit_converter->number_density_to_SI(density));
-            fprintf(system->io->linear_pressure_file,"%E ",system->unit_converter->pressure_to_SI(pressure));
-            fprintf(system->io->linear_temperature_file,"%E ",system->unit_converter->temperature_to_SI(temperature_in_bin));
-        }
-
-        fprintf(system->io->linear_density_file,"\n");
-        fprintf(system->io->linear_pressure_file,"\n");
-        fprintf(system->io->linear_temperature_file,"\n");
-    }
+    system->timer->end_sample();
 }
 
 void StatisticsSampler::finalize() {
-    gather_velocity_distribution();
-    gather_stats_across_channel();
+    for(int i=0; i<statistical_properties.size(); i++) {
+        StatisticalProperty *value = statistical_properties[i];
+        value->finalize(system->unit_converter);
+    }
 }
 
 /*

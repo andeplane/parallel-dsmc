@@ -19,7 +19,7 @@ FFLAGS = $(LIBDIR) -lmpi_cxx -lmpi -lm
 PROJECT = main
 
 
-_obj = main.o cvector.o cell.o cmath.o colliderbase.o collidercercignanilampis.o collidermaxwell.o colliderspecular.o colliderthermal.o cutil.o dsmc_io.o dsmctimer.o grid.o moleculemover.o random.o settings.o statisticssampler.o system.o topology.o unitconverter.o
+_obj = main.o cvector.o cell.o cmath.o colliderbase.o collidercercignanilampis.o collidermaxwell.o colliderspecular.o colliderthermal.o cutil.o dsmc_io.o dsmctimer.o grid.o moleculemover.o random.o settings.o statisticssampler.o system.o topology.o unitconverter.o statisticalproperty.o
 
 obj_main     = $(patsubst %,$(SOURCEDIR)/%, $(_obj))
 

@@ -39,7 +39,11 @@ int main(int argc, char **argv)
         cg.create_empty_space(ini);
     } else if(type.compare("diamond_square") == 0) {
         cg.create_diamond_square(ini);
+    } else if(type.compare("cylinder") == 0) {
+        cg.create_cylinder(ini);
     }
+
+    if(ini.getbool("create_border")) cg.create_border();
 
     if(ini.getbool("save_file")) cg.save_to_file(ini);
     if(ini.getbool("visualize")) {

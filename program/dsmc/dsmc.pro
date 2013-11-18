@@ -48,7 +48,8 @@ SOURCES += main.cpp \
     cbitmap.cpp \
     camera.cpp \
     geometry.cpp \
-    diamondsquare.cpp
+    diamondsquare.cpp \
+    statisticalproperty.cpp
 
 HEADERS += \
     system.h \
@@ -90,7 +91,9 @@ HEADERS += \
     cisosurface.h \
     cbitmap.h \
     camera.h \
-    diamondsquare.h
+    diamondsquare.h \
+    statisticalproperty.h \
+    statisticalvalue.h
 
 
 OTHER_FILES += \

@@ -6,7 +6,6 @@ class Grid;
 class DSMC_IO;
 class Random;
 class Settings;
-class UnitConverter;
 class DSMCTimer;
 class MoleculeMover;
 class Topology;
@@ -16,6 +15,7 @@ class Topology;
 #include <vector>
 #include <cinifile.h>
 #include <mpi.h>
+#include <unitconverter.h>
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
 #define BOX_FRACTION 0.2
@@ -116,6 +116,7 @@ public:
     long reservoir_b_particle_count;
     long flux_count;
 
+    double t_in_nano_seconds() { return unit_converter->time_to_SI(t)*1e9; }
     void initialize(Settings *settings_, int myid_);
 	void step();
     System() { }
