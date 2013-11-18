@@ -20,7 +20,8 @@ public:
 
     StatisticalProperty(int myid_, int interval_, FILE *file_);
     virtual void update(System *system) = 0;
-    virtual void finalize(UnitConverter *unit_converter) = 0;
+    virtual void finalize(UnitConverter *unit_converter) {}
+    virtual void resize(int number_of_bins) {}
 };
 
 class MeasureEnergy : public StatisticalProperty {
@@ -73,4 +74,25 @@ public:
     virtual void update(System *system);
     virtual void finalize(UnitConverter *unit_converter);
     double get_current_value();
+};
+
+class MeasureCount : public StatisticalProperty {
+public:
+    StatisticalValue<unsigned long> value;
+    MeasureCount(FILE *file_, int myid_, int interval_, int bins);
+    virtual void update(System *system);
+    vector<unsigned long> get_current_value();
+    virtual void resize(int number_of_bins);
+};
+
+class MeasureVelocityDistributionPoiseuille : public StatisticalProperty {
+protected:
+    MeasureCount *count;
+public:
+    StatisticalValue<double> value;
+    MeasureVelocityDistributionPoiseuille(FILE *file_, int myid_, int interval_, int bins, MeasureCount *count);
+    virtual void update(System *system);
+    virtual void finalize(UnitConverter *unit_converter);
+    vector<double> get_current_value();
+    virtual void resize(int number_of_bins);
 };

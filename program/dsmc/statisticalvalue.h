@@ -12,10 +12,12 @@ public:
     vector<T> sum;
     vector<T> sum_squared;
     int number_of_samples;
+    int number_of_bins;
 
     StatisticalValue(int number_of_elements = 1)
         : number_of_samples(0)
     {
+        number_of_bins = number_of_elements;
         current_value.resize(number_of_elements,0);
         sum.resize(number_of_elements, 0);
         sum_squared.resize(number_of_elements, 0);
@@ -82,5 +84,12 @@ public:
         }
 
         return standard_deviation;
+    }
+
+    void resize(int number_of_bins_) {
+        number_of_bins = number_of_bins_;
+        current_value.resize(number_of_bins,0);
+        sum.resize(number_of_bins,0);;
+        sum_squared.resize(number_of_bins,0);;
     }
 };

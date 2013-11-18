@@ -178,3 +178,95 @@ void MeasurePermeability::finalize(UnitConverter *unit_converter) {
 
     fprintf(file, "%E\n",unit_converter->permeability_to_SI(value.get_current_value()[0]));
 }
+
+MeasureCount::MeasureCount(FILE *file_, int myid_, int interval_, int number_of_bins) :
+    StatisticalProperty(myid_, interval_, file_)
+{
+    this->resize(number_of_bins);
+}
+
+void MeasureCount::resize(int number_of_bins) {
+    value.resize(number_of_bins);
+}
+
+void MeasureCount::update(System *system) {
+    if((system->steps % interval) || system->steps == last_sample) return;
+    last_sample = system->steps;
+
+    vector<unsigned long> count(value.number_of_bins, 0);
+
+    for(unsigned int i=0; i<system->num_molecules_local; i++) {
+        int bin_y = system->r[3*i+1]*system->one_over_length[1]*value.number_of_bins;
+
+        int index = bin_y;
+        count[index]++;
+    }
+
+    value.add_value(count);
+    count.clear();
+}
+
+vector<unsigned long> MeasureCount::get_current_value() {
+    return value.get_current_value();
+}
+
+MeasureVelocityDistributionPoiseuille::MeasureVelocityDistributionPoiseuille(FILE *file_, int myid_, int interval_, int number_of_bins, MeasureCount *count_) :
+    StatisticalProperty(myid_, interval_, file_)
+{
+    count = count_;
+    resize(number_of_bins);
+}
+
+void MeasureVelocityDistributionPoiseuille::update(System *system) {
+    if((system->steps % interval) || system->steps == last_sample) return;
+    last_sample = system->steps;
+
+    vector<double> velocity_distribution(value.number_of_bins,0);
+
+    for(unsigned int i=0; i<system->num_molecules_local; i++) {
+        int bin_y = system->r[3*i+1]*system->one_over_length[1]*value.number_of_bins;
+
+        int index = bin_y;
+
+        velocity_distribution[index] += system->v[3*i+2];
+    }
+
+    value.add_value(velocity_distribution);
+    velocity_distribution.clear();
+}
+
+vector<double> MeasureVelocityDistributionPoiseuille::get_current_value() {
+    vector<double> values_global(value.number_of_bins,0);
+    vector<unsigned long> count_values_global(value.number_of_bins,0);
+
+    vector<double> values(value.current_value);
+    vector<unsigned long> count_values = count->get_current_value();
+
+
+    MPI_Reduce(&values[0],&values_global[0],value.number_of_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(&count_values[0],&count_values_global[0],value.number_of_bins,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
+
+    if(myid==0) {
+        for(int i=0; i<values_global.size(); i++) {
+            values_global[i] /= max(count_values_global[i],(unsigned long)1); // Normalize
+        }
+    }
+
+    count_values_global.clear();
+    values.clear();
+    count_values_global.clear();
+
+    return values_global;
+}
+
+void MeasureVelocityDistributionPoiseuille::finalize(UnitConverter *unit_converter) {
+    vector<double> velocity_distribution = get_current_value();
+    if(myid!=0) return;
+    for(int i=0; i<velocity_distribution.size(); i++) {
+        fprintf(file,"%E ", unit_converter->velocity_to_SI(velocity_distribution[i]));
+    }
+}
+
+void MeasureVelocityDistributionPoiseuille::resize(int number_of_bins) {
+    value.resize(number_of_bins);
+}

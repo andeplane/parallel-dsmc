@@ -2,7 +2,6 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <defines.h>
 
 #ifdef OPENGL
 #include <cshaders.h>

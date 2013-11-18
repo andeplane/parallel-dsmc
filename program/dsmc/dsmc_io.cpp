@@ -8,12 +8,23 @@
 #include <dsmctimer.h>
 #include <topology.h>
 
-DSMC_IO::DSMC_IO(System *system_) {
-    system = system_;
-    settings = system->settings;
-    movie_frames = 0;
-    movie_file_open = false;
-
+DSMC_IO::DSMC_IO(System *system_) :
+    energy_file(0),
+    velocity_file(0),
+    flux_file(0),
+    permeability_file(0),
+    density_file(0),
+    linear_density_file(0),
+    num_molecules_file(0),
+    pressure_file(0),
+    temperature_file(0),
+    linear_pressure_file(0),
+    linear_temperature_file(0),
+    movie_frames(0),
+    movie_file_open(0),
+    system(system_),
+    settings(system_->settings)
+{
     char *time_statistics_filename = new char[100];
     sprintf(time_statistics_filename,"statistics/time/time%04d.txt",system->myid);
     time_statistics_file = new ofstream(time_statistics_filename,ios::out | ios::binary);

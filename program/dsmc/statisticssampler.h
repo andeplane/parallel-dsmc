@@ -26,4 +26,6 @@ public:
     MeasurePressure *pressure;
     MeasureFlux *flux;
     MeasurePermeability *permeability;
+    MeasureCount *count;
+    MeasureVelocityDistributionPoiseuille *velocity;
 };

@@ -18,12 +18,16 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     flux = new MeasureFlux(system->io->flux_file,system->myid,system->settings->statistics_interval);
     pressure = new MeasurePressure(system->io->pressure_file,system->myid,system->settings->statistics_interval, temperature);
     permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, flux);
+    count = new MeasureCount(system->io->num_molecules_file, system->myid, system->settings->statistics_interval, system->settings->sampling_bins);
+    velocity = new MeasureVelocityDistributionPoiseuille(system->io->velocity_file, system->myid, system->settings->statistics_interval,system->settings->sampling_bins, count);
 
     statistical_properties.push_back(energy);
     statistical_properties.push_back(temperature);
     statistical_properties.push_back(flux);
     statistical_properties.push_back(pressure);
     statistical_properties.push_back(permeability);
+    statistical_properties.push_back(count);
+    statistical_properties.push_back(velocity);
 }
 
 
@@ -45,7 +49,7 @@ void StatisticsSampler::sample() {
     MPI_Reduce(&system->mover->surface_collider->num_collisions,&wall_collisions,1,MPI_UNSIGNED_LONG, MPI_SUM,0, MPI_COMM_WORLD);
     system->timer->end_mpi_reduce();
 
-    if(system->myid==0) {        
+    if(system->myid==0) {
         cout << system->steps << "   t=" << system->t_in_nano_seconds() << "ns   T=" << system->unit_converter->temperature_to_SI(temperature->get_current_value()) << "K   Collisions: " <<  collisions <<   "   Wall collisions: " << wall_collisions << "   Pressure: " << system->unit_converter->pressure_to_SI(pressure->get_current_value()) <<  "Pa   Molecules: " << system->num_molecules_global << endl ;
     }
 
