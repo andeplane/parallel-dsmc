@@ -1,9 +1,12 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include <algorithm>
+
 using std::vector;
 using std::cout;
 using std::endl;
+using std::max;
 
 template <typename T>
 class StatisticalValue {

@@ -166,6 +166,7 @@ void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Rando
         // Normalize
         norm = sqrt(tangent2[0]*tangent2[0] + tangent2[1]*tangent2[1] + tangent2[2]*tangent2[2]);
 
+
         tangent2[0] /= norm;
         tangent2[1] /= norm;
         tangent2[2] /= norm;
@@ -188,10 +189,6 @@ void MoleculeMover::apply_periodic_boundary_conditions(int &molecule_index, doub
         if(r[3*molecule_index + 2] >= system_length.z) { r[3*molecule_index + 2] -= system_length.z; count_periodic[2]++; }
         else if(r[3*molecule_index + 2] < 0)         { r[3*molecule_index + 2] += system_length.z; count_periodic[2]--; }
 }
-
-int interesting_molecule = 3686;
-int interesting_step = 1;
-int interesting_node = 1;
 
 void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
 //    double nx_div_lx = grid->global_nx*system->one_over_length[0];
@@ -263,3 +260,4 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         move_molecule(molecule_index,dt,rnd,depth+1);
     }
 }
+

@@ -112,11 +112,13 @@ void System::mpi_move() {
 void System::move() {
     timer->start_moving();
     CVector system_length(length[0], length[1], length[2]);
+    #pragma simd
     for(int n=0;n<num_molecules_local;n++) {
-        // mover->move_molecule_cylinder(n,dt,rnd,0);
         mover->move_molecule(n,dt,rnd,0);
+    }
+
+    for(int n=0;n<num_molecules_local;n++) {
         mover->apply_periodic_boundary_conditions(n, r, system_length);
-        // mover->move_molecule_box(n,dt,rnd,0);
     }
     timer->end_moving();
 }

@@ -1,9 +1,10 @@
 #pragma once
+#include <grid.h>
+#include <colliderbase.h>
+
 class Cell;
 class System;
 class Random;
-class Grid;
-class ColliderBase;
 class CVector;
 class MoleculeMover
 {
@@ -24,3 +25,5 @@ public:
     void move_molecule_box(int &molecule_index, double dt, Random *rnd, int depth);
     void apply_periodic_boundary_conditions(int &molecule_index, double *r, const CVector &system_length);
 };
+
+
