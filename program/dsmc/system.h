@@ -69,10 +69,9 @@ public:
     vector<int> molecule_cell_index;
     vector<int> node_num_new_molecules;
     vector<int> cell_index_map;
-    // vector<int> node_num_new_molecules;
-    data_type **node_molecule_data;
+    vector<vector<data_type> > node_molecule_data;
+    // data_type **node_molecule_data;
     vector<int> steps_since_collision;
-    // vector<vector<double> > node_molecule_data;
 
     int MAX_MOLECULE_NUM;
     long num_molecules_local;

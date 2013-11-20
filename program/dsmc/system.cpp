@@ -55,13 +55,12 @@ void System::mpi_move() {
         if(node_id != myid) {
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
             if(node_id < 0 || node_id >= topology->num_processors) cout << "Moved existing molecule to a node that doesn't exists" << endl;
-
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 0] = r.at(3*n+0);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 1] = r.at(3*n+1);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 2] = r.at(3*n+2);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 3] = v.at(3*n+0);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 4] = v.at(3*n+1);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 5] = v.at(3*n+2);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 0) = r.at(3*n+0);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 1) = r.at(3*n+1);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 2) = r.at(3*n+2);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 3) = v.at(3*n+0);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 4) = v.at(3*n+1);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 5) = v.at(3*n+2);
             node_num_new_molecules.at(node_id)++;
             remove_molecule_from_system(n);
             n--;
@@ -81,14 +80,14 @@ void System::mpi_move() {
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
                 // 6 doubles per molecule
-                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
+                if(num_send) MPI_Send(&node_molecule_data.at(node_id).front(), 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
                 if(num_recieve) MPI_Recv(&mpi_receive_buffer.front(), 6*num_recieve, mpi_data_type, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
             } else if (topology->my_parity[dimension] == 1){
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 // 6 doubles per molecule
                 if(num_recieve) MPI_Recv(&mpi_receive_buffer.front(), 6*num_recieve, mpi_data_type, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
-                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
+                if(num_send) MPI_Send(&node_molecule_data.at(node_id).front(), 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
             }
 
             node_num_new_molecules.at(node_id) = 0; // We have sent everything we wanted to this node now.
@@ -177,13 +176,12 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
         if(node_id != myid) {
             if(node_id < 0 || node_id >= topology->num_processors) throw string("Moved new molecule to a node that doesn't exists");
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
-
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 0] = data.at(6*i+0);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 1] = data.at(6*i+1);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 2] = data.at(6*i+2);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 3] = data.at(6*i+3);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 4] = data.at(6*i+4);
-            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 5] = data.at(6*i+5);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 0) = data.at(6*i+0);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 1) = data.at(6*i+1);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 2) = data.at(6*i+2);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 3) = data.at(6*i+3);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 4) = data.at(6*i+4);
+            node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 5) = data.at(6*i+5);
             node_num_new_molecules.at(node_id)++;
             continue;
         }
@@ -300,8 +298,10 @@ void System::initialize(Settings *settings_, int myid_) {
     io = new DSMC_IO(this);
     topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
     node_num_new_molecules.resize(topology->num_processors, 0);
-    node_molecule_data = new data_type*[topology->num_processors];
-    for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new data_type[MAX_MPI_DATA]; }
+    node_molecule_data.resize(topology->num_processors,vector<data_type>(MAX_MPI_DATA,0));
+
+//    node_molecule_data = new data_type*[topology->num_processors];
+//    for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new data_type[MAX_MPI_DATA]; }
     MPI_Barrier(MPI_COMM_WORLD);
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
