@@ -1,7 +1,7 @@
 #pragma once
  
 #include <iostream>
-#include <math.h>         // Used only for sin() and cos() functions
+#include <cmath>         // Used only for sin() and cos() functions
  
 #include <GL/glfw.h>      // Include OpenGL Framework library for the GLFW_PRESS constant only!
  

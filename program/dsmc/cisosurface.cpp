@@ -6,7 +6,7 @@
 //
 // Description: This is the implementation file for the CIsoSurface class.
 
-#include <math.h>
+#include <cmath>
 #include <cisosurface.h>
 #include <cvector.h>
 template <class T> const unsigned int CIsoSurface<T>::m_edgeTable[256] = {
