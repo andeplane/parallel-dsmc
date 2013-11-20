@@ -42,8 +42,8 @@ public:
     int collide(Random *rnd);
     inline void collide_molecules(data_type *v0, data_type *v1, const data_type &v_rel, Random *rnd);
     void update_volume();
-    void add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index);
-    void remove_molecule(const int &molecule_index, unsigned long *index_in_cell);
+    void add_molecule(const int &molecule_index, vector<int> &index_in_cell, vector<int> &cell_index);
+    void remove_molecule(const int &molecule_index, vector<int> &index_in_cell);
     vector<data_type> &update_average_velocity();
 
     double calculate_kinetic_energy();

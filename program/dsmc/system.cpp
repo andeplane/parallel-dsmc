@@ -433,8 +433,8 @@ void System::setup_molecules() {
     r.resize(3*MAX_MOLECULE_NUM);
     v.resize(3*MAX_MOLECULE_NUM);
 
-    molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
-    molecule_cell_index = new unsigned long[MAX_MOLECULE_NUM];
+    molecule_index_in_cell.resize(MAX_MOLECULE_NUM,-1);
+    molecule_cell_index.resize(MAX_MOLECULE_NUM,-1);
     steps_since_collision.resize(MAX_MOLECULE_NUM,0);
 
     if(settings->load_previous_state) {

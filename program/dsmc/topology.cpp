@@ -130,7 +130,7 @@ int Topology::index_from_position(data_type *r) {
     return index_from_ijk(i,j,k);
 }
 
-vector<int> Topology::index_vector_from_position(const vector<double> &r, const int &index) {
+vector<int> Topology::index_vector_from_position(const vector<data_type> &r, const int &index) {
     vector<int> index_vector(3,0);
 
     index_vector[0] = r.at(3*index + 0) / system->length[0] * num_processors_vector[0];
@@ -140,7 +140,7 @@ vector<int> Topology::index_vector_from_position(const vector<double> &r, const 
     return index_vector;
 }
 
-bool Topology::is_position_inside(const vector<double> &r, const int &index) {
+bool Topology::is_position_inside(const vector<data_type> &r, const int &index) {
     return (r.at(3*index + 0) >= origin[0] && r.at(3*index + 0) < origin[0]+length[0] &&
             r.at(3*index + 1) >= origin[1] && r.at(3*index + 1) < origin[1]+length[1] &&
             r.at(3*index + 2) >= origin[2] && r.at(3*index + 0) < origin[2]+length[2]);

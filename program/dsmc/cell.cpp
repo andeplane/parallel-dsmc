@@ -6,8 +6,9 @@
 #include <random.h>
 #include <settings.h>
 #include <cstring>
+#include <vector>
 
-using namespace std;
+using std::vector;
 
 Cell::Cell(System *_system) {
     system = _system;
@@ -114,7 +115,7 @@ int Cell::collide(Random *rnd) {
 	return collisions;
 }
 
-void Cell::add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index) {
+void Cell::add_molecule(const int &molecule_index, vector<int> &index_in_cell, vector<int> &cell_index) {
     if(num_molecules+1>num_molecules_allocated_memory) {
         // We need to reallocate
         num_molecules_allocated_memory *= 2;
@@ -123,18 +124,17 @@ void Cell::add_molecule(const int &molecule_index, unsigned long *index_in_cell,
         delete molecules;
         molecules = tmp;
     }
-
     molecules[num_molecules] = molecule_index;
-    index_in_cell[molecule_index] = num_molecules;
-    cell_index[molecule_index] = index;
+    index_in_cell.at(molecule_index) = num_molecules;
+    cell_index.at(molecule_index) = index;
     num_molecules++;
 }
 
-void Cell::remove_molecule(const int &molecule_index, unsigned long *index_in_cell) {
+void Cell::remove_molecule(const int &molecule_index, vector<int> &index_in_cell) {
     if(num_molecules>1) {
         // Move the last molecule over here
-        molecules[ index_in_cell[molecule_index] ] = molecules[num_molecules-1];
-        index_in_cell[ molecules[num_molecules-1] ] = index_in_cell[molecule_index];
+        molecules[ index_in_cell.at(molecule_index) ] = molecules[num_molecules-1];
+        index_in_cell.at(molecules[num_molecules-1]) = index_in_cell.at(molecule_index);
     }
 
     num_molecules--;

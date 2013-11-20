@@ -65,10 +65,8 @@ public:
     vector<data_type> mpi_receive_buffer;
     vector<data_type> r;
     vector<data_type> v;
-    unsigned long *molecule_index_in_cell;
-    // vector<unsigned long> molecule_index_in_cell;
-    // vector<unsigned long> molecule_cell_index;
-    unsigned long *molecule_cell_index;
+    vector<int> molecule_index_in_cell;
+    vector<int> molecule_cell_index;
     int *node_num_new_molecules;
     int *cell_index_map;
     // vector<int> node_num_new_molecules;
