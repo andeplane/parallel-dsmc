@@ -43,7 +43,7 @@ private:
     void add_molecules_in_outlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules);
     void remove_molecules_in_outlet_reservoir(Cell *cell, const int &delta_num_molecules);
     void add_molecule_to_cell(Cell *cell, const int &molecule_index);
-    void add_molecules_from_mpi(double *data, const int &num_new_molecules);
+    void add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules);
     void remove_molecule_from_system(const long &molecule_index);
     bool validate_number_of_cells();
     inline void find_position(double *r);
@@ -66,11 +66,8 @@ public:
     Topology *topology;
 
     vector<Cell*> active_cells;
-    // vector<Cell*> all_cells;
-//    vector<Cell*> reservoir_A_cells;
-//    vector<Cell*> reservoir_B_cells;
 
-    double *mpi_receive_buffer;
+    vector<double> mpi_receive_buffer;
     // vector<double> mpi_receive_buffer;
     double *r, *v;
     unsigned long *molecule_index_in_cell;

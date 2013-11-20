@@ -12,7 +12,8 @@ INCLUDES = -I$(SOURCEDIR) -I/usr/local/Cellar/open-mpi/1.6.4/include
 LIBDIR = -L/usr/local/Cellar/open-mpi/1.6.4/lib 
 
 # compiler specific flags
-CFLAGS =  -D$(TARGET) -O2 $(INCLUDES) -vec-report2
+CFLAGS =  -D$(TARGET) -O2 $(INCLUDES) 
+#-vec-report2
 
 FFLAGS = $(LIBDIR) -lmpi_cxx -lmpi -lm
 
