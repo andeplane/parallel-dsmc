@@ -67,8 +67,8 @@ public:
     vector<data_type> v;
     vector<int> molecule_index_in_cell;
     vector<int> molecule_cell_index;
-    int *node_num_new_molecules;
-    int *cell_index_map;
+    vector<int> node_num_new_molecules;
+    vector<int> cell_index_map;
     // vector<int> node_num_new_molecules;
     data_type **node_molecule_data;
     vector<int> steps_since_collision;

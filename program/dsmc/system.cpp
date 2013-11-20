@@ -48,7 +48,7 @@ void System::step() {
 
 void System::mpi_move() {
     timer->start_mpi();
-    for(int i=0; i<topology->num_processors; i++) node_num_new_molecules[i] = 0;
+    for(int i=0; i<topology->num_processors; i++) node_num_new_molecules.at(i) = 0;
 
     for(unsigned long n=0; n<num_molecules_local; n++) {
         int node_id = topology->index_from_molecule_index(n);
@@ -56,13 +56,13 @@ void System::mpi_move() {
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
             if(node_id < 0 || node_id >= topology->num_processors) cout << "Moved existing molecule to a node that doesn't exists" << endl;
 
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = r.at(3*n+0);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = r.at(3*n+1);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = r.at(3*n+2);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 3] = v.at(3*n+0);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 4] = v.at(3*n+1);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 5] = v.at(3*n+2);
-            node_num_new_molecules[node_id]++;
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 0] = r.at(3*n+0);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 1] = r.at(3*n+1);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 2] = r.at(3*n+2);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 3] = v.at(3*n+0);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 4] = v.at(3*n+1);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 5] = v.at(3*n+2);
+            node_num_new_molecules.at(node_id)++;
             remove_molecule_from_system(n);
             n--;
         }
@@ -76,7 +76,7 @@ void System::mpi_move() {
             int facet_index = 2*dimension + upper;
             int node_id = topology->facet_id_to_node_id_list[facet_index];
             if(node_id == myid) continue;
-            num_send = node_num_new_molecules[node_id];
+            num_send = node_num_new_molecules.at(node_id);
             if(topology->my_parity[dimension] == 0) {
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
@@ -91,7 +91,7 @@ void System::mpi_move() {
                 if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
             }
 
-            node_num_new_molecules[node_id] = 0; // We have sent everything we wanted to this node now.
+            node_num_new_molecules.at(node_id) = 0; // We have sent everything we wanted to this node now.
             add_molecules_from_mpi(mpi_receive_buffer, num_recieve);
         }
 
@@ -146,7 +146,7 @@ void System::accelerate() {
 void System::update_molecule_cells() {
     for(int n=0;n<num_molecules_local;n++) {
         int cell_index_new = cell_index_map[cell_index_from_position(n)];
-        int cell_index_old = cell_index_map[molecule_cell_index[n]];
+        int cell_index_old = cell_index_map[molecule_cell_index.at(n)];
 
         Cell *new_cell;
         Cell *old_cell;
@@ -178,13 +178,13 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
             if(node_id < 0 || node_id >= topology->num_processors) throw string("Moved new molecule to a node that doesn't exists");
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
 
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = data.at(6*i+0);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = data.at(6*i+1);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = data.at(6*i+2);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 3] = data.at(6*i+3);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 4] = data.at(6*i+4);
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 5] = data.at(6*i+5);
-            node_num_new_molecules[node_id]++;
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 0] = data.at(6*i+0);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 1] = data.at(6*i+1);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 2] = data.at(6*i+2);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 3] = data.at(6*i+3);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 4] = data.at(6*i+4);
+            node_molecule_data[node_id][6*node_num_new_molecules.at(node_id) + 5] = data.at(6*i+5);
+            node_num_new_molecules.at(node_id)++;
             continue;
         }
         int n = num_molecules_local;
@@ -209,7 +209,7 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
 
 void System::remove_molecule_from_system(const long &molecule_index) {
 
-    long cell_index = cell_index_map[molecule_cell_index[molecule_index]];
+    long cell_index = cell_index_map[molecule_cell_index.at(molecule_index)];
     Cell *cell = active_cells.at(cell_index);
     cell->remove_molecule(molecule_index,molecule_index_in_cell);
 
@@ -220,8 +220,8 @@ void System::remove_molecule_from_system(const long &molecule_index) {
         last_molecule_index--;
     }
 
-    int last_molecule_cell_index = molecule_cell_index[last_molecule_index];
-    int last_molecule_index_in_cell = molecule_index_in_cell[last_molecule_index];
+    int last_molecule_cell_index = molecule_cell_index.at(last_molecule_index);
+    int last_molecule_index_in_cell = molecule_index_in_cell.at(last_molecule_index);
 //    std::move(r.begin()+3*last_molecule_index, r.begin()+6*last_molecule_index, r.begin()+3*molecule_index);
 //    std::move(v.begin()+3*last_molecule_index, v.begin()+6*last_molecule_index, v.begin()+3*molecule_index);
 
@@ -229,8 +229,8 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     memcpy(&v.at(3*molecule_index),&v.at(3*last_molecule_index),3*sizeof(data_type));
 
     cell = active_cells[ cell_index_map[last_molecule_cell_index] ];
-    molecule_cell_index[molecule_index] = last_molecule_cell_index;
-    molecule_index_in_cell[molecule_index] = last_molecule_index_in_cell;
+    molecule_cell_index.at(molecule_index) = last_molecule_cell_index;
+    molecule_index_in_cell.at(molecule_index) = last_molecule_index_in_cell;
     cell->molecules[last_molecule_index_in_cell] = molecule_index;
     num_molecules_local--;
 }
@@ -295,12 +295,11 @@ void System::initialize(Settings *settings_, int myid_) {
     num_cells_vector[1] = cells_y;
     num_cells_vector[2] = cells_z;
     int num_cells_total = cells_x*cells_y*cells_z;
-    cell_index_map = new int[num_cells_total];
-    for(int i=0; i<num_cells_total; i++) cell_index_map[i] = -1;
+    cell_index_map.resize(num_cells_total,-1);
 
     io = new DSMC_IO(this);
     topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
-    node_num_new_molecules = new int[topology->num_processors];
+    node_num_new_molecules.resize(topology->num_processors, 0);
     node_molecule_data = new data_type*[topology->num_processors];
     for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new data_type[MAX_MPI_DATA]; }
     MPI_Barrier(MPI_COMM_WORLD);
