@@ -1,6 +1,6 @@
 #include <system.h>
 
-#include <math.h>
+#include <cmath>
 #include <fstream>
 #include <cell.h>
 #include <grid.h>

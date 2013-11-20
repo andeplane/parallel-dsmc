@@ -2,7 +2,7 @@
 
 using namespace std;
 
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <vector>
 #include <cutil.h>

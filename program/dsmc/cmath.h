@@ -3,7 +3,7 @@
 using namespace std;
 
 
-#include <math.h>
+#include <cmath>
 #include <cmatrix.h>
 #include <iostream>
 #include <vector>

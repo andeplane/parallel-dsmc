@@ -12,7 +12,7 @@ INCLUDES = -I$(SOURCEDIR)
 LIBDIR = -L/usr/local/Cellar/open-mpi/1.6.4/lib 
 
 # compiler specific flags
-CFLAGS =  -D$(TARGET) -O3 -I/usr/lib/openmpi/include -I/usr/lib/openmpi/include/openmpi -pthread
+CFLAGS =  -D$(TARGET) -O3 -I/usr/lib/openmpi/include -I/usr/lib/openmpi/include/openmpi -pthread -std=gnu++11
 
 FFLAGS = -pthread -L/usr/lib/openmpi/lib -lmpi_cxx -lmpi -lopen-rte -lopen-pal -ldl -Wl,--export-dynamic -lnsl -lutil -lm -ldl
 

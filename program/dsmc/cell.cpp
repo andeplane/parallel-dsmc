@@ -1,6 +1,6 @@
 #include <cstddef>
 #include <cell.h>
-#include <math.h>
+#include <cmath>
 #include <time.h>
 #include <system.h>
 #include <random.h>

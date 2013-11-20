@@ -1,6 +1,6 @@
 #include "collidercercignanilampis.h"
 #include <random.h>
-#include <math.h>
+#include <cmath>
 #include <system.h>
 #include <unitconverter.h>
 

@@ -1,5 +1,5 @@
 #include "collidermaxwell.h"
-#include <math.h>
+#include <cmath>
 #include <random.h>
 #include <iostream>
 using namespace std;
