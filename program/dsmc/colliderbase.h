@@ -1,4 +1,6 @@
 #pragma once
+#include <system.h>
+
 class Random;
 
 class ColliderBase
@@ -8,5 +10,5 @@ protected:
 public:
     unsigned long num_collisions;
     ColliderBase();
-    virtual void collide(Random *rnd, double *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2);
+    virtual void collide(Random *rnd, data_type *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2);
 };

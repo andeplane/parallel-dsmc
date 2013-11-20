@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <defines.h>
 
 class Random;
 class System;
@@ -19,11 +20,11 @@ public:
 
     double x0, y0, z0;
     double Lx, Ly, Lz;
-	double vr_max;
+    data_type vr_max;
     double collision_coefficient;
     double origin[3];
     int index_vector[3];
-    vector<double> average_velocity;
+    vector<data_type> average_velocity;
 
     System *system;
     int *molecules;
@@ -39,11 +40,11 @@ public:
     unsigned long prepare();
     void resize(int n);
     int collide(Random *rnd);
-    inline void collide_molecules(double *v0, double *v1, const double &v_rel, Random *rnd);
+    inline void collide_molecules(data_type *v0, data_type *v1, const data_type &v_rel, Random *rnd);
     void update_volume();
     void add_molecule(const int &molecule_index, unsigned long *index_in_cell, unsigned long *cell_index);
     void remove_molecule(const int &molecule_index, unsigned long *index_in_cell);
-    vector<double> &update_average_velocity();
+    vector<data_type> &update_average_velocity();
 
     double calculate_kinetic_energy();
     static bool cmp(Cell *c1, Cell *c2);

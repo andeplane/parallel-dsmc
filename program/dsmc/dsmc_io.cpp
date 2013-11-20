@@ -60,12 +60,12 @@ void DSMC_IO::save_state_to_movie_file() {
 
         int count = 0;
         for(unsigned int n=0;n<system->num_molecules_local;n++) {
-            data[count++] = system->r[3*n+0];
-            data[count++] = system->r[3*n+1];
-            data[count++] = system->r[3*n+2];
-            data[count++] = system->v[3*n+0];
-            data[count++] = system->v[3*n+1];
-            data[count++] = system->v[3*n+2];
+            data[count++] = system->r.at(3*n+0);
+            data[count++] = system->r.at(3*n+1);
+            data[count++] = system->r.at(3*n+2);
+            data[count++] = system->v.at(3*n+0);
+            data[count++] = system->v.at(3*n+1);
+            data[count++] = system->v.at(3*n+2);
         }
 
         count /= 6; // This should represent the number of particles, 4 doubles per particle
@@ -93,22 +93,22 @@ void DSMC_IO::save_state_to_file_binary() {
         exit(1);
     }
 
-    double *tmp_data = new double[6*N];
+    data_type *tmp_data = new data_type[6*N];
 
     int count = 0;
 
     for(unsigned int n=0;n<system->num_molecules_local;n++) {
-        tmp_data[count++] = system->r[3*n+0];
-        tmp_data[count++] = system->r[3*n+1];
-        tmp_data[count++] = system->r[3*n+2];
+        tmp_data[count++] = system->r.at(3*n+0);
+        tmp_data[count++] = system->r.at(3*n+1);
+        tmp_data[count++] = system->r.at(3*n+2);
 
-        tmp_data[count++] = system->v[3*n+0];
-        tmp_data[count++] = system->v[3*n+1];
-        tmp_data[count++] = system->v[3*n+2];
+        tmp_data[count++] = system->v.at(3*n+0);
+        tmp_data[count++] = system->v.at(3*n+1);
+        tmp_data[count++] = system->v.at(3*n+2);
     }
 
     file.write (reinterpret_cast<char*>(&N), sizeof(int));
-    file.write (reinterpret_cast<char*>(tmp_data), 6*N*sizeof(double));
+    file.write (reinterpret_cast<char*>(tmp_data), 6*N*sizeof(data_type));
 
     file.close();
     delete tmp_data;
@@ -130,22 +130,21 @@ void DSMC_IO::load_state_from_file_binary() {
     }
 
     file.read(reinterpret_cast<char*>(&N),sizeof(int));
-    double *tmp_data = new double[6*N];
+    data_type *tmp_data = new data_type[6*N];
 
-    file.read(reinterpret_cast<char*>(tmp_data), 6*N*sizeof(double));
+    file.read(reinterpret_cast<char*>(tmp_data), 6*N*sizeof(data_type));
     file.close();
+    vector<data_type> &r = system->r;
+    vector<data_type> &v = system->v;
 
     for(int n=0;n<N;n++) {
-        double *r = &system->r[3*n];
-        double *v = &system->v[3*n];
-
-        r[0] = tmp_data[6*n+0];
-        r[1] = tmp_data[6*n+1];
-        r[2] = tmp_data[6*n+2];
-        v[0] = tmp_data[6*n+3];
-        v[1] = tmp_data[6*n+4];
-        v[2] = tmp_data[6*n+5];
-        int mapped_cell_index = system->cell_index_map[system->cell_index_from_position(r)];
+        r.at(3*n+0) = tmp_data[6*n+0];
+        r.at(3*n+1) = tmp_data[6*n+1];
+        r.at(3*n+2) = tmp_data[6*n+2];
+        v.at(3*n+0) = tmp_data[6*n+3];
+        v.at(3*n+1) = tmp_data[6*n+4];
+        v.at(3*n+2) = tmp_data[6*n+5];
+        int mapped_cell_index = system->cell_index_map[system->cell_index_from_position(n)];
         Cell *cell = system->active_cells.at(mapped_cell_index);
         cell->add_molecule(n,system->molecule_index_in_cell,system->molecule_cell_index);
     }

@@ -10,7 +10,7 @@ ColliderCercignaniLampis::ColliderCercignaniLampis(double sqrt_wall_temp_over_ma
     system = system_;
 }
 
-void ColliderCercignaniLampis::collide(Random *rnd, double *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2)
+void ColliderCercignaniLampis::collide(Random *rnd, data_type *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2)
 {
     double factor = sqrt(2)*sqrt_wall_temp_over_mass;
 

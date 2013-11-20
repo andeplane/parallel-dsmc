@@ -51,17 +51,17 @@ void System::mpi_move() {
     for(int i=0; i<topology->num_processors; i++) node_num_new_molecules[i] = 0;
 
     for(unsigned long n=0; n<num_molecules_local; n++) {
-        int node_id = topology->index_from_position(&r[3*n]);
+        int node_id = topology->index_from_molecule_index(n);
         if(node_id != myid) {
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
             if(node_id < 0 || node_id >= topology->num_processors) cout << "Moved existing molecule to a node that doesn't exists" << endl;
 
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = r[3*n+0];
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = r[3*n+1];
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = r[3*n+2];
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 3] = v[3*n+0];
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 4] = v[3*n+1];
-            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 5] = v[3*n+2];
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 0] = r.at(3*n+0);
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 1] = r.at(3*n+1);
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 2] = r.at(3*n+2);
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 3] = v.at(3*n+0);
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 4] = v.at(3*n+1);
+            node_molecule_data[node_id][6*node_num_new_molecules[node_id] + 5] = v.at(3*n+2);
             node_num_new_molecules[node_id]++;
             remove_molecule_from_system(n);
             n--;
@@ -81,14 +81,14 @@ void System::mpi_move() {
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
                 // 6 doubles per molecule
-                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,MPI_DOUBLE,node_id,100+facet_index, MPI_COMM_WORLD);
-                if(num_recieve) MPI_Recv(&mpi_receive_buffer.front(), 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
+                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
+                if(num_recieve) MPI_Recv(&mpi_receive_buffer.front(), 6*num_recieve, mpi_data_type, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
             } else if (topology->my_parity[dimension] == 1){
                 MPI_Recv(&num_recieve, 1, MPI_INT, MPI_ANY_SOURCE, 10+facet_index, MPI_COMM_WORLD, &status);
                 MPI_Send(&num_send, 1, MPI_INT, node_id, 10+facet_index, MPI_COMM_WORLD);
                 // 6 doubles per molecule
-                if(num_recieve) MPI_Recv(&mpi_receive_buffer.front(), 6*num_recieve, MPI_DOUBLE, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
-                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,MPI_DOUBLE,node_id,100+facet_index, MPI_COMM_WORLD);
+                if(num_recieve) MPI_Recv(&mpi_receive_buffer.front(), 6*num_recieve, mpi_data_type, MPI_ANY_SOURCE, 100+facet_index, MPI_COMM_WORLD, &status);
+                if(num_send) MPI_Send(node_molecule_data[node_id], 6*num_send,mpi_data_type,node_id,100+facet_index, MPI_COMM_WORLD);
             }
 
             node_num_new_molecules[node_id] = 0; // We have sent everything we wanted to this node now.
@@ -138,16 +138,15 @@ void System::accelerate() {
     double gravity = settings->gravity*dt;
 
     for(int n=0;n<num_molecules_local;n++) {
-        v[3*n+flow_dir] += gravity;
+        v.at(3*n+flow_dir) += gravity;
     }
     timer->end_accelerate();
 }
 
 void System::update_molecule_cells() {
     for(int n=0;n<num_molecules_local;n++) {
-        int cell_index_new = cell_index_map[cell_index_from_position(&r[3*n])];
+        int cell_index_new = cell_index_map[cell_index_from_position(n)];
         int cell_index_old = cell_index_map[molecule_cell_index[n]];
-
 
         Cell *new_cell;
         Cell *old_cell;
@@ -172,7 +171,7 @@ void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
     num_molecules_local++;
 }
 
-void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_molecules) {
+void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_molecules) {
     for(int i=0; i<num_new_molecules; i++) {
         int node_id = topology->index_from_position(&data[6*i+0]);
         if(node_id != myid) {
@@ -189,13 +188,13 @@ void System::add_molecules_from_mpi(vector<double> &data, const int &num_new_mol
             continue;
         }
         int n = num_molecules_local;
-        r[3*n+0] = data[6*i+0];
-        r[3*n+1] = data[6*i+1];
-        r[3*n+2] = data[6*i+2];
-        v[3*n+0] = data[6*i+3];
-        v[3*n+1] = data[6*i+4];
-        v[3*n+2] = data[6*i+5];
-        int cell_index = cell_index_map[cell_index_from_position(&r[3*n])];
+        r.at(3*n+0) = data.at(6*i+0);
+        r.at(3*n+1) = data.at(6*i+1);
+        r.at(3*n+2) = data.at(6*i+2);
+        v.at(3*n+0) = data.at(6*i+3);
+        v.at(3*n+1) = data.at(6*i+4);
+        v.at(3*n+2) = data.at(6*i+5);
+        int cell_index = cell_index_map[cell_index_from_position(n)];
         Cell *cell;
         try {
             cell = active_cells.at(cell_index);
@@ -223,8 +222,11 @@ void System::remove_molecule_from_system(const long &molecule_index) {
 
     int last_molecule_cell_index = molecule_cell_index[last_molecule_index];
     int last_molecule_index_in_cell = molecule_index_in_cell[last_molecule_index];
-    memcpy(&r[3*molecule_index],&r[3*last_molecule_index],3*sizeof(double));
-    memcpy(&v[3*molecule_index],&v[3*last_molecule_index],3*sizeof(double));
+//    std::move(r.begin()+3*last_molecule_index, r.begin()+6*last_molecule_index, r.begin()+3*molecule_index);
+//    std::move(v.begin()+3*last_molecule_index, v.begin()+6*last_molecule_index, v.begin()+3*molecule_index);
+
+    memcpy(&r.at(3*molecule_index),&r.at(3*last_molecule_index),3*sizeof(data_type));
+    memcpy(&v.at(3*molecule_index),&v.at(3*last_molecule_index),3*sizeof(data_type));
 
     cell = active_cells[ cell_index_map[last_molecule_cell_index] ];
     molecule_cell_index[molecule_index] = last_molecule_cell_index;
@@ -232,139 +234,6 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     cell->molecules[last_molecule_index_in_cell] = molecule_index;
     num_molecules_local--;
 }
-
-//void System::add_molecules_in_inlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules) {
-//    int neighbor_cell_index_vector[3];
-//    neighbor_cell_index_vector[0] = cell->index_vector[0];
-//    neighbor_cell_index_vector[1] = cell->index_vector[1];
-//    neighbor_cell_index_vector[2] = cell->index_vector[2];
-//    neighbor_cell_index_vector[settings->flow_direction] += 1; // We want the next cell in flow direction
-//    int neighbor_cell_index = cell_index_map[cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2])];
-//    vector<double> average_velocity_neighbor_cell = ((Cell*)active_cells[neighbor_cell_index])->update_average_velocity();
-
-//    for(int i=0; i<delta_num_molecules; i++) {
-//        int molecule_index = num_molecules_local;
-
-//        v[3*molecule_index+0] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[0];
-//        v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
-//        v[3*molecule_index+2] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[2];
-//        find_position_in_cell(cell, &r[3*molecule_index]);
-
-//        add_molecule_to_cell(cell, molecule_index);
-//    }
-//}
-
-//void System::remove_molecules_in_inlet_reservoir(Cell *cell, const int &delta_num_molecules) {
-//    // delta_num_molecules is a negative number
-//    for(int i=0; i<abs(delta_num_molecules); i++) {
-//        int this_molecule_index_in_cell = cell->num_molecules*rnd->next_double();
-//        long molecule_index = cell->molecules[this_molecule_index_in_cell];
-//        remove_molecule_from_system(molecule_index);
-//    }
-//}
-
-//void System::add_molecules_in_outlet_reservoir(Cell *cell, const double &velocity_std_dev, const int &delta_num_molecules) {
-//    int neighbor_cell_index_vector[3];
-//    neighbor_cell_index_vector[0] = cell->index_vector[0];
-//    neighbor_cell_index_vector[1] = cell->index_vector[1];
-//    neighbor_cell_index_vector[2] = cell->index_vector[2];
-//    neighbor_cell_index_vector[settings->flow_direction] -= 1; // We want the previous cell in flow direction
-//    int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
-//    vector<double> average_velocity_neighbor_cell = ((Cell*)all_cells[neighbor_cell_index])->update_average_velocity();
-
-//    for(int i=0; i<delta_num_molecules; i++) {
-//        int molecule_index = num_molecules_local;
-
-//        v[3*molecule_index+0] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[0];
-//        v[3*molecule_index+1] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[1];
-//        v[3*molecule_index+2] = rnd->next_gauss()*velocity_std_dev + average_velocity_neighbor_cell[2];
-//        find_position_in_cell(cell, &r[3*molecule_index]);
-
-//        add_molecule_to_cell(cell, molecule_index);
-//    }
-//}
-
-//void System::remove_molecules_in_outlet_reservoir(Cell *cell, const int &delta_num_molecules) {
-//    // delta_num_molecules is a negative number
-//    for(int i=0; i<abs(delta_num_molecules); i++) {
-//        int this_molecule_index_in_cell = cell->num_molecules*rnd->next_double();
-//        long molecule_index = cell->molecules[this_molecule_index_in_cell];
-//        remove_molecule_from_system(molecule_index);
-//    }
-//}
-
-//void System::maintain_pressure_A() {
-//    /*
-//     * Strategy: Keep the number of molecules in a cell equal to that of the neighbor cell towards the center of the system
-//     *           If adding any new molecules, let the velocity be equal to the average in the neighbor cell plus a MB-distribution.
-//     */
-
-//    double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_A);
-//    double wanted_density = wanted_pressure / temperature;
-
-//    double velocity_std_dev = sqrt(wanted_pressure/density); // Shouldn't this density be the wanted density?
-//    velocity_std_dev = sqrt(temperature/settings->mass);
-
-//    for(int i=0;i<reservoir_A_cells.size();i++) {
-//        Cell *cell = reservoir_A_cells[i];
-//        if(cell->volume == 0) continue;
-//        int num_molecules_in_reservoir = cell->num_molecules;
-//        int wanted_num_molecules_in_reservoir = wanted_density*cell->volume / atoms_per_molecule;
-//        int delta_num_molecules = wanted_num_molecules_in_reservoir - num_molecules_in_reservoir;
-//        // cout << "I want " << wanted_num_molecules_in_reservoir << " molecules, and I have " << num_molecules_in_reservoir << endl;
-
-//        if(delta_num_molecules > 0) {
-//            add_molecules_in_inlet_reservoir(cell, velocity_std_dev, delta_num_molecules);
-//        } else if(delta_num_molecules < 0) {
-//            remove_molecules_in_inlet_reservoir(cell, delta_num_molecules);
-//        }
-//    }
-//}
-
-//void System::maintain_pressure_B() {
-//    /*
-//     * Strategy: Keep the number of molecules in a cell equal to that of the neighbor cell towards the center of the system
-//     *           If adding any new molecules, let the velocity be equal to the average in the neighbor cell plus a MB-distribution.
-//     */
-
-//    double wanted_pressure = unit_converter->pressure_from_SI(settings->pressure_B);
-//    double velocity_std_dev = sqrt(wanted_pressure/density); // Shouldn't this density be the wanted density?
-//    velocity_std_dev = sqrt(temperature/settings->mass);
-
-//    for(int i=0;i<reservoir_B_cells.size();i++) {
-//        Cell *cell = reservoir_B_cells[i];
-//        if(cell->volume == 0) continue;
-
-//        // Find neighbor cell
-//        int neighbor_cell_index_vector[3];
-//        neighbor_cell_index_vector[0] = cell->index_vector[0];
-//        neighbor_cell_index_vector[1] = cell->index_vector[1];
-//        neighbor_cell_index_vector[2] = cell->index_vector[2];
-//        neighbor_cell_index_vector[settings->flow_direction] -= 1; // We want the previous cell in flow direction
-//        int neighbor_cell_index = cell_index_from_ijk(neighbor_cell_index_vector[0], neighbor_cell_index_vector[1], neighbor_cell_index_vector[2]);
-//        Cell *neighbor_cell = all_cells[neighbor_cell_index];
-
-//        int num_molecules_in_reservoir = cell->num_molecules;
-//        int num_molecules_in_neighbor_cell = neighbor_cell->num_molecules;
-//        // cout << "Neighbor cell has " << num_molecules_in_neighbor_cell << " molecules, and I have " << num_molecules_in_reservoir << endl;
-
-//        int wanted_num_molecules_in_reservoir = num_molecules_in_neighbor_cell;
-//        int delta_num_molecules = wanted_num_molecules_in_reservoir - num_molecules_in_reservoir;
-
-//        if(delta_num_molecules > 0) {
-//            add_molecules_in_outlet_reservoir(cell, velocity_std_dev, delta_num_molecules);
-//        } else if(delta_num_molecules < 0) {
-//            remove_molecules_in_outlet_reservoir(cell, delta_num_molecules);
-//        }
-//    }
-//}
-
-//void System::maintain_pressure() {
-//    timer->start_pressure();
-//    maintain_pressure_A();
-//    maintain_pressure_B();
-//    timer->end_pressure();
-//}
 
 bool System::validate_number_of_cells() {
     double num_voxels_per_cell_x = double(world_grid->global_nx) / cells_x;
@@ -432,8 +301,8 @@ void System::initialize(Settings *settings_, int myid_) {
     io = new DSMC_IO(this);
     topology = new Topology(myid, settings->nx, settings->ny, settings->nz, this);
     node_num_new_molecules = new int[topology->num_processors];
-    node_molecule_data = new double*[topology->num_processors];
-    for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new double[MAX_MPI_DATA]; }
+    node_molecule_data = new data_type*[topology->num_processors];
+    for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new data_type[MAX_MPI_DATA]; }
     MPI_Barrier(MPI_COMM_WORLD);
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
@@ -528,28 +397,17 @@ void System::initialize(Settings *settings_, int myid_) {
     timer->end_system_initialize();
 }
 
-inline void System::find_position(double *r) {
+inline void System::find_position(const int &index) {
     bool did_collide = true;
     bool is_inside = false;
 
     while(did_collide || !is_inside) {
-        r[0] = topology->origin[0] + topology->length[0]*rnd->next_double();
-        r[1] = topology->origin[1] + topology->length[1]*rnd->next_double();
-        r[2] = topology->origin[2] + topology->length[2]*rnd->next_double();
+        r.at(3*index + 0) = topology->origin[0] + topology->length[0]*rnd->next_double();
+        r.at(3*index + 1) = topology->origin[1] + topology->length[1]*rnd->next_double();
+        r.at(3*index + 2) = topology->origin[2] + topology->length[2]*rnd->next_double();
 
-        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
-        is_inside = topology->is_position_inside(r);
-    }
-}
-
-inline void System::find_position_in_cell(Cell *cell, double *r) {
-    bool did_collide = true;
-    while(did_collide) {
-        r[0] = cell->origin[0] + cell->Lx*rnd->next_double();
-        r[1] = cell->origin[1] + cell->Ly*rnd->next_double();
-        r[2] = cell->origin[2] + cell->Lz*rnd->next_double();
-
-        did_collide = *world_grid->get_voxel(r)>=voxel_type_wall;
+        did_collide = *world_grid->get_voxel(r,index)>=voxel_type_wall;
+        is_inside = topology->is_position_inside(r, index);
     }
 }
 
@@ -557,10 +415,10 @@ inline int System::cell_index_from_ijk(const int &i, const int &j, const int &k)
     return i*cells_y*cells_z + j*cells_z + k;
 }
 
-int System::cell_index_from_position(double *r) {
-    int i = r[0]/length[0]*cells_x;
-    int j = r[1]/length[1]*cells_y;
-    int k = r[2]/length[2]*cells_z;
+int System::cell_index_from_position(const int &index) {
+    int i = r.at(3*index + 0)/length[0]*cells_x;
+    int j = r.at(3*index + 1)/length[1]*cells_y;
+    int k = r.at(3*index + 2)/length[2]*cells_z;
 
     return cell_index_from_ijk(i,j,k);
 }
@@ -572,9 +430,9 @@ void System::setup_molecules() {
         cout << error << endl;
         exit(1);
     }
+    r.resize(3*MAX_MOLECULE_NUM);
+    v.resize(3*MAX_MOLECULE_NUM);
 
-    r = new double[3*MAX_MOLECULE_NUM];
-    v = new double[3*MAX_MOLECULE_NUM];
     molecule_index_in_cell = new unsigned long[MAX_MOLECULE_NUM];
     molecule_cell_index = new unsigned long[MAX_MOLECULE_NUM];
     steps_since_collision.resize(MAX_MOLECULE_NUM,0);
@@ -586,11 +444,11 @@ void System::setup_molecules() {
 
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
     for(int n=0; n<num_molecules_local; n++) {
-        v[3*n+0] = rnd->next_gauss()*sqrt_temp_over_mass;
-        v[3*n+1] = rnd->next_gauss()*sqrt_temp_over_mass;
-        v[3*n+2] = rnd->next_gauss()*sqrt_temp_over_mass;
-        find_position(&r[3*n]);
-        int cell_index = cell_index_map[cell_index_from_position(&r[3*n])];
+        v.at(3*n + 0) = rnd->next_gauss()*sqrt_temp_over_mass;
+        v.at(3*n + 1) = rnd->next_gauss()*sqrt_temp_over_mass;
+        v.at(3*n + 2) = rnd->next_gauss()*sqrt_temp_over_mass;
+        find_position(n);
+        int cell_index = cell_index_map[cell_index_from_position(n)];
         Cell *cell = active_cells.at(cell_index);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
     }

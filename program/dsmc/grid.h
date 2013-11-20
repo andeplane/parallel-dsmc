@@ -65,15 +65,15 @@ public:
     unsigned char *get_voxel(const CVector &voxel_indices);
     unsigned char *get_voxel(const int &i, const int &j, const int &k);
     unsigned char *get_voxel(const double &x, const double &y, const double &z);
-    unsigned char *get_voxel(double *r);
+    unsigned char *get_voxel(vector<data_type> &r, int index);
     void get_index_vector_from_index(const int &index, int &i, int &j, int &k);
-    int get_index_of_voxel(double *r);
-    double get_time_until_collision(double *r, double *v, double dt, const int &voxel_index);
+    int get_index_of_voxel(data_type *r);
+    double get_time_until_collision(data_type *r, data_type *v, double dt, const int &voxel_index);
 
     void read_matrix(string filename, DSMC_IO *io);
 };
 
-inline double Grid::get_time_until_collision(double *r, double *v, double dt, const int &voxel_index) {
+inline double Grid::get_time_until_collision(data_type *r, data_type *v, double dt, const int &voxel_index) {
     /*
      * Strategy:
      *          First calculate time until intersection with every facet of the voxel.
@@ -142,7 +142,7 @@ inline double Grid::get_time_until_collision(double *r, double *v, double dt, co
     else return time_until_collision - 1e-7; // Subtract a small number to avoid being exactly at the boundary of a voxel
 }
 
-inline int Grid::get_index_of_voxel(double *r) {
+inline int Grid::get_index_of_voxel(data_type *r) {
     int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
     int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
     int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;

@@ -11,9 +11,9 @@ ColliderThermal::ColliderThermal(double sqrt_wall_temp_over_mass_)
 
 void ColliderThermal::collide(Random *rnd, double *v, float *normal_vector, float *tangent_vector_1, float *tangent_vector_2)
 {
-    double v_normal   = sqrt_wall_temp_over_mass*sqrt(-2*log(rnd->next_double()));
-    double v_tangent1 = sqrt_wall_temp_over_mass*rnd->next_gauss();
-    double v_tangent2 = sqrt_wall_temp_over_mass*rnd->next_gauss();
+    data_type v_normal   = sqrt_wall_temp_over_mass*sqrt(-2*log(rnd->next_double()));
+    data_type v_tangent1 = sqrt_wall_temp_over_mass*rnd->next_gauss();
+    data_type v_tangent2 = sqrt_wall_temp_over_mass*rnd->next_gauss();
 
     // Normal vector
     float n_x = normal_vector[0];

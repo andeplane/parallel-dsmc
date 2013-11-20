@@ -56,10 +56,10 @@ unsigned char *Grid::get_voxel(const double &x, const double &y, const double &z
     return get_voxel(i,j,k);
 }
 
-unsigned char *Grid::get_voxel(double *r) {
-    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
-    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
-    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
+unsigned char *Grid::get_voxel(vector<data_type> &r, int index) {
+    int i =  (r.at(3*index + 0)-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
+    int j =  (r.at(3*index + 1)-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
+    int k =  (r.at(3*index + 2)-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
 
     return get_voxel(i,j,k);
 }

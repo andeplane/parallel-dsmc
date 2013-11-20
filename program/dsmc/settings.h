@@ -15,7 +15,6 @@ public:
     CIniFile ini_file;
     bool load_previous_state;
     bool create_movie;
-    bool maintain_pressure;
     int statistics_interval;
     int movie_every_n_frame;
     int atoms_per_molecule;

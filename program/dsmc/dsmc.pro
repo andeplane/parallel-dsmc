@@ -92,7 +92,8 @@ HEADERS += \
     camera.h \
     diamondsquare.h \
     statisticalproperty.h \
-    statisticalvalue.h
+    statisticalvalue.h \
+    defines.h
 
 
 OTHER_FILES += \
