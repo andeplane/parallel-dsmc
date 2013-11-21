@@ -206,7 +206,6 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
 }
 
 void System::remove_molecule_from_system(const long &molecule_index) {
-
     long cell_index = cell_index_map[molecule_cell_index.at(molecule_index)];
     Cell *cell = active_cells.at(cell_index);
     cell->remove_molecule(molecule_index,molecule_index_in_cell);
@@ -218,10 +217,14 @@ void System::remove_molecule_from_system(const long &molecule_index) {
         last_molecule_index--;
     }
 
+    if(last_molecule_index < 0) {
+        // This was the last molecule on the node
+        num_molecules_local = 0;
+        return;
+    }
+
     int last_molecule_cell_index = molecule_cell_index.at(last_molecule_index);
     int last_molecule_index_in_cell = molecule_index_in_cell.at(last_molecule_index);
-//    std::move(r.begin()+3*last_molecule_index, r.begin()+6*last_molecule_index, r.begin()+3*molecule_index);
-//    std::move(v.begin()+3*last_molecule_index, v.begin()+6*last_molecule_index, v.begin()+3*molecule_index);
 
     memcpy(&r.at(3*molecule_index),&r.at(3*last_molecule_index),3*sizeof(data_type));
     memcpy(&v.at(3*molecule_index),&v.at(3*last_molecule_index),3*sizeof(data_type));
