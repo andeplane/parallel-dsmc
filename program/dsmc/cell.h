@@ -27,14 +27,14 @@ public:
     vector<data_type> average_velocity;
 
     System *system;
-    int *molecules;
+    vector<int> molecules;
     int num_molecules_allocated_memory;
     int num_molecules;
 
     Cell(System *system);
     ~Cell() {
         average_velocity.clear();
-        delete molecules;
+        molecules.clear();
     }
 	void reset();
     unsigned long prepare();

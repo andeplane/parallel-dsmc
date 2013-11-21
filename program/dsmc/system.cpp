@@ -18,7 +18,6 @@
 #include <collidercercignanilampis.h>
 #include <collidermaxwell.h>
 #include <cvector.h>
-#include <stdexcept>      // std::out_of_range
 
 void System::step() {
     for(int n=0; n<num_molecules_local; n++) steps_since_collision[n]++;
@@ -206,8 +205,7 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
 }
 
 void System::remove_molecule_from_system(const long &molecule_index) {
-    long cell_index = cell_index_map[molecule_cell_index.at(molecule_index)];
-    Cell *cell = active_cells.at(cell_index);
+    Cell *cell = cell_containing_molecule(molecule_index);
     cell->remove_molecule(molecule_index,molecule_index_in_cell);
 
     // Move the last molecule into that memory location

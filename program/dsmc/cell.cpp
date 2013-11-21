@@ -18,9 +18,6 @@ Cell::Cell(System *_system) {
     total_pixels = 0;
     collision_rest = 0;
     average_velocity.resize(3,0);
-
-    num_molecules_allocated_memory = 0;
-    molecules = NULL;
 }
 
 bool Cell::cmp(Cell *c1, Cell *c2) {
@@ -34,8 +31,7 @@ void Cell::update_volume() {
         return;
     }
 
-    num_molecules_allocated_memory = 100;
-    molecules = new int[num_molecules_allocated_memory];
+    molecules.resize(100,-1);
     // Update the effective cell volume. A cell may contain 50% of solid material
     double system_volume = system->length[0]*system->length[1]*system->length[2];
     int num_cells = system->cells_x*system->cells_y*system->cells_z;
@@ -116,15 +112,11 @@ int Cell::collide(Random *rnd) {
 }
 
 void Cell::add_molecule(const int &molecule_index, vector<int> &index_in_cell, vector<int> &cell_index) {
-    if(num_molecules+1>num_molecules_allocated_memory) {
+    if(num_molecules+1>molecules.size()) {
         // We need to reallocate
-        num_molecules_allocated_memory *= 2;
-        int *tmp = new int[num_molecules_allocated_memory];
-        memcpy(tmp,molecules,num_molecules*sizeof(int));
-        delete molecules;
-        molecules = tmp;
+        molecules.resize(2*molecules.size());
     }
-    molecules[num_molecules] = molecule_index;
+    molecules.at(num_molecules) = molecule_index;
     index_in_cell.at(molecule_index) = num_molecules;
     cell_index.at(molecule_index) = index;
     num_molecules++;

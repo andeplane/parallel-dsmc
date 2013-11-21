@@ -17,6 +17,7 @@ class Topology;
 #include <cinifile.h>
 #include <mpi.h>
 #include <unitconverter.h>
+#include <stdexcept>      // std::out_of_range
 
 #define CYLINDER_RADIUS_SQUARED 0.0064
 #define BOX_FRACTION 0.2
@@ -48,6 +49,32 @@ private:
     void setup_cells();
     void update_molecule_cells();
     void count_reservoir_particles();
+    inline Cell *cell_containing_molecule(const int &molecule_index) {
+        long global_cell_index;
+        try {
+            global_cell_index = molecule_cell_index.at(molecule_index);
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Out of Range error: " << oor.what() << '\n';
+            cout << "Molecule index " << molecule_index << " was larger than molecule_cell_index accepts on node "  << myid << endl;
+            exit(1);
+        }
+        long local_cell_index;
+        try {
+            local_cell_index = cell_index_map.at(global_cell_index);
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Out of Range error: " << oor.what() << '\n';
+            cout << "Global cell index " << global_cell_index << " was larger than cell_index_map on node " << myid << endl;
+            exit(1);
+        }
+        try {
+            return active_cells.at(local_cell_index);
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Out of Range error: " << oor.what() << '\n';
+            cout << "Local cell index " << local_cell_index << " was larger than active_cells on node " << myid << endl;
+            exit(1);
+        }
+    }
+
 public:
     int cell_index_from_position(const int &index);
 
