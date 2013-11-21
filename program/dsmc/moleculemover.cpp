@@ -57,8 +57,8 @@ void MoleculeMover::apply_periodic_boundary_conditions(int &molecule_index, vect
 
 void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
     double tau = dt;
-    data_type *r = &system->r.at(3*molecule_index);
-    data_type *v = &system->v.at(3*molecule_index);
+    data_type *r = &system->r[3*molecule_index];
+    data_type *v = &system->v[3*molecule_index];
 
     int idx = grid->get_index_of_voxel(r);
 

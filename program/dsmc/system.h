@@ -44,44 +44,14 @@ private:
     void add_molecules_from_mpi(vector<data_type> &data, const int &num_new_molecules);
     void remove_molecule_from_system(const long &molecule_index);
     bool validate_number_of_cells();
-    inline void find_position(const int &index);
-    inline int cell_index_from_ijk(const int &i, const int &j, const int &k);
+    void find_position(const int &index);
     void setup_molecules();
     void setup_cells();
     void update_molecule_cells();
     void count_reservoir_particles();
-
-    inline Cell *cell_that_should_contain_molecule(const int &molecule_index) {
-        int global_cell_index = cell_index_from_position(molecule_index);
-        int local_cell_index = cell_index_map.at(global_cell_index);
-        return active_cells.at(local_cell_index);
-    }
-
-    inline Cell *cell_currently_containing_molecule(const int &molecule_index) {
-        long global_cell_index;
-        try {
-            global_cell_index = molecule_cell_index.at(molecule_index);
-        } catch (const std::out_of_range& oor) {
-            std::cerr << "Out of Range error: " << oor.what() << '\n';
-            cout << "Molecule index " << molecule_index << " was larger than molecule_cell_index accepts on node "  << myid << endl;
-            exit(1);
-        }
-        long local_cell_index;
-        try {
-            local_cell_index = cell_index_map.at(global_cell_index);
-        } catch (const std::out_of_range& oor) {
-            std::cerr << "Out of Range error: " << oor.what() << '\n';
-            cout << "Global cell index " << global_cell_index << " was larger than cell_index_map on node " << myid << endl;
-            exit(1);
-        }
-        try {
-            return active_cells.at(local_cell_index);
-        } catch (const std::out_of_range& oor) {
-            std::cerr << "Out of Range error: " << oor.what() << '\n';
-            cout << "Local cell index " << local_cell_index << " was larger than active_cells on node " << myid << endl;
-            exit(1);
-        }
-    }
+    Cell *cell_currently_containing_molecule(const int &molecule_index);
+    Cell *cell_that_should_contain_molecule(const int &molecule_index);
+    int cell_index_from_ijk(const int &i, const int &j, const int &k);
 
 public:
     int cell_index_from_position(const int &index);
@@ -145,3 +115,47 @@ public:
 	void step();
     System() { }
 };
+
+inline int System::cell_index_from_position(const int &index) {
+    int i = r[3*index + 0]*one_over_length[0]*cells_x;
+    int j = r[3*index + 1]*one_over_length[1]*cells_y;
+    int k = r[3*index + 2]*one_over_length[2]*cells_z;
+
+    return cell_index_from_ijk(i,j,k);
+}
+
+inline int System::cell_index_from_ijk(const int &i, const int &j, const int &k) {
+        return i*cells_y*cells_z + j*cells_z + k;
+    }
+
+inline Cell *System::cell_that_should_contain_molecule(const int &molecule_index) {
+    int global_cell_index = cell_index_from_position(molecule_index);
+    int local_cell_index = cell_index_map.at(global_cell_index);
+    return active_cells.at(local_cell_index);
+}
+
+inline Cell *System::cell_currently_containing_molecule(const int &molecule_index) {
+    long global_cell_index;
+    try {
+        global_cell_index = molecule_cell_index.at(molecule_index);
+    } catch (const std::out_of_range& oor) {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        cout << "Molecule index " << molecule_index << " was larger than molecule_cell_index accepts on node "  << myid << endl;
+        exit(1);
+    }
+    long local_cell_index;
+    try {
+        local_cell_index = cell_index_map.at(global_cell_index);
+    } catch (const std::out_of_range& oor) {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        cout << "Global cell index " << global_cell_index << " was larger than cell_index_map on node " << myid << endl;
+        exit(1);
+    }
+    try {
+        return active_cells.at(local_cell_index);
+    } catch (const std::out_of_range& oor) {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        cout << "Local cell index " << local_cell_index << " was larger than active_cells on node " << myid << endl;
+        exit(1);
+    }
+}

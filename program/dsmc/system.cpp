@@ -378,7 +378,7 @@ void System::initialize(Settings *settings_, int myid_) {
     timer->end_system_initialize();
 }
 
-inline void System::find_position(const int &index) {
+void System::find_position(const int &index) {
     bool did_collide = true;
     bool is_inside = false;
 
@@ -390,18 +390,6 @@ inline void System::find_position(const int &index) {
         did_collide = *world_grid->get_voxel(r,index)>=voxel_type_wall;
         is_inside = topology->is_position_inside(r, index);
     }
-}
-
-inline int System::cell_index_from_ijk(const int &i, const int &j, const int &k) {
-    return i*cells_y*cells_z + j*cells_z + k;
-}
-
-int System::cell_index_from_position(const int &index) {
-    int i = r.at(3*index + 0)/length[0]*cells_x;
-    int j = r.at(3*index + 1)/length[1]*cells_y;
-    int k = r.at(3*index + 2)/length[2]*cells_z;
-
-    return cell_index_from_ijk(i,j,k);
 }
 
 void System::setup_molecules() {
