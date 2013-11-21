@@ -116,6 +116,7 @@ void Cell::add_molecule(const int &molecule_index, vector<int> &index_in_cell, v
         // We need to reallocate
         molecules.resize(2*molecules.size());
     }
+
     molecules.at(num_molecules) = molecule_index;
     index_in_cell.at(molecule_index) = num_molecules;
     cell_index.at(molecule_index) = index;
@@ -123,13 +124,20 @@ void Cell::add_molecule(const int &molecule_index, vector<int> &index_in_cell, v
 }
 
 void Cell::remove_molecule(const int &molecule_index, vector<int> &index_in_cell) {
-    if(num_molecules>1) {
-        // Move the last molecule over here
-        molecules[ index_in_cell.at(molecule_index) ] = molecules[num_molecules-1];
-        index_in_cell.at(molecules[num_molecules-1]) = index_in_cell.at(molecule_index);
-    }
+    try {
+        if(num_molecules>1) {
+            // Move the last molecule over here
+            int current_molecule_index_in_cell = index_in_cell.at(molecule_index);
+            int last_molecule_global_index = molecules.at(num_molecules-1);
+            molecules.at(current_molecule_index_in_cell) = last_molecule_global_index;
+            index_in_cell.at(last_molecule_global_index) = index_in_cell.at(molecule_index);
+        }
 
-    num_molecules--;
+        num_molecules--;
+    } catch (const std::out_of_range& oor) {
+        std::cerr << "Out of Range error: " << oor.what() << '\n';
+        cout << "Tried to remove molecule with global index " << molecule_index << " from cell " << index << " on node " << system->myid << endl;
+    }
 }
 
 double Cell::calculate_kinetic_energy() {
