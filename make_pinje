@@ -12,9 +12,8 @@ INCLUDES = -I$(SOURCEDIR)
 LIBDIR = /opt/intel/itac/8.1.3/lib
 
 # compiler specific flags
-CFLAGS =  -D$(TARGET) -inline-debug-info -g $(INCLUDES) -std=c++11 -I/usr/include/x86_64-linux-gnu/c++/4.8/
-#CFLAGS =  -D$(TARGET) -ipo $(INCLUDES) -std=c++11 -I/usr/include/x86_64-linux-gnu/c++/4.8/
-#-vec-report2
+#CFLAGS =  -D$(TARGET) -inline-debug-info -g $(INCLUDES) -std=c++11 -I/usr/include/x86_64-linux-gnu/c++/4.8/
+CFLAGS =  -D$(TARGET) -ipo $(INCLUDES) -std=c++11 -I/usr/include/x86_64-linux-gnu/c++/4.8/
 
 FFLAGS = -L$(LIBDIR)
 

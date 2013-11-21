@@ -67,7 +67,7 @@ public:
     unsigned char *get_voxel(const double &x, const double &y, const double &z);
     unsigned char *get_voxel(vector<data_type> &r, int index);
     void get_index_vector_from_index(const int &index, int &i, int &j, int &k);
-    int get_index_of_voxel(data_type *r);
+    int get_index_of_voxel(const data_type *r);
     double get_time_until_collision(data_type *r, data_type *v, double dt, const int &voxel_index);
 
     void read_matrix(string filename, DSMC_IO *io);
@@ -142,10 +142,10 @@ inline double Grid::get_time_until_collision(data_type *r, data_type *v, double 
     else return time_until_collision - 1e-7; // Subtract a small number to avoid being exactly at the boundary of a voxel
 }
 
-inline int Grid::get_index_of_voxel(data_type *r) {
-    int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
-    int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
-    int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
+inline int Grid::get_index_of_voxel(const data_type *r) {
+    const int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
+    const int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
+    const int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
 
     return i*ny*nz + j*nz + k;
 }

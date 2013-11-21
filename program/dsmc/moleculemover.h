@@ -26,4 +26,13 @@ public:
     void apply_periodic_boundary_conditions(int &molecule_index, vector<data_type> &r, const CVector &system_length);
 };
 
+inline void MoleculeMover::apply_periodic_boundary_conditions(int &molecule_index, vector<data_type> &r, const CVector &system_length) {
+        if(r[3*molecule_index + 0] >= system_length.x)  { r[3*molecule_index + 0] -= system_length.x; count_periodic[0]++; }
+        else if(r[3*molecule_index + 0] < 0)         { r[3*molecule_index + 0] += system_length.x; count_periodic[0]--; }
 
+        if(r[3*molecule_index + 1] >= system_length.y) { r[3*molecule_index + 1] -= system_length.y; count_periodic[1]++;}
+        else if(r[3*molecule_index + 1] < 0)         { r[3*molecule_index + 1] += system_length.y; count_periodic[1]--; }
+
+        if(r[3*molecule_index + 2] >= system_length.z) { r[3*molecule_index + 2] -= system_length.z; count_periodic[2]++; }
+        else if(r[3*molecule_index + 2] < 0)         { r[3*molecule_index + 2] += system_length.z; count_periodic[2]--; }
+}

@@ -34,7 +34,7 @@ void MoleculeMover::move_molecules(double dt, Random *rnd) {
 
 int idx = 0;
 
-void MoleculeMover::do_move(data_type *r, data_type *v, double dt) {
+inline void MoleculeMover::do_move(data_type *r, data_type *v, double dt) {
     r[0] += v[0]*dt;
     r[1] += v[1]*dt;
     r[2] += v[2]*dt;
@@ -42,17 +42,6 @@ void MoleculeMover::do_move(data_type *r, data_type *v, double dt) {
 
 int sign(double a) {
     return (a<0) ? -1 : 1;
-}
-
-void MoleculeMover::apply_periodic_boundary_conditions(int &molecule_index, vector<data_type> &r, const CVector &system_length) {
-        if(r[3*molecule_index + 0] >= system_length.x)  { r[3*molecule_index + 0] -= system_length.x; count_periodic[0]++; }
-        else if(r[3*molecule_index + 0] < 0)         { r[3*molecule_index + 0] += system_length.x; count_periodic[0]--; }
-
-        if(r[3*molecule_index + 1] >= system_length.y) { r[3*molecule_index + 1] -= system_length.y; count_periodic[1]++;}
-        else if(r[3*molecule_index + 1] < 0)         { r[3*molecule_index + 1] += system_length.y; count_periodic[1]--; }
-
-        if(r[3*molecule_index + 2] >= system_length.z) { r[3*molecule_index + 2] -= system_length.z; count_periodic[2]++; }
-        else if(r[3*molecule_index + 2] < 0)         { r[3*molecule_index + 2] += system_length.z; count_periodic[2]--; }
 }
 
 void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, int depth) {
