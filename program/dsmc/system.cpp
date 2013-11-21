@@ -429,8 +429,7 @@ void System::setup_molecules() {
         v.at(3*n + 1) = rnd->next_gauss()*sqrt_temp_over_mass;
         v.at(3*n + 2) = rnd->next_gauss()*sqrt_temp_over_mass;
         find_position(n);
-        int cell_index = cell_index_map[cell_index_from_position(n)];
-        Cell *cell = active_cells.at(cell_index);
+        Cell *cell = cell_that_should_contain_molecule(n);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
     }
 }
@@ -485,7 +484,7 @@ void System::setup_cells() {
         if(cell->volume > 0) {
             temp_volume += cell->volume;
             int cell_index = cell->index;
-            cell_index_map[cell_index] = active_cells.size();
+            cell_index_map.at(cell_index) = active_cells.size();
             active_cells.push_back(cell);
         } else {
             delete cell;
