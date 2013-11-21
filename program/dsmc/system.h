@@ -49,7 +49,14 @@ private:
     void setup_cells();
     void update_molecule_cells();
     void count_reservoir_particles();
-    inline Cell *cell_containing_molecule(const int &molecule_index) {
+
+    inline Cell *cell_that_should_contain_molecule(const int &molecule_index) {
+        int global_cell_index = cell_index_from_position(molecule_index);
+        int local_cell_index = cell_index_map.at(global_cell_index);
+        return active_cells.at(local_cell_index);
+    }
+
+    inline Cell *cell_currently_containing_molecule(const int &molecule_index) {
         long global_cell_index;
         try {
             global_cell_index = molecule_cell_index.at(molecule_index);

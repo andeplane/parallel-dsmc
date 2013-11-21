@@ -143,20 +143,10 @@ void System::accelerate() {
 
 void System::update_molecule_cells() {
     for(int n=0;n<num_molecules_local;n++) {
-        int cell_index_new = cell_index_map[cell_index_from_position(n)];
-        int cell_index_old = cell_index_map[molecule_cell_index.at(n)];
+        Cell *old_cell = cell_currently_containing_molecule(n);
+        Cell *new_cell = cell_that_should_contain_molecule(n);
 
-        Cell *new_cell;
-        Cell *old_cell;
-        try {
-            new_cell = active_cells.at(cell_index_new);
-            old_cell = active_cells.at(cell_index_old);
-        } catch (const std::out_of_range& oor) {
-            std::cerr << "Out of Range error: " << oor.what() << '\n';
-            cout << "Error in update_molecule_cells(), molecule wants a cell that is outside the range" << endl;
-        }
-
-        if(cell_index_new != cell_index_old) {
+        if(old_cell->index != new_cell->index) {
             // We changed cell
             old_cell->remove_molecule(n,molecule_index_in_cell);
             new_cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
@@ -171,7 +161,7 @@ void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
 
 void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_molecules) {
     for(int i=0; i<num_new_molecules; i++) {
-        int node_id = topology->index_from_position(&data[6*i+0]);
+        int node_id = topology->index_from_position(&data.at(6*i+0));
         if(node_id != myid) {
             if(node_id < 0 || node_id >= topology->num_processors) throw string("Moved new molecule to a node that doesn't exists");
             node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
@@ -184,6 +174,7 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
             node_num_new_molecules.at(node_id)++;
             continue;
         }
+
         int n = num_molecules_local;
         r.at(3*n+0) = data.at(6*i+0);
         r.at(3*n+1) = data.at(6*i+1);
@@ -191,21 +182,14 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
         v.at(3*n+0) = data.at(6*i+3);
         v.at(3*n+1) = data.at(6*i+4);
         v.at(3*n+2) = data.at(6*i+5);
-        int cell_index = cell_index_map[cell_index_from_position(n)];
-        Cell *cell;
-        try {
-            cell = active_cells.at(cell_index);
-        } catch (const std::out_of_range& oor) {
-            std::cerr << "Out of Range error: " << oor.what() << '\n';
-            cout << "New molecule from another node didn't land inside a cell that exists." << endl;
-        }
+        Cell *cell = cell_that_should_contain_molecule(n);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
         num_molecules_local++;
     }
 }
 
 void System::remove_molecule_from_system(const long &molecule_index) {
-    Cell *cell = cell_containing_molecule(molecule_index);
+    Cell *cell = cell_currently_containing_molecule(molecule_index);
     cell->remove_molecule(molecule_index,molecule_index_in_cell);
 
     // Move the last molecule into that memory location
@@ -218,7 +202,7 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     }
 
     // Remove the last molecule from current cell to re-add it after we moved all data
-    cell = cell_containing_molecule(last_molecule_index);
+    cell = cell_currently_containing_molecule(last_molecule_index);
     cell->remove_molecule(last_molecule_index,molecule_index_in_cell);
 
     // Copy the last molecule into the index of the removed molecule
