@@ -60,6 +60,12 @@ public:
     float *tangents1;
     float *tangents2;
     CVector voxel_origin;
+    float constant_0;
+    float constant_1;
+    float constant_2;
+    float one_over_length_x_times_global_nx;
+    float one_over_length_y_times_global_ny;
+    float one_over_length_z_times_global_nz;
 
     Grid(string filename, System *system_);
     unsigned char *get_voxel(const CVector &voxel_indices);
@@ -143,9 +149,10 @@ inline double Grid::get_time_until_collision(data_type *r, data_type *v, double 
 }
 
 inline int Grid::get_index_of_voxel(const data_type *r) {
-    const int i =  (r[0]-system->topology->origin[0])*system->one_over_length[0]*global_nx + voxel_origin.x;
-    const int j =  (r[1]-system->topology->origin[1])*system->one_over_length[1]*global_ny + voxel_origin.y;
-    const int k =  (r[2]-system->topology->origin[2])*system->one_over_length[2]*global_nz + voxel_origin.z;
-
+    r[0]*system->one_over_length[0]*global_nx-system->topology->origin[0]*system->one_over_length[0]*global_nx + voxel_origin.x;
+    const int i = r[0]*one_over_length_x_times_global_nx + constant_0;
+    const int j = r[1]*one_over_length_y_times_global_ny + constant_1;
+    const int k = r[2]*one_over_length_z_times_global_nz + constant_2;
+    
     return i*ny*nz + j*nz + k;
 }

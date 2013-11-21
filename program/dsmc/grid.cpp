@@ -38,6 +38,13 @@ Grid::Grid(string foldername, System *system_)
     unit_normal_vectors[5].z = 1;
 
     point_list.resize(8, CVector(0,0,0));
+
+    constant_0 = -system->topology->origin[0]*system->one_over_length[0]*global_nx + voxel_origin.x;
+    constant_1 = -system->topology->origin[1]*system->one_over_length[1]*global_ny + voxel_origin.y;
+    constant_2 = -system->topology->origin[2]*system->one_over_length[2]*global_nz + voxel_origin.z;
+    one_over_length_x_times_global_nx = system->one_over_length[0]*global_nx;
+    one_over_length_y_times_global_ny = system->one_over_length[1]*global_ny;
+    one_over_length_z_times_global_nz = system->one_over_length[2]*global_nz;
 }
 
 unsigned char *Grid::get_voxel(const CVector &voxel_indices) {
