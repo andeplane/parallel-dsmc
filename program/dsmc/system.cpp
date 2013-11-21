@@ -211,26 +211,23 @@ void System::remove_molecule_from_system(const long &molecule_index) {
     // Move the last molecule into that memory location
     int last_molecule_index = num_molecules_local-1;
 
-    while(last_molecule_index==molecule_index) {
-        last_molecule_index--;
-    }
-
-    if(last_molecule_index < 0) {
-        // This was the last molecule on the node
-        num_molecules_local = 0;
+    if(last_molecule_index==molecule_index) {
+        // We are lucky, the molecule to remove is the last one.
+        num_molecules_local--;
         return;
     }
 
-    int last_molecule_cell_index = molecule_cell_index.at(last_molecule_index);
-    int last_molecule_index_in_cell = molecule_index_in_cell.at(last_molecule_index);
+    // Remove the last molecule from current cell to re-add it after we moved all data
+    cell = cell_containing_molecule(last_molecule_index);
+    cell->remove_molecule(last_molecule_index,molecule_index_in_cell);
 
+    // Copy the last molecule into the index of the removed molecule
     memcpy(&r.at(3*molecule_index),&r.at(3*last_molecule_index),3*sizeof(data_type));
     memcpy(&v.at(3*molecule_index),&v.at(3*last_molecule_index),3*sizeof(data_type));
 
-    cell = active_cells[ cell_index_map[last_molecule_cell_index] ];
-    molecule_cell_index.at(molecule_index) = last_molecule_cell_index;
-    molecule_index_in_cell.at(molecule_index) = last_molecule_index_in_cell;
-    cell->molecules[last_molecule_index_in_cell] = molecule_index;
+    // Re-add it
+    cell->add_molecule(molecule_index,molecule_index_in_cell, molecule_cell_index);
+
     num_molecules_local--;
 }
 
