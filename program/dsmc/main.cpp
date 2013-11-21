@@ -12,7 +12,9 @@
 #include <colliderbase.h>
 #include <moleculemover.h>
 #define VERSION "1.0.08"
-using namespace std;
+
+using std::cout;
+using std::endl;
 
 int main(int args, char* argv[]) {
     int num_nodes, myid;

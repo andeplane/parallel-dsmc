@@ -114,12 +114,12 @@ inline double Grid::get_time_until_collision(data_type *r, data_type *v, double 
     bool will_hit_facet_5 = is_point_within_square(point_list[4], point_list[5], point_list[1], point_list[0], r_vec+v_vec*time_facet_5);
     bool will_hit_facet_6 = is_point_within_square(point_list[2], point_list[3], point_list[7], point_list[6], r_vec+v_vec*time_facet_6);
 
-    if( time_facet_1 > 0 && time_facet_1 < time_until_collision && will_hit_facet_1 && !isnan(time_facet_1)) time_until_collision = time_facet_1;
-    if( time_facet_2 > 0 && time_facet_2 < time_until_collision && will_hit_facet_2 && !isnan(time_facet_2)) time_until_collision = time_facet_2;
-    if( time_facet_3 > 0 && time_facet_3 < time_until_collision && will_hit_facet_3 && !isnan(time_facet_3)) time_until_collision = time_facet_3;
-    if( time_facet_4 > 0 && time_facet_4 < time_until_collision && will_hit_facet_4 && !isnan(time_facet_4)) time_until_collision = time_facet_4;
-    if( time_facet_5 > 0 && time_facet_5 < time_until_collision && will_hit_facet_5 && !isnan(time_facet_5)) time_until_collision = time_facet_5;
-    if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !isnan(time_facet_6)) time_until_collision = time_facet_6;
+    if( time_facet_1 > 0 && time_facet_1 < time_until_collision && will_hit_facet_1 && !std::isnan(time_facet_1)) time_until_collision = time_facet_1;
+    if( time_facet_2 > 0 && time_facet_2 < time_until_collision && will_hit_facet_2 && !std::isnan(time_facet_2)) time_until_collision = time_facet_2;
+    if( time_facet_3 > 0 && time_facet_3 < time_until_collision && will_hit_facet_3 && !std::isnan(time_facet_3)) time_until_collision = time_facet_3;
+    if( time_facet_4 > 0 && time_facet_4 < time_until_collision && will_hit_facet_4 && !std::isnan(time_facet_4)) time_until_collision = time_facet_4;
+    if( time_facet_5 > 0 && time_facet_5 < time_until_collision && will_hit_facet_5 && !std::isnan(time_facet_5)) time_until_collision = time_facet_5;
+    if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !std::isnan(time_facet_6)) time_until_collision = time_facet_6;
 
     if(time_until_collision > 1000) {
         cout << system->myid << " didn't collide with anything :/" << endl;

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <string.h>
 
 //#include "aGL_Extensions.cpp"
