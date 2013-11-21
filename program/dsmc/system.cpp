@@ -18,7 +18,7 @@
 #include <collidercercignanilampis.h>
 #include <collidermaxwell.h>
 #include <cvector.h>
-
+#include <cstring>
 void System::step() {
     for(int n=0; n<num_molecules_local; n++) steps_since_collision[n]++;
     steps += 1;

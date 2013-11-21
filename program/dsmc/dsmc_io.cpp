@@ -1,13 +1,11 @@
-#include <dsmc_io.h>
-
-#include <system.h>
-#include <cell.h>
 #include <mpi.h>
+#include <dsmc_io.h>
+#include <cell.h>
 #include <grid.h>
 #include <settings.h>
 #include <dsmctimer.h>
 #include <topology.h>
-
+#include <cstring>
 DSMC_IO::DSMC_IO(System *system_) :
     energy_file(0),
     velocity_file(0),

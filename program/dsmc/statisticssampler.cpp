@@ -1,5 +1,5 @@
-#include <statisticssampler.h>
 #include <system.h>
+#include <statisticssampler.h>
 #include <statisticalproperty.h>
 #include <dsmc_io.h>
 #include <settings.h>

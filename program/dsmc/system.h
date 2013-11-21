@@ -1,4 +1,5 @@
 #pragma once
+#include <mpi.h>
 #include <defines.h>
 
 class Cell;

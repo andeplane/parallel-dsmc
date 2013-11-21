@@ -1,3 +1,4 @@
+#include <mpi.h>
 #include <iostream>
 #include <cmath>
 #include "time.h"
@@ -7,7 +8,6 @@
 #include <unitconverter.h>
 #include <settings.h>
 #include <dsmc_io.h>
-#include <mpi.h>
 #include <dsmctimer.h>
 #include <colliderbase.h>
 #include <moleculemover.h>

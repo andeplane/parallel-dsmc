@@ -1,8 +1,8 @@
 #pragma once
+#include <system.h>
 #include <vector>
 #include <string>
 #include <cvector.h>
-#include <system.h>
 #include <topology.h>
 class DSMC_IO;
 
