@@ -143,5 +143,5 @@ vector<int> Topology::index_vector_from_position(const vector<data_type> &r, con
 bool Topology::is_position_inside(const vector<data_type> &r, const int &index) {
     return (r.at(3*index + 0) >= origin[0] && r.at(3*index + 0) < origin[0]+length[0] &&
             r.at(3*index + 1) >= origin[1] && r.at(3*index + 1) < origin[1]+length[1] &&
-            r.at(3*index + 2) >= origin[2] && r.at(3*index + 0) < origin[2]+length[2]);
+            r.at(3*index + 2) >= origin[2] && r.at(3*index + 2) < origin[2]+length[2]);
 }
