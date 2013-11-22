@@ -48,6 +48,8 @@ public:
     }
 
     vector<T> get_current_value() { return current_value; }
+    vector<T> get_sum() { return sum; }
+    vector<T> get_sum_squared() { return sum_squared; }
     vector<T> get_average() {
         vector<T> average(sum.size());
         for(int i=0; i<sum.size(); i++) {

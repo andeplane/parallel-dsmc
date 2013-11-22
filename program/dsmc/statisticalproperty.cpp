@@ -210,6 +210,10 @@ vector<unsigned long> MeasureCount::get_current_value() {
     return value.get_current_value();
 }
 
+vector<unsigned long> MeasureCount::get_sum() {
+    return value.get_sum();
+}
+
 MeasureVelocityDistributionPoiseuille::MeasureVelocityDistributionPoiseuille(FILE *file_, int myid_, int interval_, int number_of_bins, MeasureCount *count_) :
     StatisticalProperty(myid_, interval_, file_)
 {
@@ -222,6 +226,7 @@ void MeasureVelocityDistributionPoiseuille::update(System *system) {
     last_sample = system->steps;
 
     vector<double> velocity_distribution(value.number_of_bins,0);
+    count->update(system);
 
     for(unsigned int i=0; i<system->num_molecules_local; i++) {
         int bin_y = system->r[3*i+1]*system->one_over_length[1]*value.number_of_bins;
@@ -235,13 +240,12 @@ void MeasureVelocityDistributionPoiseuille::update(System *system) {
     velocity_distribution.clear();
 }
 
-vector<double> MeasureVelocityDistributionPoiseuille::get_current_value() {
+vector<double> MeasureVelocityDistributionPoiseuille::get_average() {
     vector<double> values_global(value.number_of_bins,0);
     vector<unsigned long> count_values_global(value.number_of_bins,0);
 
-    vector<double> values(value.current_value);
-    vector<unsigned long> count_values = count->get_current_value();
-
+    vector<double> values(value.get_sum());
+    vector<unsigned long> count_values = count->get_sum();
 
     MPI_Reduce(&values[0],&values_global[0],value.number_of_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
     MPI_Reduce(&count_values[0],&count_values_global[0],value.number_of_bins,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
@@ -254,13 +258,13 @@ vector<double> MeasureVelocityDistributionPoiseuille::get_current_value() {
 
     count_values_global.clear();
     values.clear();
-    count_values_global.clear();
+    count_values.clear();
 
     return values_global;
 }
 
 void MeasureVelocityDistributionPoiseuille::finalize(UnitConverter *unit_converter) {
-    vector<double> velocity_distribution = get_current_value();
+    vector<double> velocity_distribution = get_average();
     if(myid!=0) return;
     for(int i=0; i<velocity_distribution.size(); i++) {
         fprintf(file,"%E ", unit_converter->velocity_to_SI(velocity_distribution[i]));
@@ -268,5 +272,122 @@ void MeasureVelocityDistributionPoiseuille::finalize(UnitConverter *unit_convert
 }
 
 void MeasureVelocityDistributionPoiseuille::resize(int number_of_bins) {
+    value.resize(number_of_bins);
+}
+
+MeasureTemperatureDistribution::MeasureTemperatureDistribution(FILE *file_, int myid_, int interval_, int number_of_bins, MeasureCount *count_) :
+    StatisticalProperty(myid_, interval_, file_)
+{
+    count = count_;
+    resize(number_of_bins);
+}
+
+void MeasureTemperatureDistribution::update(System *system) {
+    if((system->steps % interval) || system->steps == last_sample) return;
+    last_sample = system->steps;
+
+    vector<double> temperature_distribution(value.number_of_bins,0);
+    count->update(system);
+
+    for(int i=0; i<system->num_molecules_local; i++) {
+        int bin_y = system->r[3*i+1]*system->one_over_length[1]*value.number_of_bins;
+        int index = bin_y;
+
+        temperature_distribution[index] += 0.5*system->settings->mass*system->v[3*i+2]*system->v[3*i+2];
+    }
+
+    value.add_value(temperature_distribution);
+    temperature_distribution.clear();
+}
+
+vector<double> MeasureTemperatureDistribution::get_average() {
+    vector<double> values_global(value.number_of_bins,0);
+    vector<unsigned long> count_values_global(value.number_of_bins,0);
+
+    vector<double> values(value.get_sum());
+    vector<unsigned long> count_values = count->get_sum();
+
+    MPI_Reduce(&values[0],&values_global[0],value.number_of_bins,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    MPI_Reduce(&count_values[0],&count_values_global[0],value.number_of_bins,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
+
+    if(myid==0) {
+        for(int i=0; i<values_global.size(); i++) {
+            values_global[i] /= max(count_values_global[i],(unsigned long)1); // Normalize
+            values_global[i] *= 2.0/3.0; // Energies are already measured per particle
+        }
+    }
+
+    count_values_global.clear();
+    values.clear();
+    count_values.clear();
+
+    return values_global;
+}
+
+void MeasureTemperatureDistribution::finalize(UnitConverter *unit_converter) {
+    vector<double> temperature_distribution = get_average();
+
+    if(myid!=0) return;
+    for(int i=0; i<temperature_distribution.size(); i++) {
+        fprintf(file,"%E ", unit_converter->temperature_to_SI(temperature_distribution.at(i)));
+    }
+}
+
+void MeasureTemperatureDistribution::resize(int number_of_bins) {
+    value.resize(number_of_bins);
+}
+
+MeasurePressureDistribution::MeasurePressureDistribution(FILE *file_, int myid_, int interval_, int number_of_bins, MeasureCount *count_, MeasureTemperatureDistribution *temperature_distribution_) :
+    StatisticalProperty(myid_, interval_, file_)
+{
+    count = count_;
+    temperature_distribution = temperature_distribution_;
+    resize(number_of_bins);
+}
+
+void MeasurePressureDistribution::update(System *system) {
+    if((system->steps % interval) || system->steps == last_sample) return;
+    last_sample = system->steps;
+
+    count->update(system);
+    temperature_distribution->update(system);
+}
+
+vector<double> MeasurePressureDistribution::get_average(System *system) {
+    vector<double> values_global(value.number_of_bins,0);
+    vector<unsigned long> count_values_global(value.number_of_bins,0);
+
+    vector<unsigned long> count_values = count->get_sum();
+    vector<double> temperature_values = temperature_distribution->get_average();
+
+    MPI_Reduce(&count_values[0],&count_values_global[0],value.number_of_bins,MPI_UNSIGNED_LONG,MPI_SUM,0,MPI_COMM_WORLD);
+
+    if(myid==0) {
+        double volume_per_bin = system->volume_global / value.number_of_bins; //
+        for(int i=0; i<values_global.size(); i++) {
+            double density = count_values_global[i] / volume_per_bin;
+            double temperature = temperature_values[i];
+
+            values_global[i] = density*temperature;
+        }
+    }
+
+    count_values_global.clear();
+    count_values.clear();
+    temperature_values.clear();
+
+    return values_global;
+}
+
+void MeasurePressureDistribution::finalize(System *system) {
+    vector<double> pressure_distribution = get_average(system);
+
+    if(myid!=0) return;
+    for(int i=0; i<pressure_distribution.size(); i++) {
+        fprintf(file,"%E ", system->unit_converter->pressure_to_SI(pressure_distribution.at(i)));
+    }
+}
+
+void MeasurePressureDistribution::resize(int number_of_bins) {
     value.resize(number_of_bins);
 }

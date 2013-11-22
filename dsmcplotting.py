@@ -60,7 +60,7 @@ class Visualizer():
 			self.plot(x=x_axis, y=velocities, x_axis_label="x", y_axis_label="v(x)", filename=output)
 		if show_plot: plt.show()
 
-	def polyfit_velocity(self, state_path, height=1.0):
+	def polyfit_velocity(self, state_path="./", height=1.0):
 		"""
 		Reads a file containing several timesteps with average velocity profile across two parallel plates.
 		Function will take average of all timesteps in order to get good statistics.
@@ -78,7 +78,7 @@ class Visualizer():
 		return x_axis, velocities, p
 		
 		
-	def plot_linear_density_profile(self, state_path, length=1.0, output = None, show_plot=False):
+	def plot_linear_density_profile(self, state_path="./", length=1.0, output = None, show_plot=False):
 		"""
 		Reads a file containing several timesteps with average velocity profile across two parallel plates.
 		Function will take average of all timesteps in order to get good statistics.
@@ -95,24 +95,43 @@ class Visualizer():
 		self.plot(x=x_axis, y=densities, x_axis_label="x", y_axis_label="# molecules", filename=output)
 		if show_plot: plt.show()
 
-	def plot_linear_pressure_profile(self, state_path, length=1.0, output = None, show_plot=False):
+	def plot_linear_temperature_profile(self, state_path="./", length=1.0, output = None, skip_zeros=True, show_plot=False):
 		"""
 		Reads a file containing several timesteps with average velocity profile across two parallel plates.
 		Function will take average of all timesteps in order to get good statistics.
 		"""
-
-		pressure = pylab.loadtxt(state_path+"/statistics/linear_pressure.txt")
-		num_timesteps = len(pressure) # Number of lines equals number of timesteps
-		num_bins = len(pressure[0])   # Number of elements on first line equals number of bins
-		pressure = sum(pressure,0) / num_timesteps  # Sum each column and normalize to take time average
-		print "Plotting linear density profile with "+str(num_timesteps)+" timesteps and "+str(num_bins)+" bins."
+		temperatures = pylab.loadtxt(state_path+"/statistics/linear_temperature.txt")
+		num_bins = len(temperatures)   # Number of elements on first line equals number of bins
+		print "Plotting linear temperature profile with "+str(num_bins)+" bins."
 
 		x_axis = linspace(0,length,num_bins) # Create x_axis with possible real channel height
+
+		if skip_zeros:
+			self.plot(x=x_axis[temperatures>0], y=temperatures[temperatures>0], x_axis_label="x", y_axis_label="Temperature [K]", filename=output)
+		else:
+			self.plot(x=x_axis, y=temperatures, x_axis_label="x", y_axis_label="Temperature [K]", filename=output)
 		
-		self.plot(x=x_axis, y=pressure, x_axis_label="x", y_axis_label="# molecules", filename=output)
 		if show_plot: plt.show()
 
-	def plot_permeability(self, state_path, output = None, show_plot=False):
+	def plot_linear_pressure_profile(self, state_path="./", length=1.0, output = None, skip_zeros=True, show_plot=False):
+		"""
+		Reads a file containing several timesteps with average velocity profile across two parallel plates.
+		Function will take average of all timesteps in order to get good statistics.
+		"""
+		pressures = pylab.loadtxt(state_path+"/statistics/linear_pressure.txt")
+		num_bins = len(pressures)   # Number of elements on first line equals number of bins
+		print "Plotting linear pressure profile with "+str(num_bins)+" bins."
+
+		x_axis = linspace(0,length,num_bins) # Create x_axis with possible real channel height
+
+		if skip_zeros:
+			self.plot(x=x_axis[pressures>0], y=pressures[pressures>0], x_axis_label="x", y_axis_label="Pressure [Pa]", filename=output)
+		else:
+			self.plot(x=x_axis, y=pressures, x_axis_label="x", y_axis_label="Pressure [Pa]", filename=output)
+			
+		if show_plot: plt.show()
+
+	def plot_permeability(self, state_path="./", output = None, show_plot=False):
 		"""
 		Reads a file containing several timesteps with average velocity profile across a cylinder.
 		Function will take average of all timesteps in order to get good statistics.

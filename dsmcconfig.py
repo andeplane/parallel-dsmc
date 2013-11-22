@@ -54,7 +54,6 @@ class DSMC:
 		self.gravity = 0
 		self.flow_direction = 2
 
-		self.maintain_pressure = False
 		self.pressure_A = 100000
 		self.pressure_B = 100000
 		self.reservoir_fraction = 0
@@ -99,6 +98,7 @@ class DSMC:
 		self.log("Saving state to "+str(path))
 		self.run_command("mkdir -p "+path)
 		self.run_command("cp -r log state_files statistics run_log.txt dsmc.ini Tocontinue "+path)
+		self.run_command("cp run.py "+path+"/run_script.py")
 
 	def run_command(self, cmd):
 		"""
@@ -189,7 +189,6 @@ class DSMC:
 			line = line.replace('__movie_molecules__',str(self.movie_molecules) )
 			line = line.replace('__gravity__',str(self.gravity) )
 			line = line.replace('__flow_direction__',str(self.flow_direction) )
-			line = line.replace('__maintain_pressure__',str(self.maintain_pressure).lower() )
 			line = line.replace('__pressure_A__',str(self.pressure_A) )
 			line = line.replace('__pressure_B__',str(self.pressure_B) )
 			line = line.replace('__reservoir_fraction__',str(self.reservoir_fraction) )

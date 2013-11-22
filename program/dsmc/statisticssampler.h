@@ -28,4 +28,6 @@ public:
     MeasurePermeability *permeability;
     MeasureCount *count;
     MeasureVelocityDistributionPoiseuille *velocity;
+    MeasureTemperatureDistribution *temperature_distribution;
+    MeasurePressureDistribution *pressure_distribution;
 };

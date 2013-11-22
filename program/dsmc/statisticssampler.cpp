@@ -20,6 +20,8 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, flux);
     count = new MeasureCount(system->io->num_molecules_file, system->myid, system->settings->statistics_interval, system->settings->sampling_bins);
     velocity = new MeasureVelocityDistributionPoiseuille(system->io->velocity_file, system->myid, system->settings->statistics_interval,system->settings->sampling_bins, count);
+    temperature_distribution = new MeasureTemperatureDistribution(system->io->linear_temperature_file, system->myid,system->settings->statistics_interval,system->settings->sampling_bins,count);
+    pressure_distribution = new MeasurePressureDistribution(system->io->linear_pressure_file, system->myid,system->settings->statistics_interval,system->settings->sampling_bins,count, temperature_distribution);
 
     statistical_properties.push_back(energy);
     statistical_properties.push_back(temperature);
@@ -28,6 +30,8 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     statistical_properties.push_back(permeability);
     statistical_properties.push_back(count);
     statistical_properties.push_back(velocity);
+    statistical_properties.push_back(temperature_distribution);
+    statistical_properties.push_back(pressure_distribution);
 }
 
 
@@ -60,6 +64,7 @@ void StatisticsSampler::finalize() {
     for(int i=0; i<statistical_properties.size(); i++) {
         StatisticalProperty *value = statistical_properties[i];
         value->finalize(system->unit_converter);
+        value->finalize(system);
     }
 }
 

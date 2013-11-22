@@ -21,6 +21,7 @@ public:
     StatisticalProperty(int myid_, int interval_, FILE *file_);
     virtual void update(System *system) = 0;
     virtual void finalize(UnitConverter *unit_converter) {}
+    virtual void finalize(System *system) {}
     virtual void resize(int number_of_bins) {}
 };
 
@@ -82,6 +83,7 @@ public:
     MeasureCount(FILE *file_, int myid_, int interval_, int bins);
     virtual void update(System *system);
     vector<unsigned long> get_current_value();
+    vector<unsigned long> get_sum();
     virtual void resize(int number_of_bins);
 };
 
@@ -93,6 +95,31 @@ public:
     MeasureVelocityDistributionPoiseuille(FILE *file_, int myid_, int interval_, int bins, MeasureCount *count);
     virtual void update(System *system);
     virtual void finalize(UnitConverter *unit_converter);
-    vector<double> get_current_value();
+    vector<double> get_average();
+    virtual void resize(int number_of_bins);
+};
+
+class MeasureTemperatureDistribution : public StatisticalProperty {
+protected:
+    MeasureCount *count;
+public:
+    StatisticalValue<double> value;
+    MeasureTemperatureDistribution(FILE *file_, int myid_, int interval_, int bins, MeasureCount *count);
+    virtual void update(System *system);
+    virtual void finalize(UnitConverter *unit_converter);
+    vector<double> get_average();
+    virtual void resize(int number_of_bins);
+};
+
+class MeasurePressureDistribution : public StatisticalProperty {
+protected:
+    MeasureCount *count;
+    MeasureTemperatureDistribution *temperature_distribution;
+public:
+    StatisticalValue<double> value;
+    MeasurePressureDistribution(FILE *file_, int myid_, int interval_, int bins, MeasureCount *count_, MeasureTemperatureDistribution *temperature_distribution_);
+    virtual void update(System *system);
+    virtual void finalize(System *system);
+    vector<double> get_average(System *system);
     virtual void resize(int number_of_bins);
 };
