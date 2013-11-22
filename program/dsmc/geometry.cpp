@@ -39,6 +39,8 @@ int main(int argc, char **argv)
         cg.create_diamond_square(ini);
     } else if(type.compare("cylinders") == 0) {
         cg.create_cylinders(ini);
+    } else if(type.compare("sinus") == 0) {
+        cg.create_sinus(ini);
     }
 
     if(ini.getbool("create_border")) cg.create_border();

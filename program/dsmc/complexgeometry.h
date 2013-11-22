@@ -42,6 +42,7 @@ public:
     void create_border();
     void create_cylinders(CIniFile &ini);
     void create_poiseuille(CIniFile &ini);
+    void create_sinus(CIniFile &ini);
     void calculate_normals_tangents_and_inner_points(int number_of_neighbor_averages);
     void calculate_global_porosity();
     void find_boundary_points();

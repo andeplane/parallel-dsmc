@@ -127,24 +127,12 @@ inline double Grid::get_time_until_collision(data_type *r, data_type *v, double 
     if( time_facet_5 > 0 && time_facet_5 < time_until_collision && will_hit_facet_5 && !std::isnan(time_facet_5)) time_until_collision = time_facet_5;
     if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !std::isnan(time_facet_6)) time_until_collision = time_facet_6;
 
-    if(time_until_collision > 1000) {
-        cout << system->myid << " didn't collide with anything :/" << endl;
-        cout << "Time 1: " << time_facet_1 << endl;
-        cout << "Time 2: " << time_facet_2 << endl;
-        cout << "Time 3: " << time_facet_3 << endl;
-        cout << "Time 4: " << time_facet_4 << endl;
-        cout << "Time 5: " << time_facet_5 << endl;
-        cout << "Time 6: " << time_facet_6 << endl;
-        cout << "Particle at:" << endl;
-        cout << "r=[" << r[0] << " " << r[1] << " " << r[2] << "]" << endl;
-        cout << "v=[" << v[0] << " " << v[1] << " " << v[2] << "]" << endl;
-        cout << "with local i,j,k = " << i << ", " << j << ", " << k << ", " << endl;
-        cout << "which is local voxel index " << voxel_index << endl;
-
+    if(time_until_collision < 0) {
+        cout << "We found a negative number, that's bad!" << endl;
         exit(1);
     }
 
-    if(time_until_collision < 1e-7) return 0;
+    if(time_until_collision < 1e-5) return 0;
     else return time_until_collision - 1e-7; // Subtract a small number to avoid being exactly at the boundary of a voxel
 }
 

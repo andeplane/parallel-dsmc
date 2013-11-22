@@ -44,7 +44,6 @@ private:
     void add_molecules_from_mpi(vector<data_type> &data, const int &num_new_molecules);
     void remove_molecule_from_system(const long &molecule_index);
     bool validate_number_of_cells();
-    void find_position(const int &index);
     void setup_molecules();
     void setup_cells();
     void update_molecule_cells();
@@ -54,6 +53,7 @@ private:
     int cell_index_from_ijk(const int &i, const int &j, const int &k);
 
 public:
+    void find_position(const int &index);
     int cell_index_from_position(const int &index);
 
     DSMC_IO *io;

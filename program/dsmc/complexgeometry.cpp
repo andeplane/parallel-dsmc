@@ -386,6 +386,46 @@ void ComplexGeometry::create_cylinders(CIniFile &ini) {
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
+void ComplexGeometry::create_sinus(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int sinus_mode = ini.getint("sinus_mode");
+    float amplitude = ini.getdouble("amplitude");
+    float displacement = ini.getdouble("displacement");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+
+    allocate(nx_, ny_, nz_);
+    cout << "Creating " << "sinus with amplitude h(x) = " << amplitude << "*sin(" << sinus_mode << "*2*pi*x/L) on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    for(int i=0; i<num_vertices; i++) {
+        vertices_unsigned_char[i] = 0;
+        vertices[i] = 0;
+    }
+
+    for(int i=0;i<nx;i++) {
+        for(int j=0;j<ny;j++) {
+            for(int k=0;k<nz;k++) {
+                int index = i + j*nx + k*nx*ny;
+
+                float h = amplitude*sin(sinus_mode*2*M_PI*float(k)/nz) + displacement;
+
+                float distance_top = ny - 1 - j;
+                float distance_bottom = j;
+
+                float min_distance = min(distance_bottom, distance_top);
+                min_distance /= ny; // Normalize distance to [0,1)
+
+                if(min_distance < h) {
+                    vertices_unsigned_char[index] = 1;
+                    vertices[index] = 1;
+                }
+            }
+        }
+    }
+
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
 void ComplexGeometry::create_diamond_square(CIniFile &ini) {
     int nx_ = ini.getint("num_voxels_x");
     int ny_ = ini.getint("num_voxels_y");

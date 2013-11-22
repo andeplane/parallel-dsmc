@@ -34,6 +34,11 @@ class DSMC_geometry:
 		self.hurst_exponent = 0.5
 		self.diamond_square_h0 = 1.0
 
+		# Sinus settings
+		self.amplitude = 1.0
+		self.sinus_mode = 1
+		self.displacement = 1.0
+
 		# Perlin settings
 		self.perlin_octave = 1
 		self.perlin_frequency = 1
@@ -89,6 +94,14 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
+	def create_sinus(self, sinus_mode=1, amplitude=1.0, displacement=1.0):
+		self.type = "sinus"
+		self.sinus_mode = sinus_mode
+		self.amplitude = amplitude
+		self.displacement = displacement
+		self.create_config_file()
+		self.run()
+
 	def create_perlin(self, threshold=0.5, num_scales = 4, scale_factor=3.64341524563, constant=8.23552246134, seed = 1, amplitude=1, frequency=1, octave=1):
 		self.perlin_threshold = threshold
 		self.perlin_constant = constant
@@ -120,6 +133,9 @@ class DSMC_geometry:
 			line = line.replace('__num_processors_z__',str(self.num_processors_z) )
 			line = line.replace('__box_porosity__',str(self.box_porosity) )
 			line = line.replace('__sphere_radius__', str(self.sphere_radius))
+			line = line.replace('__amplitude__',str(self.amplitude) )
+			line = line.replace('__displacement__',str(self.displacement) )
+			line = line.replace('__sinus_mode__', str(self.sinus_mode))
 			line = line.replace('__cylinder_radius__', str(self.cylinder_radius))
 			line = line.replace('__num_cylinders_per_dimension__', str(self.num_cylinders_per_dimension))
 			line = line.replace('__sphere_inverse__',str(self.sphere_inverse).lower() )
