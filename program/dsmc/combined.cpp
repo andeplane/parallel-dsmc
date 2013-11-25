@@ -49,6 +49,8 @@ int main(int args, char* argv[]) {
         cg.create_diamond_square(ini);
     } else if(type.compare("cylinders") == 0) {
         cg.create_cylinders(ini);
+    } else if(type.compare("sinus") == 0) {
+        cg.create_sinus(ini);
     }
 
     if(ini.getbool("save_file")) cg.save_to_file(ini);

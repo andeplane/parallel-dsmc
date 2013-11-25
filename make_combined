@@ -1,9 +1,3 @@
-
-# target might be WINDOWS, OS_X or LINUX
-TARGET = OS_X
-
-# Home directory of the acw program
-
 # point to the inclue directory
 INCLUDE = program/dsmc
 SOURCEDIR = program/dsmc
@@ -13,14 +7,12 @@ INCLUDES = -I$(SOURCEDIR) -I/usr/local/Cellar/open-mpi/1.6.4/include
 LIBDIR = -L/usr/local/Cellar/open-mpi/1.6.4/lib 
 
 # compiler specific flags
-# CFLAGS =  -O3 -D$(TARGET) -std=c++11
-CFLAGS =  -D$(TARGET) 
-# CFLAGS = -D$(TARGET)
+CFLAGS =  -O3 -D$(TARGET) -std=c++11 -D OPENGL
 FFLAGS = -framework GLUT -lglew -lGLFW -framework OpenGL -lmpi_cxx -lmpi
 
 PROJECT = combined
 
-_obj = combined.o cell.o cmath.o colliderbase.o collidercercignanilampis.o collidermaxwell.o colliderspecular.o colliderthermal.o cutil.o dsmc_io.o dsmctimer.o grid.o moleculemover.o random.o settings.o statisticssampler.o system.o topology.o unitconverter.o cvector.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o moviedata.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o solver.o diamondsquare.o
+_obj = combined.o cell.o cmath.o colliderbase.o collidercercignanilampis.o collidermaxwell.o colliderspecular.o colliderthermal.o cutil.o dsmc_io.o dsmctimer.o grid.o moleculemover.o random.o settings.o statisticssampler.o system.o topology.o unitconverter.o cvector.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o moviedata.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o solver.o diamondsquare.o statisticalproperty.o
 
 obj_ = $(patsubst %,$(SOURCEDIR)/%, $(_obj))
 

@@ -21,7 +21,7 @@ Timestep::Timestep() {
 void Timestep::render_billboards(CTexture *texture, float scale) {
     int num_molecules = positions.size()/3;
     vector<int> steps_since_last_collision(num_molecules,100);
-    texture->render_billboards(&positions[0], &velocities[0], steps_since_last_collision, num_molecules, scale);
+    texture->render_billboards(positions, velocities, steps_since_last_collision, num_molecules, scale);
 }
 
 void Timestep::add_molecule_data(vector<float> data) {

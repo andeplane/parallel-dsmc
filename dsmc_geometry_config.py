@@ -12,7 +12,7 @@ class DSMC_geometry:
 		self.num_voxels_y = 128
 		self.num_voxels_z = 128
 		self.number_of_neighbor_averages = 1
-		self.save_file = False
+		self.save_file = True
 		self.binary_output_folder = "../worlds/test/"
 		self.num_processors_x = dsmc.nx
 		self.num_processors_y = dsmc.ny
@@ -183,3 +183,8 @@ class DSMC_geometry:
 			exit()
 		
 		self.run_command("./geometry")
+
+	def get_porosity(self):
+		file_pointer = open(self.binary_output_folder+"/porosity.txt",'r');
+		porosity = file_pointer.readline()
+		return float(porosity)

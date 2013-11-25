@@ -9,6 +9,7 @@ import os
 import logging
 from datetime import datetime
 from math import sqrt
+from dsmc_unit_converter import *
 
 class DSMC:
 	def __init__(self, compiler = "icpc", dt=0.001, nx=1, ny=1, nz=1):
@@ -277,3 +278,35 @@ class DSMC:
 		if(num_cells_per_cpu_z % 1 > 0): return False
 
 		return True
+	def apply_pressure_gradient_percentage(self, factor):
+		uc = DSMC_unit_converter(self)
+		ideal_gas_pressure = self.density*self.constants["boltzmann"]*self.temperature
+		pressure_A = ideal_gas_pressure*factor
+		pressure_B = ideal_gas_pressure
+		delta_p = pressure_A - pressure_B
+		self.gravity = uc.acceleration_from_si(uc.pressure_difference_to_gravity(delta_p, self.Lz))
+
+	def set_number_of_cells(self, geometry, particles_per_cell=10):
+		uc = DSMC_unit_converter(self)
+		volume = self.Lx*self.Ly*self.Lz*geometry.get_porosity()
+		# Find number of particles to set correct cell count
+		num_particles =  int(uc.number_density_from_si(self.density)*volume / self.atoms_per_molecule)
+		print "Estimated number of particles: ", num_particles
+		number_of_cells = num_particles / particles_per_cell
+		number_of_cells_per_dimension = int(number_of_cells**(1.0/3.0)) # Assuming cubi system
+		self.cells_x = number_of_cells_per_dimension
+		self.cells_y = number_of_cells_per_dimension
+		self.cells_z = number_of_cells_per_dimension
+
+		self.cells_x = self.cells_x - self.cells_x%self.nx
+		self.cells_y = self.cells_y - self.cells_y%self.ny
+		self.cells_z = self.cells_z - self.cells_z%self.nz
+
+		while(geometry.num_voxels_x%self.cells_x>0): self.cells_x += self.nx
+		while(geometry.num_voxels_y%self.cells_y>0): self.cells_y += self.ny
+		while(geometry.num_voxels_z%self.cells_z>0): self.cells_z += self.nz
+
+		print "Cells: (%d, %d, %d)" % (self.cells_x, self.cells_y, self.cells_z)
+		num_cells = self.cells_x*self.cells_y*self.cells_z
+		particles_per_cell = num_particles / num_cells
+		print "Particles per cell: ", particles_per_cell

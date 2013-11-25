@@ -303,6 +303,18 @@ void ComplexGeometry::save_to_file(CIniFile &ini) {
 
         p.update(index);
     }
+
+    sprintf(filename,"%s/porosity.txt",foldername.c_str());
+    ofstream file (filename, ios::out | ios::binary);
+    if(!file.is_open()) {
+        cout << "Could not open " << filename << ". Check your permissions and that the folder exists." << endl;
+        exit(1);
+    }
+    char porositystring[1000];
+    int num_chars = sprintf(porositystring,"%f",global_porosity);
+    file.write(porositystring,num_chars*sizeof(char));
+    file.close();
+    // delete porositystring;
 }
 
 void ComplexGeometry::create_sphere(CIniFile &ini) {
@@ -407,7 +419,7 @@ void ComplexGeometry::create_sinus(CIniFile &ini) {
             for(int k=0;k<nz;k++) {
                 int index = i + j*nx + k*nx*ny;
 
-                float h = amplitude*sin(sinus_mode*2*M_PI*float(k)/nz) + displacement;
+                float h = amplitude*sin(sinus_mode*2*M_PI*float(i)/nx) + displacement;
 
                 float distance_top = ny - 1 - j;
                 float distance_bottom = j;

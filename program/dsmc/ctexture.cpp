@@ -62,7 +62,7 @@ void CTexture::load_texture(CBitMap* bmp, COpenGLTexture* texture, bool has_alph
     else gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, bmp->width, bmp->height, GL_RGB, GL_UNSIGNED_BYTE, bmp->data  );
 }
 
-void CTexture::render_billboards(double *positions, double *velocities, vector<int> &steps_since_collision, int num_particles, float position_scale) {
+void CTexture::render_billboards(vector<double> &positions, vector<double> &velocities, vector<int> &steps_since_collision, int num_particles, float position_scale) {
     Camera *camera = opengl->camera;
     glEnable(GL_LIGHT0);
     glDisable(GL_LIGHTING);
@@ -97,7 +97,7 @@ void CTexture::render_billboards(double *positions, double *velocities, vector<i
     v2 = (right*-1 + up*-1);
     v3 = (right + up*-1);
     float one_over_color_cutoff = 1.0/1000;
-    float scale = 0.01;
+    float scale = 0.05;
 
     glNormal3f(direction.x, direction.y, direction.z);
     double average_this_time_step = 0;
