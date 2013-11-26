@@ -322,11 +322,11 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
     float radius = ini.getdouble("sphere_radius");
-    bool inverse = ini.getbool("sphere_inverse");
+    bool inverted = ini.getbool("inverted");
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     allocate(nx_, ny_, nz_);
 
-    cout << "Creating sphere with radius=" << radius<< ", inverse=" << inverse << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    cout << "Creating sphere with radius=" << radius<< ", inverted=" << inverted << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
@@ -336,7 +336,7 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
                 double r2 = x*x + y*y + z*z;
                 int index = i*ny*nz + j*nz + k;
 
-                if( (!inverse && r2 > radius*radius) || (inverse && r2 < radius*radius)) {
+                if( (!inverted && r2 > radius*radius) || (inverted && r2 < radius*radius)) {
                     vertices_unsigned_char[index] = 1;
                     vertices[index] = 1;
                 } else {
@@ -573,6 +573,117 @@ void ComplexGeometry::create_poiseuille(CIniFile &ini) {
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
+void ComplexGeometry::create_random_walk(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    int walker_number = ini.getint("walker_number");
+    int walker_steps = ini.getint("walker_steps");
+    int walker_max_thickness = ini.getint("walker_max_thickness");
+    double walker_thickness_change_prob = ini.getdouble("walker_thickness_change_prob");
+    double walker_turn_probability = ini.getdouble("walker_turn_probability");
+
+    int seed = ini.getint("seed");
+    bool inverted = ini.getbool("inverted");
+
+    allocate(nx_, ny_, nz_);
+    cout << "Creating " << walker_number << " random walkers with " << walker_steps << " steps on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+
+    for(int i=0; i<num_vertices; i++) {
+        vertices_unsigned_char[i] = !inverted;
+        vertices[i] = !inverted;
+    }
+
+    int nx_half = nx/2;
+    int ny_half = ny/2;
+    int nz_half = nz/2;
+
+    Random *rnd = new Random(seed,0,0);
+    cout << "Starting walkers..." << endl;
+    for(int walker=0; walker < walker_number; walker++) {
+        int thickness = walker_max_thickness;
+
+        cout << "Starting walker " << walker << endl;
+        vector<int> pos(3,0);
+        vector<int> system_size(3,0);
+        system_size[0] = nx_half;
+        system_size[1] = ny_half;
+        system_size[2] = nz_half;
+
+        for(int a=0; a<3; a++) pos[a] = rnd->next_double()*system_size[a];
+        int dir = 2;
+        int positive = 1;
+
+        for(int step=0; step<walker_steps; step++) {
+            if(rnd->next_double() < walker_thickness_change_prob) {
+                thickness = (walker_max_thickness+1)*rnd->next_double();
+                thickness = max(3,thickness);
+            }
+
+            int delta_index_due_to_thickness = (thickness-1)/2; // thickness of 3 should have +-1
+            int delta_low = -delta_index_due_to_thickness;
+            int delta_high = delta_index_due_to_thickness;
+
+            if(rnd->next_double() < walker_turn_probability) {
+                int random_index = 6*rnd->next_double();
+                dir = random_index/2;
+                positive = random_index%2;
+            }
+
+            if(positive) pos[dir] += 1;
+            else pos[dir] -= 1;
+            pos[dir] = (pos[dir] + system_size[dir]) % system_size[dir]; // Periodic boundaries
+
+            for(int di=delta_low; di<=delta_high; di++) {
+                int i = pos[0] + di*(dir!=0);
+
+                for(int dj=delta_low; dj<=delta_high; dj++) {
+                    int j = pos[1] + dj*(dir!=1);
+
+                    for(int dk=delta_low; dk<=delta_high; dk++) {
+                        int k = pos[2] + dk*(dir!=2);
+
+                        i = (i+nx_half)%nx_half;
+                        j = (j+ny_half)%ny_half;
+                        k = (k+nz_half)%nz_half;
+
+                        int index = i*ny*nz + j*nz + k;
+                        vertices_unsigned_char[index] = inverted;
+                        vertices[index] = inverted;
+                    }
+                }
+            }
+        }
+    }
+
+    cout << "Walkers are finished" << endl;
+
+    make_periodic();
+
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
+void ComplexGeometry::make_periodic() {
+    for(int i=0; i<nx; i++) {
+        for(int j=0; j<ny; j++) {
+            for(int k=0; k<nz; k++) {
+                int get_i = nx - i - 1;
+                int get_j = ny - j - 1;
+                int get_k = nz - k - 1;
+                if(i<nx/2) get_i = i;
+                if(j<ny/2) get_j = j;
+                if(k<nz/2) get_k = k;
+
+                int index_from = get_i*ny*nz + get_j*nz + get_k;
+                int index_to = i*ny*nz + j*nz + k;
+                vertices_unsigned_char[index_to] = vertices_unsigned_char[index_from];
+                vertices[index_to] = vertices[index_from];
+            }
+        }
+    }
+}
+
 void ComplexGeometry::create_perlin_geometry(CIniFile &ini) {
     int nx_ = ini.getint("num_voxels_x");
     int ny_ = ini.getint("num_voxels_y");
@@ -581,7 +692,7 @@ void ComplexGeometry::create_perlin_geometry(CIniFile &ini) {
     int octave = ini.getint("perlin_octave");
     int frequency = ini.getint("perlin_frequency");
     int amplitude = ini.getint("perlin_amplitude");
-    int seed = ini.getint("perlin_seed");
+    int seed = ini.getint("seed");
     int num_scales = ini.getint("perlin_num_scales");
     int constant = ini.getdouble("perlin_constant");
     float scale_factor = ini.getdouble("perlin_scale_factor");

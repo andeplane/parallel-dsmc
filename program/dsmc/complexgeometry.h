@@ -43,6 +43,8 @@ public:
     void create_poiseuille(CIniFile &ini);
     void create_sinus(CIniFile &ini);
     void create_box(CIniFile &ini);
+    void create_random_walk(CIniFile &ini);
+    void make_periodic();
     void calculate_normals_tangents_and_inner_points(int number_of_neighbor_averages);
     void calculate_global_porosity();
     void find_boundary_points();

@@ -41,6 +41,8 @@ int main(int argc, char **argv)
         cg.create_cylinders(ini);
     } else if(type.compare("sinus") == 0) {
         cg.create_sinus(ini);
+    } else if(type.compare("random_walk") == 0) {
+        cg.create_random_walk(ini);
     }
 
     if(ini.getbool("create_border")) cg.create_border();

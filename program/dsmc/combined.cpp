@@ -51,6 +51,8 @@ int main(int args, char* argv[]) {
         cg.create_cylinders(ini);
     } else if(type.compare("sinus") == 0) {
         cg.create_sinus(ini);
+    } else if(type.compare("random_walk") == 0) {
+        cg.create_random_walk(ini);
     }
 
     if(ini.getbool("save_file")) cg.save_to_file(ini);
