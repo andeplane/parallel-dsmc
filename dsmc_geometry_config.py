@@ -29,7 +29,7 @@ class DSMC_geometry:
 
 		# Diamond square settings
 		self.hurst_exponent = 0.5
-		self.diamond_square_h0 = 1.0
+		self.diamond_square_distance = 1.0
 
 		# Sinus settings
 		self.amplitude = 1.0
@@ -85,10 +85,10 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_diamond_square(self, hurst_exponent = 0.5, seed = 1, diamond_square_h0 = 1):
+	def create_diamond_square(self, hurst_exponent = 0.5, seed = 1, diamond_square_distance = 1):
 		self.hurst_exponent = hurst_exponent
-		self.perlin_seed = seed
-		self.diamond_square_h0 = diamond_square_h0
+		self.seed = seed
+		self.diamond_square_distance = diamond_square_distance
 		self.type = "diamond_square"
 		self.create_config_file()
 		self.run()
@@ -146,7 +146,7 @@ class DSMC_geometry:
 			line = line.replace('__walker_max_thickness__',str(self.walker_max_thickness) )
 			line = line.replace('__walker_turn_probability__',str(self.walker_turn_probability) )
 			line = line.replace('__number_of_neighbor_averages__',str(self.number_of_neighbor_averages) )
-			line = line.replace('__diamond_square_h0__',str(self.diamond_square_h0) )
+			line = line.replace('__diamond_square_distance__',str(self.diamond_square_distance) )
 			line = line.replace('__save_file__',str(self.save_file).lower() )
 			line = line.replace('__binary_output_folder__',str(self.binary_output_folder) )
 			line = line.replace('__num_processors_x__',str(self.num_processors_x) )

@@ -470,9 +470,9 @@ void ComplexGeometry::create_diamond_square(CIniFile &ini) {
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
     float hurst_exponent = ini.getdouble("hurst_exponent");
-    long seed = ini.getdouble("perlin_seed");
+    long seed = ini.getdouble("seed");
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
-    float h0 = ini.getdouble("diamond_square_h0");
+    float distance = ini.getdouble("diamond_square_distance");
     allocate(nx_, ny_, nz_);
 
     if(nx != nz) {
@@ -489,11 +489,17 @@ void ComplexGeometry::create_diamond_square(CIniFile &ini) {
 
     float sigma = 0.3;
     long seed_1 = -(seed + 1);
-    long seed_2 = -(seed + 2);
+    long seed_2 = -(seed + 7);
     bool addition = true;
     bool periodic_boundary_conditions = true;
     int rng = 2;
-    vector<double> corners(4,h0);
+    double middle = ny/2.0;
+    distance *= ny;
+
+    double distance_half = distance/2.0;
+
+
+    vector<double> corners(4,0);
 
     DiamondSquare generator;
     vector<vector<double> > height_map_1 = generator.generate(power2_x, hurst_exponent, corners, seed_1, sigma, addition, periodic_boundary_conditions, rng);
@@ -503,11 +509,13 @@ void ComplexGeometry::create_diamond_square(CIniFile &ini) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
                 int index = i*ny*nz + j*nz + k;
+                float h_value_1 = middle - distance_half + 0.5*ny*height_map_1[i][k];
+                float h_value_2 = middle - distance_half + 0.5*ny*height_map_2[i][k];
 
-                float h1 = 5*float(j) / ny;
-                float h2 = 5*float(ny - j) / ny;
+                float h1 = j;
+                float h2 = ny - j - 1;
 
-                if( h1 < height_map_1[i][k] || h2 < height_map_2[i][k] ) {
+                if( h1 < h_value_1 || h2 < h_value_2 ) {
                     vertices_unsigned_char[index] = 1;
                     vertices[index] = 1;
                 } else {
