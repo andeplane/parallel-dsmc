@@ -110,6 +110,7 @@ void MarchingCubes::create_marching_cubes_from_complex_geometry(ComplexGeometry 
             }
         }
     }
+
     create_marching_cubes_from_array(vertices, mesh_dimensions, box_length, threshold, larger_than);
 }
 

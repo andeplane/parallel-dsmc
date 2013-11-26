@@ -128,7 +128,7 @@ void ComplexGeometry::create_border() {
         for(int j=0; j<ny; j++) {
             for(int k=0; k<nz;k++) {
                 if(i == 0 || j == 0 || k == 0 || i == nx-1 || j == ny-1 || k == nz-1) {
-                    int index = i + j*nx + k*nx*ny;
+                    int index = i*ny*nz + j*nz + k;
                     vertices_unsigned_char[index] = 0;
                     vertices[index] = 0;
                 }
@@ -160,7 +160,7 @@ void ComplexGeometry::save_vtk(string filename) {
     for (int k = 0; k < nz; k++) {
         for (int j = 0; j < ny; j++) {
             for (int i = 0; i < nx; i++) {
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
                 ofile << vertices[index] << endl;
             }
         }
@@ -334,7 +334,7 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
                 double y = 2*(j-ny/2.0)/(double)ny;
                 double z = 2*(k-nz/2.0)/(double)nz;
                 double r2 = x*x + y*y + z*z;
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
 
                 if( (!inverse && r2 > radius*radius) || (inverse && r2 < radius*radius)) {
                     vertices_unsigned_char[index] = 1;
@@ -382,7 +382,7 @@ void ComplexGeometry::create_cylinders(CIniFile &ini) {
                         }
                     }
                 }
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
 
                 if(is_wall) {
                     vertices_unsigned_char[index] = 1;
@@ -417,9 +417,9 @@ void ComplexGeometry::create_sinus(CIniFile &ini) {
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
 
-                float h = amplitude*sin(sinus_mode*2*M_PI*float(i)/nx) + displacement;
+                float h = amplitude*sin(sinus_mode*2*M_PI*float(k)/nz) + displacement;
 
                 float distance_top = ny - 1 - j;
                 float distance_bottom = j;
@@ -449,8 +449,7 @@ void ComplexGeometry::create_box(CIniFile &ini) {
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                // i*ny*nz + j*nz + k
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
 
                 if(i==0 || i == nx-1 || j==0 || j == ny-1 || k==0 || k == nz-1) {
                     vertices_unsigned_char[index] = 1;
@@ -503,12 +502,12 @@ void ComplexGeometry::create_diamond_square(CIniFile &ini) {
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
 
                 float h1 = 5*float(j) / ny;
                 float h2 = 5*float(ny - j) / ny;
 
-                if( h1 < height_map_1[k][i] || h2 < height_map_2[k][i] ) {
+                if( h1 < height_map_1[i][k] || h2 < height_map_2[i][k] ) {
                     vertices_unsigned_char[index] = 1;
                     vertices[index] = 1;
                 } else {
@@ -536,7 +535,7 @@ void ComplexGeometry::create_empty_space(CIniFile &ini) {
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
                 vertices_unsigned_char[index] = 0;
                 vertices[index] = 0;
             }
@@ -558,7 +557,7 @@ void ComplexGeometry::create_poiseuille(CIniFile &ini) {
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                int index = i + j*nx + k*nx*ny;
+                int index = i*ny*nz + j*nz + k;
 
                 if(j == 0 || j == ny-1) {
                     vertices_unsigned_char[index] = 1;
@@ -645,7 +644,6 @@ void ComplexGeometry::calculate_normals(int number_of_neighbor_average) {
                 at_least_one_wall_neighbor = false;
                 all_neighbors_are_walls = true;
 
-                // int idx = i + j*nx + k*nx*ny;
                 int idx = i*ny*nz + j*nz + k; //new
                 for(int di=-1;di<=1;di++) {
                     for(int dj=-1;dj<=1;dj++) {
@@ -756,7 +754,7 @@ void ComplexGeometry::find_boundary_points() {
         progress_bar.update(i);
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                int idx = i + j*nx + k*nx*ny;
+                int idx = i*ny*nz + j*nz + k;
                 double normal_norm = normals[3*idx+0]*normals[3*idx+0] + normals[3*idx+1]*normals[3*idx+1] + normals[3*idx+2]*normals[3*idx+2];
 
                 if(vertices_unsigned_char[idx] > 0 && normal_norm>0) {

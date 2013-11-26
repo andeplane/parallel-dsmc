@@ -283,8 +283,6 @@ void System::initialize(Settings *settings_, int myid_) {
     node_num_new_molecules.resize(topology->num_processors, 0);
     node_molecule_data.resize(topology->num_processors,vector<data_type>(MAX_MPI_DATA,0));
 
-//    node_molecule_data = new data_type*[topology->num_processors];
-//    for(int i=0; i<topology->num_processors; i++) { node_molecule_data[i] = new data_type[MAX_MPI_DATA]; }
     MPI_Barrier(MPI_COMM_WORLD);
     if(myid==0) cout << "Loading world..." << endl;
     world_grid = new Grid(settings->ini_file.getstring("world"),this);
