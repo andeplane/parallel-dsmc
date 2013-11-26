@@ -314,7 +314,6 @@ void ComplexGeometry::save_to_file(CIniFile &ini) {
     int num_chars = sprintf(porositystring,"%f",global_porosity);
     file.write(porositystring,num_chars*sizeof(char));
     file.close();
-    // delete porositystring;
 }
 
 void ComplexGeometry::create_sphere(CIniFile &ini) {
