@@ -286,22 +286,27 @@ class DSMC:
 		delta_p = pressure_A - pressure_B
 		self.gravity = uc.acceleration_from_si(uc.pressure_difference_to_gravity(delta_p, self.Lz))
 
-	def set_number_of_cells(self, geometry, particles_per_cell=10):
+	def get_number_of_particles(self, geometry):
 		uc = DSMC_unit_converter(self)
 		volume = self.Lx*self.Ly*self.Lz*geometry.get_porosity()
 		# Find number of particles to set correct cell count
 		num_particles =  int(uc.number_density_from_si(self.density)*volume / self.atoms_per_molecule)
+		return num_particles
+
+	def set_number_of_cells(self, geometry, particles_per_cell=10):
+		num_particles = self.get_number_of_particles(geometry)
 		print "Estimated number of particles: ", num_particles
 		number_of_cells = num_particles / particles_per_cell
 		number_of_cells_per_dimension = int(number_of_cells**(1.0/3.0)) # Assuming cubi system
-		self.cells_x = number_of_cells_per_dimension
-		self.cells_y = number_of_cells_per_dimension
-		self.cells_z = number_of_cells_per_dimension
-
+		
 		self.cells_x = self.cells_x - self.cells_x%self.nx
 		self.cells_y = self.cells_y - self.cells_y%self.ny
 		self.cells_z = self.cells_z - self.cells_z%self.nz
 
+		self.cells_x = max(number_of_cells_per_dimension,1)
+		self.cells_y = max(number_of_cells_per_dimension,1)
+		self.cells_z = max(number_of_cells_per_dimension,1)
+		
 		while(geometry.num_voxels_x%self.cells_x>0): self.cells_x += self.nx
 		while(geometry.num_voxels_y%self.cells_y>0): self.cells_y += self.ny
 		while(geometry.num_voxels_z%self.cells_z>0): self.cells_z += self.nz
