@@ -57,11 +57,11 @@ class DSMC_geometry:
 		self.visualize = False
 		self.marching_cubes_threshold = 0.5
 
-	def create_box(self, porosity):
-		self.box_porosity = porosity
+	def create_box(self):
 		self.type = "box"
 		self.create_config_file()
 		self.run()
+
 	def create_poiseuille(self):
 		self.type = "poiseuille"
 		self.create_config_file()

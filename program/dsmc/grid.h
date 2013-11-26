@@ -128,7 +128,7 @@ inline double Grid::get_time_until_collision(data_type *r, data_type *v, double 
     if( time_facet_6 > 0 && time_facet_6 < time_until_collision && will_hit_facet_6 && !std::isnan(time_facet_6)) time_until_collision = time_facet_6;
 
     if(time_until_collision < 0) {
-        cout << "We found a negative number, that's bad!" << endl;
+        cout << "We found a negative collision time, that's bad!" << endl;
         exit(1);
     }
 
@@ -137,7 +137,6 @@ inline double Grid::get_time_until_collision(data_type *r, data_type *v, double 
 }
 
 inline int Grid::get_index_of_voxel(const data_type *r) {
-    r[0]*system->one_over_length[0]*global_nx-system->topology->origin[0]*system->one_over_length[0]*global_nx + voxel_origin.x;
     const int i = r[0]*one_over_length_x_times_global_nx + constant_0;
     const int j = r[1]*one_over_length_y_times_global_ny + constant_1;
     const int k = r[2]*one_over_length_z_times_global_nz + constant_2;

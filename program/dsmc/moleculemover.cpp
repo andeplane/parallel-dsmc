@@ -67,9 +67,10 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
     if(voxels[idx] >= voxel_type_wall) {
         // We hit a wall. First, move back to find boundry
         while(voxels[idx] != voxel_type_boundary) {
-            if(++count > 10) {
-                cout << "We found an infinite loop with molecule " << molecule_index << " at timestep " << system->steps << "on a wall, index " << idx << endl;
-                exit(1);
+            if(++count > 100) {
+                system->find_position(molecule_index);
+                cout << "Warning, we found an infinite loop with molecule " << molecule_index << " at timestep " << system->steps << "on a wall, index " << idx << endl;
+                return;
             }
 
             if(voxels[idx] == voxel_type_wall) {
@@ -79,7 +80,6 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
             } else {
                 dt -= tau;
                 if(dt > 1e-5 && depth < 10) {
-                    if(i_m_index == molecule_index && i_t == system->steps) cout << "Recursive call 1" << endl;
                     move_molecule(molecule_index,dt,rnd,depth+1);
                 }
                 return;
@@ -94,8 +94,10 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
         int collision_voxel_index = idx;
         count = 0;
         while(voxels[idx] == voxel_type_boundary) {
-            if(++count > 10) {
-                cout << "We found an infinite loop on a surface" << endl;
+            if(++count > 100) {
+                system->find_position(molecule_index);
+                cout << "Warning, we found an infinite loop with molecule " << molecule_index << " at timestep " << system->steps << "on a surface, index " << idx << endl;
+                return;
             }
             collision_voxel_index = idx;
             do_move(r, v, -tau); // Move back

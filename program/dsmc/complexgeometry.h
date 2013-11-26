@@ -36,13 +36,13 @@ public:
     void load_text_files(string base_filename, CVector matrix_size, double threshold);
     void create_perlin_geometry(CIniFile &ini);
     void create_sphere(CIniFile &ini);
-    void create_box(CIniFile &ini);
     void create_diamond_square(CIniFile &ini);
     void create_empty_space(CIniFile &ini);
     void create_border();
     void create_cylinders(CIniFile &ini);
     void create_poiseuille(CIniFile &ini);
     void create_sinus(CIniFile &ini);
+    void create_box(CIniFile &ini);
     void calculate_normals_tangents_and_inner_points(int number_of_neighbor_averages);
     void calculate_global_porosity();
     void find_boundary_points();
