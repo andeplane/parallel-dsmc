@@ -320,7 +320,7 @@ void ComplexGeometry::create_sphere(CIniFile &ini) {
     int nx_ = ini.getint("num_voxels_x");
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
-    float radius = ini.getdouble("sphere_radius");
+    float radius = ini.getdouble("radius");
     bool inverted = ini.getbool("inverted");
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     allocate(nx_, ny_, nz_);
@@ -364,8 +364,8 @@ void ComplexGeometry::create_cylinders(CIniFile &ini) {
     for(int i=0;i<nx;i++) {
         for(int j=0;j<ny;j++) {
             for(int k=0;k<nz;k++) {
-                double x = j/double(ny) + voxel_size_x/2.0;
-                double y = k/double(nz) + voxel_size_y/2.0;
+                double x = i/double(nx) + voxel_size_x/2.0;
+                double y = j/double(ny) + voxel_size_y/2.0;
                 bool is_wall = true;
 
                 for(int cylinder_x=0; cylinder_x<num_cylinders_per_dimension; cylinder_x++) {
@@ -394,6 +394,62 @@ void ComplexGeometry::create_cylinders(CIniFile &ini) {
         }
     }
 
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
+void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
+    int nx_ = ini.getint("num_voxels_x");
+    int ny_ = ini.getint("num_voxels_y");
+    int nz_ = ini.getint("num_voxels_z");
+    int spheres_num = ini.getint("spheres_num");
+
+    int seed = -abs(ini.getint("seed"));
+    double radius = ini.getdouble("radius");
+    bool inverted = ini.getbool("inverted");
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    double radius_squared = radius*radius;
+
+    allocate(nx_, ny_, nz_);
+    cout << "Creating " << spheres_num << " randomly placed spheres with radius=" << radius << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    float voxel_size_x = 1.0 / nx;
+    float voxel_size_y = 1.0 / ny;
+    float voxel_size_z = 1.0 / nz;
+    int nx_half = nx/2;
+    int ny_half = ny/2;
+    int nz_half = nz/2;
+
+    for(int i=0; i<num_vertices; i++) {
+        vertices_unsigned_char[i] = !inverted;
+        vertices[i] = !inverted;
+    }
+
+    Random *rnd = new Random(seed,0,0);
+    for(int sphere=0; sphere < spheres_num; sphere++) {
+        double x0 = rnd->next_double()*0.5;
+        double y0 = rnd->next_double()*0.5;
+        double z0 = rnd->next_double()*0.5;
+
+        for(int i=0;i<nx_half;i++) {
+            for(int j=0;j<ny_half;j++) {
+                for(int k=0;k<nz_half;k++) {
+                    double x = i/double(nx) + voxel_size_x/2.0;
+                    double y = j/double(ny) + voxel_size_y/2.0;
+                    double z = k/double(nz) + voxel_size_z/2.0;
+
+                    double dx = x - x0; double dy = y - y0; double dz = z - z0;
+                    double dr2 = dx*dx + dy*dy + dz*dz;
+                    int index = i*ny*nz + j*nz + k;
+
+                    if(dr2<radius_squared) {
+                        vertices_unsigned_char[index] = inverted;
+                        vertices[index] = inverted;
+                    }
+                }
+            }
+        }
+    }
+
+    make_periodic();
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 
@@ -469,7 +525,7 @@ void ComplexGeometry::create_diamond_square(CIniFile &ini) {
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
     float hurst_exponent = ini.getdouble("hurst_exponent");
-    long seed = ini.getdouble("seed");
+    long seed = -abs(ini.getdouble("seed"));
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     float distance = ini.getdouble("diamond_square_distance");
     allocate(nx_, ny_, nz_);
@@ -496,7 +552,6 @@ void ComplexGeometry::create_diamond_square(CIniFile &ini) {
     distance *= ny;
 
     double distance_half = distance/2.0;
-
 
     vector<double> corners(4,0);
 
@@ -591,7 +646,7 @@ void ComplexGeometry::create_random_walk(CIniFile &ini) {
     double walker_thickness_change_prob = ini.getdouble("walker_thickness_change_prob");
     double walker_turn_probability = ini.getdouble("walker_turn_probability");
 
-    int seed = ini.getint("seed");
+    int seed = -abs(ini.getint("seed"));
     bool inverted = ini.getbool("inverted");
 
     allocate(nx_, ny_, nz_);

@@ -20,11 +20,11 @@ class DSMC_geometry:
 		self.create_border = False
 
 		# Sphere settings
-		self.sphere_radius = 0.8
+		self.radius = 0.8
 		self.inverted = True
+		self.spheres_num = 10
 
 		# Cylinder settings
-		self.cylinder_radius = 0.8
 		self.num_cylinders_per_dimension = 1
 
 		# Diamond square settings
@@ -71,15 +71,24 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_sphere(self, radius = 0.9, inverse=True):
-		self.inverted = inverse
-		self.sphere_radius = radius
+	def create_sphere(self, radius = 0.9, inverted=True):
+		self.inverted = inverted
+		self.radius = radius
 		self.type = "sphere"
 		self.create_config_file()
 		self.run()
 
+	def create_packed_spheres(self, radius = 0.1, spheres_num = 10, inverted=True):
+		# Creates many randomly placed spheres that will act as the walls if inverted=True
+		self.inverted = inverted
+		self.radius = radius
+		self.spheres_num = spheres_num
+		self.type = "packed_spheres"
+		self.create_config_file()
+		self.run()
+
 	def create_cylinders(self, radius = 0.9, num_cylinders_per_dimension = 1):
-		self.cylinder_radius = radius
+		self.radius = radius
 		self.num_cylinders_per_dimension = num_cylinders_per_dimension
 		self.type = "cylinders"
 		self.create_config_file()
@@ -152,11 +161,11 @@ class DSMC_geometry:
 			line = line.replace('__num_processors_x__',str(self.num_processors_x) )
 			line = line.replace('__num_processors_y__',str(self.num_processors_y) )
 			line = line.replace('__num_processors_z__',str(self.num_processors_z) )
-			line = line.replace('__sphere_radius__', str(self.sphere_radius))
+			line = line.replace('__radius__', str(self.radius))
+			line = line.replace('__spheres_num__', str(self.spheres_num))
 			line = line.replace('__amplitude__',str(self.amplitude) )
 			line = line.replace('__displacement__',str(self.displacement) )
 			line = line.replace('__sinus_mode__', str(self.sinus_mode))
-			line = line.replace('__cylinder_radius__', str(self.cylinder_radius))
 			line = line.replace('__num_cylinders_per_dimension__', str(self.num_cylinders_per_dimension))
 			line = line.replace('__inverted__',str(self.inverted).lower() )
 			line = line.replace('__create_border__',str(self.create_border).lower() )

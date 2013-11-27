@@ -30,6 +30,9 @@ program.velocity_bins = 128
 program.density = uc.density_from_knudsen_number(knudsen_number=1.0, length=program.Ly)
 
 for distance in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+    state_base_folder = "states/%f" % (distance)
+    program.mkdir(state_base_folder)
+
     program.reset()
     #geometry.create_diamond_square(hurst_exponent = 0.8, seed = 1, diamond_square_distance = distance)
     num_particles = program.get_number_of_particles(geometry)
@@ -44,10 +47,10 @@ for distance in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
     program.timesteps = 20000
     program.create_config_file()
     program.run(dsmc)
-    program.save_state(path="states/00_thermalized")
+    program.save_state(path="%s/00_thermalized" % (state_base_folder))
 
     program.statistics_interval = 5
     program.timesteps = 100000
     program.create_config_file()
     program.run(dsmc)
-    program.save_state(path="states/01_sampling")
+    program.save_state(path="%s/01_sampling" % (state_base_folder))

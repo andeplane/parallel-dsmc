@@ -53,6 +53,8 @@ int main(int args, char* argv[]) {
         cg.create_sinus(ini);
     } else if(type.compare("random_walk") == 0) {
         cg.create_random_walk(ini);
+    } else if(type.compare("packed_spheres") == 0) {
+        cg.create_packed_spheres(ini);
     }
 
     if(ini.getbool("save_file")) cg.save_to_file(ini);

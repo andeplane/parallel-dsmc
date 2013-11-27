@@ -43,6 +43,8 @@ int main(int argc, char **argv)
         cg.create_sinus(ini);
     } else if(type.compare("random_walk") == 0) {
         cg.create_random_walk(ini);
+    } else if(type.compare("packed_spheres") == 0) {
+        cg.create_packed_spheres(ini);
     }
 
     if(ini.getbool("create_border")) cg.create_border();
