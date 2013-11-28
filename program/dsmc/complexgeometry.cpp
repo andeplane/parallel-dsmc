@@ -406,6 +406,7 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
     int seed = -abs(ini.getint("seed"));
     double radius = ini.getdouble("radius");
     bool inverted = ini.getbool("inverted");
+    bool prevent_overlap = ini.getbool("prevent_overlap");
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     double radius_squared = radius*radius;
 
@@ -423,11 +424,39 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
         vertices[i] = !inverted;
     }
 
+    vector<vector<double> > sphere_positions;
+
     Random *rnd = new Random(seed,0,0);
     for(int sphere=0; sphere < spheres_num; sphere++) {
         double x0 = rnd->next_double()*0.5;
         double y0 = rnd->next_double()*0.5;
         double z0 = rnd->next_double()*0.5;
+        bool inside_another_sphere = true;
+
+        while(prevent_overlap && inside_another_sphere) {
+            x0 = rnd->next_double()*0.5;
+            y0 = rnd->next_double()*0.5;
+            z0 = rnd->next_double()*0.5;
+            inside_another_sphere = false; // Assume that this sphere is a good candidate
+
+            for(int other_sphere = 0; other_sphere < sphere_positions.size(); other_sphere++) {
+                vector<double> &other_sphere_pos = sphere_positions.at(other_sphere);
+                double dx = other_sphere_pos[0] - x0;
+                double dy = other_sphere_pos[1] - y0;
+                double dz = other_sphere_pos[2] - z0;
+                double dr = sqrt(dx*dx + dy*dy + dz*dz);
+
+                if(dr < 2*radius) {
+                    inside_another_sphere = true;
+                    break;
+                }
+            }
+        }
+
+        // Yay, this sphere isn't overlapping with any other sphere
+        vector<double> pos(3,0);
+        pos[0] = x0; pos[1] = y0; pos[2] = z0;
+        sphere_positions.push_back(pos);
 
         for(int i=0;i<nx_half;i++) {
             for(int j=0;j<ny_half;j++) {

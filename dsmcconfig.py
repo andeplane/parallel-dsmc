@@ -296,7 +296,8 @@ class DSMC:
 	def set_number_of_cells(self, geometry, particles_per_cell=10):
 		num_particles = self.get_number_of_particles(geometry)
 		print "Estimated number of particles: ", num_particles
-		number_of_cells = num_particles / particles_per_cell
+		porosity = geometry.get_porosity()
+		number_of_cells = num_particles / particles_per_cell * porosity
 		number_of_cells_per_dimension = int(number_of_cells**(1.0/3.0)) # Assuming cubi system
 		
 		self.cells_x = self.cells_x - self.cells_x%self.nx

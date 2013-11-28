@@ -23,6 +23,7 @@ class DSMC_geometry:
 		self.radius = 0.8
 		self.inverted = True
 		self.spheres_num = 10
+		self.prevent_overlap = False
 
 		# Cylinder settings
 		self.num_cylinders_per_dimension = 1
@@ -78,10 +79,11 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_packed_spheres(self, radius = 0.1, spheres_num = 10, inverted=True):
+	def create_packed_spheres(self, radius = 0.1, spheres_num = 10, prevent_overlap=False, inverted=True):
 		# Creates many randomly placed spheres that will act as the walls if inverted=True
 		self.inverted = inverted
 		self.radius = radius
+		self.prevent_overlap = prevent_overlap
 		self.spheres_num = spheres_num
 		self.type = "packed_spheres"
 		self.create_config_file()
@@ -157,6 +159,7 @@ class DSMC_geometry:
 			line = line.replace('__number_of_neighbor_averages__',str(self.number_of_neighbor_averages) )
 			line = line.replace('__diamond_square_distance__',str(self.diamond_square_distance) )
 			line = line.replace('__save_file__',str(self.save_file).lower() )
+			line = line.replace('__prevent_overlap__',str(self.prevent_overlap).lower() )
 			line = line.replace('__binary_output_folder__',str(self.binary_output_folder) )
 			line = line.replace('__num_processors_x__',str(self.num_processors_x) )
 			line = line.replace('__num_processors_y__',str(self.num_processors_y) )
