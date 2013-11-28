@@ -137,7 +137,7 @@ void System::accelerate() {
     double gravity = settings->gravity*dt;
 
     for(int n=0;n<num_molecules_local;n++) {
-        v.at(3*n+flow_dir) += gravity;
+        v[3*n+flow_dir] += gravity;
     }
     timer->end_accelerate();
 }
