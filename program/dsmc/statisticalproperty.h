@@ -55,6 +55,17 @@ public:
     double get_current_value();
 };
 
+class MeasureVolumetricFlowRate : public StatisticalProperty {
+protected:
+    MeasureFlux *flux;
+public:
+    StatisticalValue<double> value;
+    MeasureVolumetricFlowRate(FILE *file_, int myid_, int interval_, MeasureFlux *flux_);
+    virtual void update(System *system);
+    virtual void finalize(UnitConverter *unit_converter);
+    double get_current_value();
+};
+
 class MeasurePressure : public StatisticalProperty {
 protected:
     MeasureTemperature *temperature;
@@ -68,10 +79,10 @@ public:
 
 class MeasurePermeability : public StatisticalProperty {
 protected:
-    MeasureFlux *flux;
+    MeasureVolumetricFlowRate *volumetric_flow_rate;
 public:
     StatisticalValue<double> value;
-    MeasurePermeability(FILE *file_, int myid_, int interval_, MeasureFlux *flux_);
+    MeasurePermeability(FILE *file_, int myid_, int interval_, MeasureVolumetricFlowRate *volumetric_flow_rate_);
     virtual void update(System *system);
     virtual void finalize(UnitConverter *unit_converter);
     double get_current_value();

@@ -89,7 +89,7 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_cylinders(self, radius = 0.9, num_cylinders_per_dimension = 1):
+	def create_cylinders(self, radius = 0.4, num_cylinders_per_dimension = 1):
 		self.radius = radius
 		self.num_cylinders_per_dimension = num_cylinders_per_dimension
 		self.type = "cylinders"

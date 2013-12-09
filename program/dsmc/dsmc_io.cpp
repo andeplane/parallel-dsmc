@@ -40,6 +40,7 @@ DSMC_IO::DSMC_IO(System *system_) :
         temperature_file = fopen("statistics/temperature.txt","w");
         linear_pressure_file = fopen("statistics/linear_pressure.txt","w");
         linear_temperature_file = fopen("statistics/linear_temperature.txt","w");
+        volumetric_flow_rate_file = fopen("statistics/volumetric_flow_rate.txt","w");
     }
 }
 
@@ -172,6 +173,7 @@ void DSMC_IO::finalize() {
     fclose(pressure_file);
     fclose(linear_pressure_file);
     fclose(linear_temperature_file);
+    fclose(volumetric_flow_rate_file);
 }
 
 void DSMC_IO::read_grid_matrix(string filename, Grid *grid) {

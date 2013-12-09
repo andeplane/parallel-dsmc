@@ -16,8 +16,9 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     energy = new MeasureEnergy(system->io->energy_file,system->myid,system->settings->statistics_interval);
     temperature = new MeasureTemperature(system->io->temperature_file,system->myid, system->settings->statistics_interval, energy);
     flux = new MeasureFlux(system->io->flux_file,system->myid,system->settings->statistics_interval);
+    volumetric_flow_rate = new MeasureVolumetricFlowRate(system->io->volumetric_flow_rate_file, system->myid,system->settings->statistics_interval,flux);
     pressure = new MeasurePressure(system->io->pressure_file,system->myid,system->settings->statistics_interval, temperature);
-    permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, flux);
+    permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, volumetric_flow_rate);
     count = new MeasureCount(system->io->num_molecules_file, system->myid, system->settings->statistics_interval, system->settings->sampling_bins);
     velocity = new MeasureVelocityDistributionPoiseuille(system->io->velocity_file, system->myid, system->settings->statistics_interval,system->settings->sampling_bins, count);
     temperature_distribution = new MeasureTemperatureDistribution(system->io->linear_temperature_file, system->myid,system->settings->statistics_interval,system->settings->sampling_bins,count);

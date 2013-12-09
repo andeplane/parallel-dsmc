@@ -46,7 +46,7 @@ class DSMC:
 
 		self.seed = -1
 		self.statistics_interval = 100
-		self.sampling_bins = 100
+		self.sampling_bins = 128
 		self.velocity_profile_type = "other"
 		self.movie_every_n_frame = 1
 		self.movie_molecules = 10000

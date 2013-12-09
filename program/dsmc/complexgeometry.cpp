@@ -352,11 +352,11 @@ void ComplexGeometry::create_cylinders(CIniFile &ini) {
     int nx_ = ini.getint("num_voxels_x");
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
-    float cylinder_radius = ini.getdouble("cylinder_radius");
+    float radius = ini.getdouble("radius");
     int num_cylinders_per_dimension = ini.getint("num_cylinders_per_dimension");
     int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
     allocate(nx_, ny_, nz_);
-    cout << "Creating " << num_cylinders_per_dimension*num_cylinders_per_dimension << " cylinders with radius=" << cylinder_radius << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    cout << "Creating " << num_cylinders_per_dimension*num_cylinders_per_dimension << " cylinders with radius=" << radius << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
     float voxel_size_x = 1.0 / nx;
     float voxel_size_y = 1.0 / ny;
     float cylinder_center_displacement = 1.0 / num_cylinders_per_dimension;
@@ -372,11 +372,11 @@ void ComplexGeometry::create_cylinders(CIniFile &ini) {
                     for(int cylinder_y=0; cylinder_y<num_cylinders_per_dimension; cylinder_y++) {
                         double cylinder_center_x = cylinder_x * cylinder_center_displacement + cylinder_center_displacement/2.0;
                         double cylinder_center_y = cylinder_y * cylinder_center_displacement + cylinder_center_displacement/2.0;
-                        double dx = 2.0*(x - cylinder_center_x);
-                        double dy = 2.0*(y - cylinder_center_y);
+                        double dx = (x - cylinder_center_x);
+                        double dy = (y - cylinder_center_y);
                         double dr2 = dx*dx + dy*dy;
 
-                        if(dr2 < cylinder_radius*cylinder_radius) {
+                        if(dr2 < radius*radius) {
                             is_wall = false;
                         }
                     }
