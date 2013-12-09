@@ -24,7 +24,7 @@ public:
     MeasureEnergy *energy;
     MeasureTemperature *temperature;
     MeasurePressure *pressure;
-    MeasureFlux *flux;
+    MeasureNumberFlowRate *number_flow_rate;
     MeasureVolumetricFlowRate *volumetric_flow_rate;
     MeasurePermeability *permeability;
     MeasureCount *count;

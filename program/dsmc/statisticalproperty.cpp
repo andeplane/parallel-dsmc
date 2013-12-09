@@ -78,13 +78,13 @@ void MeasureTemperature::finalize(UnitConverter *unit_converter) {
 
 }
 
-MeasureFlux::MeasureFlux(FILE *file_, int myid_, int interval_) :
+MeasureNumberFlowRate::MeasureNumberFlowRate(FILE *file_, int myid_, int interval_) :
     StatisticalProperty(myid_,interval_, file_)
 {
 
 }
 
-void MeasureFlux::update(System *system) {
+void MeasureNumberFlowRate::update(System *system) {
     if((system->steps % interval) || system->steps == last_sample) return;
     last_sample = system->steps;
 
@@ -101,19 +101,19 @@ void MeasureFlux::update(System *system) {
     }
 }
 
-double MeasureFlux::get_current_value() {
+double MeasureNumberFlowRate::get_current_value() {
     return value.get_current_value()[0];
 }
 
-void MeasureFlux::finalize(UnitConverter *unit_converter) {
+void MeasureNumberFlowRate::finalize(UnitConverter *unit_converter) {
 
 }
 
 
 
-MeasureVolumetricFlowRate::MeasureVolumetricFlowRate(FILE *file_, int myid_, int interval_, MeasureFlux *flux_) :
+MeasureVolumetricFlowRate::MeasureVolumetricFlowRate(FILE *file_, int myid_, int interval_, MeasureNumberFlowRate *number_flow_rate_) :
     StatisticalProperty(myid_,interval_, file_),
-    flux(flux_)
+    number_flow_rate(number_flow_rate_)
 {
 
 }
@@ -121,13 +121,12 @@ MeasureVolumetricFlowRate::MeasureVolumetricFlowRate(FILE *file_, int myid_, int
 void MeasureVolumetricFlowRate::update(System *system) {
     if((system->steps % interval) || system->steps == last_sample) return;
     last_sample = system->steps;
-    flux->update(system);
+    number_flow_rate->update(system);
 
     if(myid==0) {
         // Global values are already calculated in flux
         double volume_per_particle = system->volume_global / (system->num_molecules_global*system->atoms_per_molecule);
-        long number_flux = flux->get_current_value();
-        double volumetric_flow_rate = number_flux * volume_per_particle / (system->t - system->t0);
+        double volumetric_flow_rate = number_flow_rate->get_current_value() * volume_per_particle;
 
         fprintf(file, "%f %E\n",system->t_in_nano_seconds(), volumetric_flow_rate);
         value.add_value(volumetric_flow_rate);
@@ -170,9 +169,10 @@ void MeasurePressure::finalize(UnitConverter *unit_converter) {
 
 }
 
-MeasurePermeability::MeasurePermeability(FILE *file_, int myid_, int interval_, MeasureVolumetricFlowRate *volumetric_flow_rate_) :
+MeasurePermeability::MeasurePermeability(FILE *file_, int myid_, int interval_, MeasureVolumetricFlowRate *volumetric_flow_rate_, MeasurePressure *pressure_) :
     StatisticalProperty(myid_, interval_, file_),
-    volumetric_flow_rate(volumetric_flow_rate_)
+    volumetric_flow_rate(volumetric_flow_rate_),
+    pressure(pressure_)
 {
 
 }
@@ -182,6 +182,7 @@ void MeasurePermeability::update(System *system) {
     last_sample = system->steps;
 
     volumetric_flow_rate->update(system);
+    pressure->update(system);
 
     if(myid==0) {
         double viscosity_dsmc_units = system->unit_converter->viscosity_from_SI(system->settings->viscosity);
@@ -194,9 +195,10 @@ void MeasurePermeability::update(System *system) {
             if(a != system->settings->flow_direction) area *= system->length[a];
         }
 
-        double pressure_in_reservoir_a = system->density*system->temperature;
+        double average_pressure = pressure->get_current_value();
+        double pressure_in_reservoir_a = average_pressure;
         double pressure_in_reservoir_b = pressure_in_reservoir_a - mass_density*system->settings->gravity*system->length[system->settings->flow_direction];
-        double permeability = 2*pressure_in_reservoir_b*volumetric_flow_rate_value*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
+        double permeability = 2*average_pressure*volumetric_flow_rate_value*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
         value.add_value(permeability);
     }
 }

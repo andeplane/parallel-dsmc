@@ -46,10 +46,10 @@ public:
     double get_current_value();
 };
 
-class MeasureFlux : public StatisticalProperty {
+class MeasureNumberFlowRate : public StatisticalProperty {
 public:
     StatisticalValue<double> value;
-    MeasureFlux(FILE *file_, int myid_, int interval_);
+    MeasureNumberFlowRate(FILE *file_, int myid_, int interval_);
     virtual void update(System *system);
     virtual void finalize(UnitConverter *unit_converter);
     double get_current_value();
@@ -57,10 +57,10 @@ public:
 
 class MeasureVolumetricFlowRate : public StatisticalProperty {
 protected:
-    MeasureFlux *flux;
+    MeasureNumberFlowRate *number_flow_rate;
 public:
     StatisticalValue<double> value;
-    MeasureVolumetricFlowRate(FILE *file_, int myid_, int interval_, MeasureFlux *flux_);
+    MeasureVolumetricFlowRate(FILE *file_, int myid_, int interval_, MeasureNumberFlowRate *number_flow_rate_);
     virtual void update(System *system);
     virtual void finalize(UnitConverter *unit_converter);
     double get_current_value();
@@ -80,9 +80,10 @@ public:
 class MeasurePermeability : public StatisticalProperty {
 protected:
     MeasureVolumetricFlowRate *volumetric_flow_rate;
+    MeasurePressure *pressure;
 public:
     StatisticalValue<double> value;
-    MeasurePermeability(FILE *file_, int myid_, int interval_, MeasureVolumetricFlowRate *volumetric_flow_rate_);
+    MeasurePermeability(FILE *file_, int myid_, int interval_, MeasureVolumetricFlowRate *volumetric_flow_rate_, MeasurePressure *pressure_);
     virtual void update(System *system);
     virtual void finalize(UnitConverter *unit_converter);
     double get_current_value();

@@ -15,10 +15,10 @@ StatisticsSampler::StatisticsSampler(System *system_) {
 
     energy = new MeasureEnergy(system->io->energy_file,system->myid,system->settings->statistics_interval);
     temperature = new MeasureTemperature(system->io->temperature_file,system->myid, system->settings->statistics_interval, energy);
-    flux = new MeasureFlux(system->io->flux_file,system->myid,system->settings->statistics_interval);
-    volumetric_flow_rate = new MeasureVolumetricFlowRate(system->io->volumetric_flow_rate_file, system->myid,system->settings->statistics_interval,flux);
+    number_flow_rate = new MeasureNumberFlowRate(system->io->number_flow_rate_file,system->myid,system->settings->statistics_interval);
+    volumetric_flow_rate = new MeasureVolumetricFlowRate(system->io->volumetric_flow_rate_file, system->myid,system->settings->statistics_interval,number_flow_rate);
     pressure = new MeasurePressure(system->io->pressure_file,system->myid,system->settings->statistics_interval, temperature);
-    permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, volumetric_flow_rate);
+    permeability = new MeasurePermeability(system->io->permeability_file, system->myid, system->settings->statistics_interval, volumetric_flow_rate,pressure);
     count = new MeasureCount(system->io->num_molecules_file, system->myid, system->settings->statistics_interval, system->settings->sampling_bins);
     velocity = new MeasureVelocityDistributionPoiseuille(system->io->velocity_file, system->myid, system->settings->statistics_interval,system->settings->sampling_bins, count);
     temperature_distribution = new MeasureTemperatureDistribution(system->io->linear_temperature_file, system->myid,system->settings->statistics_interval,system->settings->sampling_bins,count);
@@ -26,7 +26,8 @@ StatisticsSampler::StatisticsSampler(System *system_) {
 
     statistical_properties.push_back(energy);
     statistical_properties.push_back(temperature);
-    statistical_properties.push_back(flux);
+    statistical_properties.push_back(number_flow_rate);
+    statistical_properties.push_back(volumetric_flow_rate);
     statistical_properties.push_back(pressure);
     statistical_properties.push_back(permeability);
     statistical_properties.push_back(count);
