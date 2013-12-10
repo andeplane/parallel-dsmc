@@ -63,7 +63,7 @@ void MeasureTemperature::update(System *system) {
     energy->update(system);
 
     if(myid==0) {
-        double temperature = 2.0/3.0*energy->get_current_value() / (system->num_molecules_global*system->atoms_per_molecule);
+        double temperature = 2.0/3.0*energy->get_current_value() / system->get_number_of_atoms_global();
 
         fprintf(file, "%f %f\n",system->t_in_nano_seconds(), system->unit_converter->temperature_to_SI(temperature));
         value.add_value(temperature);
@@ -90,9 +90,8 @@ void MeasureNumberFlowRate::update(System *system) {
 
     double flux_local = 0;
     double flux_global = 0;
-    double elapsed_time_this_run = system->t - system->t0;
 
-    flux_local = system->mover->count_periodic[system->settings->flow_direction] / elapsed_time_this_run;
+    flux_local = system->mover->count_periodic[system->settings->flow_direction] / system->get_elapsed_time_this_run();
     MPI_Reduce(&flux_local, &flux_global, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if(myid==0) {
@@ -125,7 +124,7 @@ void MeasureVolumetricFlowRate::update(System *system) {
 
     if(myid==0) {
         // Global values are already calculated in flux
-        double volume_per_particle = system->volume_global / (system->num_molecules_global*system->atoms_per_molecule);
+        double volume_per_particle = system->volume_global / system->num_molecules_global;
         double volumetric_flow_rate = number_flow_rate->get_current_value() * volume_per_particle;
 
         fprintf(file, "%f %E\n",system->t_in_nano_seconds(), volumetric_flow_rate);
@@ -155,7 +154,7 @@ void MeasurePressure::update(System *system) {
     temperature->update(system);
 
     if(myid==0) {
-        double pressure = system->num_molecules_global*system->atoms_per_molecule / system->volume_global * temperature->get_current_value();
+        double pressure = system->get_number_of_atoms_global() / system->volume_global * temperature->get_current_value();
         fprintf(file, "%f %E\n",system->t_in_nano_seconds(), system->unit_converter->pressure_to_SI(pressure));
         value.add_value(pressure);
     }

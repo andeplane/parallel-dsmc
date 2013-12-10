@@ -55,6 +55,9 @@ private:
 public:
     void find_position(const int &index);
     int cell_index_from_position(const int &index);
+    long get_number_of_atoms_global();
+    long get_number_of_atoms_local();
+    double get_elapsed_time_this_run();
 
     DSMC_IO *io;
     DSMCTimer *timer;

@@ -498,3 +498,14 @@ void System::count_reservoir_particles() {
 //    }
 }
 
+long System::get_number_of_atoms_global() {
+    return num_molecules_global*atoms_per_molecule;
+}
+
+long System::get_number_of_atoms_local() {
+    return num_molecules_local*atoms_per_molecule;
+}
+
+double System::get_elapsed_time_this_run() {
+    return t - t0;
+}

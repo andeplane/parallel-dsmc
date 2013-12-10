@@ -14,13 +14,14 @@ program.atoms_per_molecule = 100
 program.world = geometry.binary_output_folder
 geometry.create_cylinders(radius=0.45, num_cylinders_per_dimension = 1)
 
-knudsen_numbers = [0.01]+[i*0.1 for i in range(101)]
+knudsen_numbers = [0.01]+[(i+1)*0.1 for i in range(101)]
 for kn in knudsen_numbers:
     state_folder = "states/%.6f/" % (kn)
     program.reset()
-    program.density = uc.density_from_knudsen_number(knudsen_number=0.01, length=program.Ly)
+    program.density = uc.density_from_knudsen_number(knudsen_number=kn, length=program.Ly)
     num_particles = program.get_number_of_particles(geometry)
-    if(num_particles < 250000 and program.atoms_per_molecule > 1) program.atoms_per_molecule = program.atoms_per_molecule/10
+    if(num_particles < 250000 and program.atoms_per_molecule > 1): program.atoms_per_molecule = program.atoms_per_molecule/10
+    
     program.apply_pressure_gradient_percentage(factor=1.1)
     program.set_number_of_cells(geometry, particles_per_cell=20)
 
