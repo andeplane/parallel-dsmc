@@ -23,6 +23,7 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     velocity = new MeasureVelocityDistributionPoiseuille(system->io->velocity_file, system->myid, system->settings->statistics_interval,system->settings->sampling_bins, count);
     temperature_distribution = new MeasureTemperatureDistribution(system->io->linear_temperature_file, system->myid,system->settings->statistics_interval,system->settings->sampling_bins,count);
     pressure_distribution = new MeasurePressureDistribution(system->io->linear_pressure_file, system->myid,system->settings->statistics_interval,system->settings->sampling_bins,count, temperature_distribution);
+    velocity_distribution = new MeasureVelocityDistribution(system->io->velocity_distribution_file,system->myid,system->settings->statistics_interval,system->settings->sampling_bins, system);
 
     statistical_properties.push_back(energy);
     statistical_properties.push_back(temperature);

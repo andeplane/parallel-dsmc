@@ -26,6 +26,7 @@ public:
 
     FILE *energy_file;
     FILE *velocity_file;
+    FILE *velocity_distribution_file;
     FILE *number_flow_rate_file;
     FILE *volumetric_flow_rate_file;
     FILE *permeability_file;

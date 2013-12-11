@@ -135,3 +135,17 @@ public:
     vector<double> get_average(System *system);
     virtual void resize(int number_of_bins);
 };
+
+class MeasureVelocityDistribution : public StatisticalProperty {
+public:
+    double v_min;
+    double v_max;
+    double std_dev;
+    double bin_size;
+    StatisticalValue<long> value;
+    MeasureVelocityDistribution(FILE *file_, int myid_, int interval_, int bins, System *system);
+    virtual void update(System *system);
+    virtual void finalize(UnitConverter *unit_converter);
+    vector<long> get_average();
+    virtual void resize(int number_of_bins);
+};

@@ -355,7 +355,7 @@ void System::initialize(Settings *settings_, int myid_) {
     mover->initialize(this, surface_collider);
 
     if(myid==0) {
-        double mean_free_path = volume_global/(sqrt(2.0)*M_PI*diam*diam*num_molecules_global*atoms_per_molecule);
+        double mean_free_path = volume_global/(sqrt(2.0)*M_PI*diam*diam*get_number_of_atoms_global());
         int num_active_cells = num_cells_total* porosity_global;
         printf("done.\n\n");
         printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_global / topology->num_processors);

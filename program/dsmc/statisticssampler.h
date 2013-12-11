@@ -31,4 +31,5 @@ public:
     MeasureVelocityDistributionPoiseuille *velocity;
     MeasureTemperatureDistribution *temperature_distribution;
     MeasurePressureDistribution *pressure_distribution;
+    MeasureVelocityDistribution *velocity_distribution;
 };

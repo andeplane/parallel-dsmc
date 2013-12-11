@@ -194,10 +194,11 @@ void MeasurePermeability::update(System *system) {
             if(a != system->settings->flow_direction) area *= system->length[a];
         }
 
-        double average_pressure = pressure->get_current_value();
-        double pressure_in_reservoir_a = average_pressure;
-        double pressure_in_reservoir_b = pressure_in_reservoir_a - mass_density*system->settings->gravity*system->length[system->settings->flow_direction];
-        double permeability = 2*average_pressure*volumetric_flow_rate_value*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
+        // double average_pressure = pressure->get_current_value();
+        // double pressure_in_reservoir_a = average_pressure;
+        // double pressure_in_reservoir_b = pressure_in_reservoir_a - mass_density*system->settings->gravity*system->length[system->settings->flow_direction];
+        // double permeability = 2*average_pressure*volumetric_flow_rate_value*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
+        double permeability = volumetric_flow_rate_value*viscosity_dsmc_units / (area * system->density * system->settings->gravity);
         value.add_value(permeability);
     }
 }
@@ -422,5 +423,56 @@ void MeasurePressureDistribution::finalize(System *system) {
 }
 
 void MeasurePressureDistribution::resize(int number_of_bins) {
+    value.resize(number_of_bins);
+}
+
+MeasureVelocityDistribution::MeasureVelocityDistribution(FILE *file_, int myid_, int interval_, int number_of_bins, System *system) :
+    StatisticalProperty(myid_, interval_, file_)
+{
+    resize(number_of_bins);
+    std_dev = sqrt(system->settings->mass/system->temperature);
+    v_min = -2*std_dev;
+    v_max = 2*std_dev;
+    bin_size = (v_max - v_min) / value.number_of_bins;
+}
+
+void MeasureVelocityDistribution::update(System *system) {
+    if((system->steps % interval) || system->steps == last_sample) return;
+    last_sample = system->steps;
+
+    vector<long> velocity_distribution(value.number_of_bins,0);
+
+    for(unsigned int i=0; i<system->num_molecules_local; i++) {
+        int bin_x = (system->v[3*i + 0] + v_min) / bin_size;
+        int bin_y = (system->v[3*i + 1] + v_min) / bin_size;
+        int bin_z = (system->v[3*i + 2] + v_min) / bin_size;
+
+        if(bin_x < 0 || bin_x > value.number_of_bins-1) continue;
+
+        velocity_distribution[bin_x]++;
+    }
+
+    value.add_value(velocity_distribution);
+    velocity_distribution.clear();
+}
+
+void MeasureVelocityDistribution::finalize(UnitConverter *unit_converter) {
+    vector<long> values_global(value.number_of_bins,0);
+    vector<long> values(value.get_sum());
+    MPI_Reduce(&values[0],&values_global[0],value.number_of_bins,MPI_LONG,MPI_SUM,0,MPI_COMM_WORLD);
+    values.clear();
+
+    if(myid!=0) return;
+
+    for(int i=0; i<value.number_of_bins; i++) {
+        double v = v_min + i*bin_size;
+
+        fprintf(file,"%f %ld\n", unit_converter->velocity_to_SI(v),values_global[i]);
+    }
+
+
+}
+
+void MeasureVelocityDistribution::resize(int number_of_bins) {
     value.resize(number_of_bins);
 }

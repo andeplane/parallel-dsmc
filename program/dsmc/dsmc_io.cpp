@@ -15,6 +15,7 @@ DSMC_IO::DSMC_IO(System *system_) :
     linear_density_file(0),
     num_molecules_file(0),
     pressure_file(0),
+    velocity_distribution_file(0),
     temperature_file(0),
     linear_pressure_file(0),
     linear_temperature_file(0),
@@ -32,6 +33,7 @@ DSMC_IO::DSMC_IO(System *system_) :
     if(system->myid==0) {
         energy_file = fopen("statistics/energy.txt","w");
         velocity_file = fopen("statistics/velocity.txt","w");
+        velocity_distribution_file = fopen("statistics/velocity_distribution.txt","w");
         number_flow_rate_file = fopen("statistics/number_flow_rate.txt","w");
         permeability_file = fopen("statistics/permeability.txt","w");
         density_file = fopen("statistics/density.txt","w");
@@ -169,6 +171,7 @@ void DSMC_IO::finalize() {
     fclose(permeability_file);
     fclose(num_molecules_file);
     fclose(temperature_file);
+    fclose(velocity_distribution_file);
     fclose(linear_density_file);
     fclose(density_file);
     fclose(pressure_file);
