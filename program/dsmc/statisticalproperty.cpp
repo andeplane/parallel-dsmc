@@ -198,7 +198,7 @@ void MeasurePermeability::update(System *system) {
         // double pressure_in_reservoir_a = average_pressure;
         // double pressure_in_reservoir_b = pressure_in_reservoir_a - mass_density*system->settings->gravity*system->length[system->settings->flow_direction];
         // double permeability = 2*average_pressure*volumetric_flow_rate_value*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
-        double permeability = volumetric_flow_rate_value*viscosity_dsmc_units / (area * system->density * system->settings->gravity);
+        double permeability = volumetric_flow_rate_value*viscosity_dsmc_units / (area * system->settings->mass * system->density * system->settings->gravity);
         value.add_value(permeability);
     }
 }
