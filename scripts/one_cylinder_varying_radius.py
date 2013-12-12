@@ -8,18 +8,17 @@ dsmc = program.compile(skip_compile=True, name="main")
 uc = DSMC_unit_converter(program)
 
 geometry = DSMC_geometry(program)
-geometry.binary_output_folder = "../worlds/one_cylinder/"
+geometry.binary_output_folder = "../worlds/one_cylinder_varying_radius/"
 program.mkdir(geometry.binary_output_folder)
 program.atoms_per_molecule = 100
 program.world = geometry.binary_output_folder
-radius = 0.45
-geometry.create_cylinders(radius=radius, num_cylinders_per_dimension = 1)
 
-knudsen_numbers = [0.001, 0.01]+[(i+1)*0.1 for i in range(101)]
-for kn in knudsen_numbers:
-    state_folder = "states/%.6f/" % (kn)
+radii = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45]
+for radius in radii:
+    geometry.create_cylinders(radius=radius, num_cylinders_per_dimension = 1)
+    state_folder = "states/%f/" % (radius)
     program.reset()
-    program.density = uc.density_from_knudsen_number(knudsen_number=kn, length=radius)
+    program.density = uc.density_from_knudsen_number(knudsen_number=1.0, length=radius)
     num_particles = program.get_number_of_particles(geometry)
     if(num_particles < 250000 and program.atoms_per_molecule > 1): program.atoms_per_molecule = program.atoms_per_molecule/10
     
