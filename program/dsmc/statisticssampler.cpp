@@ -34,6 +34,7 @@ StatisticsSampler::StatisticsSampler(System *system_) {
     statistical_properties.push_back(count);
     statistical_properties.push_back(velocity);
     statistical_properties.push_back(temperature_distribution);
+    statistical_properties.push_back(velocity_distribution);
     statistical_properties.push_back(pressure_distribution);
 }
 

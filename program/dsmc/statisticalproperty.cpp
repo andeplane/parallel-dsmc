@@ -91,7 +91,7 @@ void MeasureNumberFlowRate::update(System *system) {
     double flux_local = 0;
     double flux_global = 0;
 
-    flux_local = system->mover->count_periodic[system->settings->flow_direction] / system->get_elapsed_time_this_run();
+    flux_local = system->atoms_per_molecule*system->mover->count_periodic[system->settings->flow_direction] / system->get_elapsed_time_this_run();
     MPI_Reduce(&flux_local, &flux_global, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if(myid==0) {
@@ -124,8 +124,8 @@ void MeasureVolumetricFlowRate::update(System *system) {
 
     if(myid==0) {
         // Global values are already calculated in flux
-        double volume_per_particle = system->volume_global / system->num_molecules_global;
-        double volumetric_flow_rate = number_flow_rate->get_current_value() * volume_per_particle;
+        double volume_per_atom = 1.0/system->density;
+        double volumetric_flow_rate = number_flow_rate->get_current_value() * volume_per_atom;
 
         fprintf(file, "%f %E\n",system->t_in_nano_seconds(), volumetric_flow_rate);
         value.add_value(volumetric_flow_rate);
@@ -198,7 +198,10 @@ void MeasurePermeability::update(System *system) {
         // double pressure_in_reservoir_a = average_pressure;
         // double pressure_in_reservoir_b = pressure_in_reservoir_a - mass_density*system->settings->gravity*system->length[system->settings->flow_direction];
         // double permeability = 2*average_pressure*volumetric_flow_rate_value*L*viscosity_dsmc_units / (area * (pressure_in_reservoir_a*pressure_in_reservoir_a - pressure_in_reservoir_b*pressure_in_reservoir_b));
-        double permeability = volumetric_flow_rate_value*viscosity_dsmc_units / (area * system->settings->mass * system->density * system->settings->gravity);
+        double temperature = pressure->temperature->get_current_value();
+        double viscosity = 5.0/(16*system->settings->diam*system->settings->diam)*sqrt(system->settings->mass*temperature/M_PI);
+
+        double permeability = volumetric_flow_rate_value*viscosity / (area * system->settings->mass * system->density * system->settings->gravity);
         value.add_value(permeability);
     }
 }
@@ -430,9 +433,9 @@ MeasureVelocityDistribution::MeasureVelocityDistribution(FILE *file_, int myid_,
     StatisticalProperty(myid_, interval_, file_)
 {
     resize(number_of_bins);
-    std_dev = sqrt(system->settings->mass/system->temperature);
-    v_min = -2*std_dev;
-    v_max = 2*std_dev;
+    std_dev = sqrt(system->temperature/system->settings->mass);
+    v_min = -4*std_dev;
+    v_max = 4*std_dev;
     bin_size = (v_max - v_min) / value.number_of_bins;
 }
 
@@ -443,9 +446,9 @@ void MeasureVelocityDistribution::update(System *system) {
     vector<long> velocity_distribution(value.number_of_bins,0);
 
     for(unsigned int i=0; i<system->num_molecules_local; i++) {
-        int bin_x = (system->v[3*i + 0] + v_min) / bin_size;
-        int bin_y = (system->v[3*i + 1] + v_min) / bin_size;
-        int bin_z = (system->v[3*i + 2] + v_min) / bin_size;
+        int bin_x = (system->v[3*i + 0] - v_min) / bin_size;
+        int bin_y = (system->v[3*i + 1] - v_min) / bin_size;
+        int bin_z = (system->v[3*i + 2] - v_min) / bin_size;
 
         if(bin_x < 0 || bin_x > value.number_of_bins-1) continue;
 
@@ -465,7 +468,7 @@ void MeasureVelocityDistribution::finalize(UnitConverter *unit_converter) {
     if(myid!=0) return;
 
     for(int i=0; i<value.number_of_bins; i++) {
-        double v = v_min + i*bin_size;
+        double v = v_min + (i+0.5)*bin_size;
 
         fprintf(file,"%f %ld\n", unit_converter->velocity_to_SI(v),values_global[i]);
     }

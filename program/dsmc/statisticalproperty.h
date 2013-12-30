@@ -67,9 +67,8 @@ public:
 };
 
 class MeasurePressure : public StatisticalProperty {
-protected:
-    MeasureTemperature *temperature;
 public:
+    MeasureTemperature *temperature;
     StatisticalValue<double> value;
     MeasurePressure(FILE *file_, int myid_, int interval_, MeasureTemperature *temperature_);
     virtual void update(System *system);

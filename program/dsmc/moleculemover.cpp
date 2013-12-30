@@ -125,3 +125,50 @@ void MoleculeMover::move_molecule(int &molecule_index, double dt, Random *rnd, i
     }
 }
 
+void MoleculeMover::move_molecule_cylinder(int &molecule_index, double dt, Random *rnd, int depth) {
+    double tau = dt;
+    data_type *r = &system->r[3*molecule_index];
+    data_type *v = &system->v[3*molecule_index];
+    double x0 = r[0] - system->length[0]/2.0;
+    double y0 = r[1] - system->length[1]/2.0;
+
+    do_move(r,v,tau);
+
+    double dx = r[0] - system->length[0]/2.0;
+    double dy = r[1] - system->length[1]/2.0;
+    double dr2 = dx*dx + dy*dy;
+    if(dr2 > CYLINDER_RADIUS_SQUARED) {
+        double a = v[0]*v[0] + v[1]*v[1];
+        double b = 2*x0*v[0] + 2*y0*v[1];
+        double c = x0*x0 + y0*y0 - CYLINDER_RADIUS_SQUARED;
+        double t0 = (-b + sqrt(b*b - 4*a*c)) / (2*a);
+        double t1 = (-b - sqrt(b*b - 4*a*c)) / (2*a);
+        double correct_time = max(t0,t1);
+        double time_to_move_back = tau - correct_time;
+        do_move(r,v,-time_to_move_back);
+        float *normals = new float[3];
+        float *tangents1 = new float[3];
+        float *tangents2 = new float[3];
+
+        normals[0] = -(r[0] - system->length[0]/2.0);
+        normals[1] = -(r[1] - system->length[1]/2.0);
+        normals[2] = 0;
+        double norm = sqrt(normals[0]*normals[0] + normals[1]*normals[1]);
+        normals[0] /= norm;
+        normals[1] /= norm;
+
+        tangents1[0] = 0; tangents1[1] = 0; tangents1[2] = 1;
+
+        tangents2[0] = tangents1[1]*normals[2] - tangents1[2]*normals[1];
+        tangents2[1] = tangents1[2]*normals[0] - tangents1[0]*normals[2];
+        tangents2[2] = tangents1[0]*normals[1] - tangents1[1]*normals[0];
+
+        // Normalize
+        norm = sqrt(tangents2[0]*tangents2[0] + tangents2[1]*tangents2[1] + tangents2[2]*tangents2[2]);
+
+        tangents2[0] /= norm; tangents2[1] /= norm; tangents2[2] /= norm;
+
+        surface_collider->collide(rnd, v, normals, tangents1, tangents2, false);
+        move_molecule_cylinder(molecule_index,time_to_move_back,rnd,depth+1);
+    }
+}

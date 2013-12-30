@@ -411,10 +411,14 @@ void System::setup_molecules() {
     }
 
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
+    double vel = 0.25;
     for(int n=0; n<num_molecules_local; n++) {
-        v.at(3*n + 0) = rnd->next_gauss()*sqrt_temp_over_mass;
-        v.at(3*n + 1) = rnd->next_gauss()*sqrt_temp_over_mass;
-        v.at(3*n + 2) = rnd->next_gauss()*sqrt_temp_over_mass;
+//        v.at(3*n + 0) = rnd->next_gauss()*sqrt_temp_over_mass;
+//        v.at(3*n + 1) = rnd->next_gauss()*sqrt_temp_over_mass;
+//        v.at(3*n + 2) = rnd->next_gauss()*sqrt_temp_over_mass;
+        v.at(3*n + 0) = vel*(1 - 2*(n%2));
+        v.at(3*n + 1) = vel*(1 - 2*( (n+1)%2));
+        v.at(3*n + 2) = vel*(1 - 2*(n%2));
         find_position(n);
         Cell *cell = cell_that_should_contain_molecule(n);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
