@@ -209,6 +209,8 @@ class DSMC_geometry:
 		return './geometry'
 
 	def run(self):
+		return
+
 		if not os.path.isfile("./geometry"):
 			print "Executable ./geometry is not compiled, aborting!"
 			exit()
