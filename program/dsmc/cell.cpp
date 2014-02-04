@@ -55,13 +55,35 @@ void Cell::collide_molecules(data_type *v0, data_type *v1, const data_type &v_re
     data_type vcmy  = 0.5*(v0[1] + v1[1]);
     data_type vcmz  = 0.5*(v0[2] + v1[2]);
 
-    data_type cos_th = 1.0 - 2.0*rnd->next_double();      // Cosine and sine of
-    data_type sin_th = sqrt(1.0 - cos_th*cos_th);        // collision angle theta
-    data_type phi = 2*M_PI*rnd->next_double();
+//    data_type cos_th = 1.0 - 2.0*rnd->next_double();      // Cosine and sine of
+//    data_type sin_th = sqrt(1.0 - cos_th*cos_th);        // collision angle theta
+//    data_type phi = 2*M_PI*rnd->next_double();
 
-    data_type vrelx = v_rel*cos_th;                   // Compute post-collision relative velocity
-    data_type vrely = v_rel*sin_th*cos(phi);
-    data_type vrelz = v_rel*sin_th*sin(phi);
+//    data_type vrelx = v_rel*cos_th;                   // Compute post-collision relative velocity
+//    data_type vrely = v_rel*sin_th*cos(phi);
+//    data_type vrelz = v_rel*sin_th*sin(phi);
+
+    data_type vrelx, vrely, vrelz;
+
+    bool did_find_awesome_numbers = false;
+    double r1, r2;
+    while(!did_find_awesome_numbers) {
+        r1 = 1 - 2*rnd->next_double();
+        r2 = 1 - 2*rnd->next_double();
+        double r_squared_thingy = r1*r1 + r2*r2;
+        if(r_squared_thingy < 1) {
+            did_find_awesome_numbers = true;
+            double square_root_thingy = sqrt(1 - r_squared_thingy);
+
+            vrelx = 2*r1*square_root_thingy;
+            vrely = 2*r2*square_root_thingy;
+            vrelz = 1 - 2*r_squared_thingy;
+        }
+    }
+
+    vrelx *= v_rel;
+    vrely *= v_rel;
+    vrelz *= v_rel;
 
     v0[0] = vcmx + 0.5*vrelx;
     v0[1] = vcmy + 0.5*vrely;
@@ -73,7 +95,6 @@ void Cell::collide_molecules(data_type *v0, data_type *v1, const data_type &v_re
 }
 
 int Cell::collide(Random *rnd) {
-
     //* Skip cells with only one particle
 
     if( num_molecules < 2 ) return 0;  // Skip to the next cell
