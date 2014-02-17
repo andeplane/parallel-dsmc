@@ -756,23 +756,23 @@ template <class T> void CIsoSurface<T>::CalculateNormals()
 		CVector n2 = CVector(m_pvec3dNormals[id1][0], m_pvec3dNormals[id1][1], m_pvec3dNormals[id1][2]);
 		CVector n3 = CVector(m_pvec3dNormals[id2][0], m_pvec3dNormals[id2][1], m_pvec3dNormals[id2][2]);
 
-		if(normal.dot(n1) >= 0) {
-			m_pvec3dNormals[id0][0] += normal.x;
-			m_pvec3dNormals[id0][1] += normal.y;
-			m_pvec3dNormals[id0][2] += normal.z;
-		}
+        if(normal.dot(n1) >= 0) {
+            m_pvec3dNormals[id0][0] = normal.x;
+            m_pvec3dNormals[id0][1] = normal.y;
+            m_pvec3dNormals[id0][2] = normal.z;
+        }
 
-		if(normal.dot(n2) >= 0) {
-			m_pvec3dNormals[id1][0] += normal.x;
-			m_pvec3dNormals[id1][1] += normal.y;
-			m_pvec3dNormals[id1][2] += normal.z;
-		}
+        if(normal.dot(n2) >= 0) {
+            m_pvec3dNormals[id1][0] = normal.x;
+            m_pvec3dNormals[id1][1] = normal.y;
+            m_pvec3dNormals[id1][2] = normal.z;
+        }
 
-		if(normal.dot(n3) >= 0) {
-			m_pvec3dNormals[id2][0] += normal.x;
-			m_pvec3dNormals[id2][1] += normal.y;
-			m_pvec3dNormals[id2][2] += normal.z;
-		}
+        if(normal.dot(n3) >= 0) {
+            m_pvec3dNormals[id2][0] = normal.x;
+            m_pvec3dNormals[id2][1] = normal.y;
+            m_pvec3dNormals[id2][2] = normal.z;
+        }
 	}
 
 	// Normalize normals.

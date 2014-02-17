@@ -650,7 +650,8 @@ void ComplexGeometry::create_poiseuille(CIniFile &ini) {
             for(int k=0;k<nz;k++) {
                 int index = i*ny*nz + j*nz + k;
 
-                if(j == 0 || j == ny-1) {
+                // if(j == 0 || j == ny-1) {
+                if(j == ny-1) {
                     vertices_unsigned_char[index] = 1;
                     vertices[index] = 1;
                 } else {

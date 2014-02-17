@@ -23,7 +23,7 @@ void Mesh::verify_initialized() {
     if(!is_initialized) throw "Mesh not initialized";
 }
 
-#ifdef OPENGL
+// #ifdef OPENGL
 void Mesh::render_triangles() {
     verify_initialized();
 	glBegin(GL_TRIANGLES);
@@ -78,7 +78,7 @@ void Mesh::disable_blend() {
 	glDisable(GL_BLEND);
 }
 
-#endif
+// #endif
 
 void Mesh::generate_smooth_normals(map<string, vector<int> > &vertex_map ) {
     verify_initialized();

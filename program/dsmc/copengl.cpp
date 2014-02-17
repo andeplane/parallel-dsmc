@@ -109,7 +109,7 @@ void COpenGL::set_standard_light() {
     glLightfv(GL_LIGHT0, GL_POSITION, position);
     glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
-    glColor4f(1.0, 1.0, 0.0, 1.0);
+    glColor4f(1.0, 1.0, 1.0, 1.0);
 /*
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, front_mat_shininess);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, front_mat_specular);

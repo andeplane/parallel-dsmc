@@ -30,6 +30,7 @@ public:
     double v_absolute_value_average;
     vector<float> average_velocity;
     CTexture(COpenGL *ogl);
+    void load_png(string filename, string name);
     void create_sphere1(string name, int w);
     void load_texture(CBitMap* bmp, COpenGLTexture* texture, bool has_alpha);
     void render_billboards(vector<double> &positions, vector<double> & velocities, vector<int> &steps_since_collision, int num_particles, float position_scale);

@@ -70,7 +70,8 @@ int main(int args, char* argv[]) {
     c.build_vbo();
 
     CTexture sphere(v.opengl);
-    sphere.create_sphere1("balle",512);
+    // sphere.create_sphere1("balle",512);
+    sphere.load_png("sphere2.png","balle");
 
     Solver *solver = new Solver(num_processors, myid);
     TestShader shader;
@@ -87,10 +88,11 @@ int main(int args, char* argv[]) {
 
     while(true) {
         v.render_begin();
-        // CVector lightpos = CVector(10 + sin(omega*t),10 + cos(omega*t),10);
-        CVector lightpos = CVector(10, 10, 10);
+        CVector balle = CVector(sin(omega*t),cos(omega*t),1.0);
+        CVector lightpos = v.opengl->camera->position;
         shader.lightpos = lightpos;
-        shader.targetdir = v.opengl->camera->target;
+        // shader.targetdir = (v.opengl->camera->target - v.opengl->camera->position).normalize();
+        shader.targetdir = v.opengl->camera->target.normalize();
 
         glBegin(GL_POINTS);
         glVertex3f(lightpos.x, lightpos.y, lightpos.z);

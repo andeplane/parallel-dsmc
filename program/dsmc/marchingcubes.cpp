@@ -38,9 +38,9 @@ void MarchingCubes::create_marching_cubes_from_array(const T* scalar_field, CVec
     Random *rnd = new Random(-time(NULL), 0, 0);
 
 
-    float r = 89/255.0;
-    float g = 193/255.0;
-    float b = 235/255.0;
+    float r = 111/255.0;
+    float g = 133/255.0;
+    float b = 144/255.0;
 
 //    float r = rnd->next_double();
 //    float g = rnd->next_double();
@@ -61,17 +61,39 @@ void MarchingCubes::create_marching_cubes_from_array(const T* scalar_field, CVec
         VECTOR3D &norm2 = surf.m_pvec3dNormals[p2_index];
         VECTOR3D &norm3 = surf.m_pvec3dNormals[p3_index];
 
+//        CVector n1 = (p2 - p1).cross(p3 - p1).normalize();
+//        CVector n2 = (p2 - p1).cross(p3 - p1).normalize();
+//        CVector n3 = (p2 - p1).cross(p3 - p1).normalize();
+
         CVector n1(norm1[0], norm1[1], norm1[2]);
         CVector n2(norm2[0], norm2[1], norm2[2]);
         CVector n3(norm3[0], norm3[1], norm3[2]);
-//        int i = p1.x;
-//        int j = p1.z;
-//        int k = p1.y;
-//        int index = i + j*cg.nx + k*cg.nx*cg.ny;
-//        float relative_value = 0.5 + 0.5*cg.vertices_float[index]/cg.max_value;
 
-        // CVector color(r+0.7*relative_value, g+0.8*relative_value, b+0.9*relative_value);
         CVector color(r,g,b);
+
+//        n1 = n1*(-1);
+//        n2 = n2*(-1);
+//        n3 = n3*(-1);
+
+        add_vertex(p1);
+        add_normal(n1);
+        add_color(color, 1.0);
+
+        add_vertex(p2);
+        add_normal(n2);
+        add_color(color, 1.0);
+
+        add_vertex(p3);
+        add_normal(n3);
+        add_color(color, 1.0);
+        continue;
+        n1 = n1*(-1);
+        n2 = n2*(-1);
+        n3 = n3*(-1);
+
+        p1 = p1+n1*0.01;
+        p2 = p2+n2*0.01;
+        p3 = p3+n3*0.01;
 
         add_vertex(p1);
         add_normal(n1);
