@@ -14,9 +14,6 @@ class DSMC_geometry:
 		self.number_of_neighbor_averages = 1
 		self.save_file = True
 		self.binary_output_folder = "../worlds/test/"
-		self.num_processors_x = dsmc.nx
-		self.num_processors_y = dsmc.ny
-		self.num_processors_z = dsmc.nz
 		self.create_border = False
 
 		# Sphere settings
@@ -162,9 +159,9 @@ class DSMC_geometry:
 			line = line.replace('__save_file__',str(self.save_file).lower() )
 			line = line.replace('__prevent_overlap__',str(self.prevent_overlap).lower() )
 			line = line.replace('__binary_output_folder__',str(self.binary_output_folder) )
-			line = line.replace('__num_processors_x__',str(self.num_processors_x) )
-			line = line.replace('__num_processors_y__',str(self.num_processors_y) )
-			line = line.replace('__num_processors_z__',str(self.num_processors_z) )
+			line = line.replace('__num_processors_x__',str(self.dsmc.nx) )
+			line = line.replace('__num_processors_y__',str(self.dsmc.ny) )
+			line = line.replace('__num_processors_z__',str(self.dsmc.nz) )
 			line = line.replace('__radius__', str(self.radius))
 			line = line.replace('__spheres_num__', str(self.spheres_num))
 			line = line.replace('__amplitude__',str(self.amplitude) )
@@ -210,8 +207,6 @@ class DSMC_geometry:
 		return './geometry'
 
 	def run(self):
-		return
-
 		if not os.path.isfile("./geometry"):
 			print "Executable ./geometry is not compiled, aborting!"
 			exit()
