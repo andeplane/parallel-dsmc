@@ -413,7 +413,6 @@ void System::setup_molecules() {
     double sqrt_temp_over_mass = sqrt(temperature/settings->mass);
     double vel = 0.25;
     for(int n=0; n<num_molecules_local; n++) {
-        cout << n << endl;
         v.at(3*n + 0) = rnd->next_gauss()*sqrt_temp_over_mass;
         v.at(3*n + 1) = rnd->next_gauss()*sqrt_temp_over_mass;
         v.at(3*n + 2) = rnd->next_gauss()*sqrt_temp_over_mass;
