@@ -300,23 +300,35 @@ class DSMC:
 		number_of_cells = num_particles / particles_per_cell * porosity
 		number_of_cells_per_dimension = int(number_of_cells**(1.0/3.0)) # Assuming cubi system
 		
+		self.cells_x = max(number_of_cells_per_dimension,1)
+		self.cells_y = max(number_of_cells_per_dimension,1)
+		self.cells_z = max(number_of_cells_per_dimension,1)
+
 		self.cells_x = self.cells_x - self.cells_x%self.nx
 		self.cells_y = self.cells_y - self.cells_y%self.ny
 		self.cells_z = self.cells_z - self.cells_z%self.nz
 
-		self.cells_x = max(number_of_cells_per_dimension,1)
-		self.cells_y = max(number_of_cells_per_dimension,1)
-		self.cells_z = max(number_of_cells_per_dimension,1)
-		
 		while(geometry.num_voxels_x%self.cells_x>0): 
 			self.cells_x += self.nx
 			self.cells_x = self.cells_x - self.cells_x%self.nx
+			if(self.cells_x > geometry.num_voxels_x): 
+				print "Number of cells (%d) exceeds number of voxels (%d), choosing cells_x=num_voxels_x=%d!" % (self.cells_x, geometry.num_voxels_x, geometry.num_voxels_x)
+				self.cells_x = geometry.num_voxels_x
+				break
 		while(geometry.num_voxels_y%self.cells_y>0): 
 			self.cells_y += self.ny
 			self.cells_y = self.cells_y - self.cells_y%self.ny
+			if(self.cells_y > geometry.num_voxels_y): 
+				print "Number of cells (%d) exceeds number of voxels (%d), choosing cells_y=num_voxels_y=%d!" % (self.cells_y, geometry.num_voxels_y, geometry.num_voxels_y)
+				self.cells_y = geometry.num_voxels_y
+				break
 		while(geometry.num_voxels_z%self.cells_z>0): 
 			self.cells_z += self.nz
 			self.cells_z = self.cells_z - self.cells_z%self.nz
+			if(self.cells_z > geometry.num_voxels_z): 
+				print "Number of cells (%d) exceeds number of voxels (%d), choosing cells_x=num_voxels_x=%d!" % (self.cells_z, geometry.num_voxels_z, geometry.num_voxels_z)
+				self.cells_z = geometry.num_voxels_z
+				break
 
 		print "Cells: (%d, %d, %d)" % (self.cells_x, self.cells_y, self.cells_z)
 		num_cells = self.cells_x*self.cells_y*self.cells_z
