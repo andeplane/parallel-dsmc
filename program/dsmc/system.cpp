@@ -323,8 +323,8 @@ void System::initialize(Settings *settings_, int myid_) {
     num_molecules_local = density*volume/atoms_per_molecule;
 
     if(myid==0) {
-        int num_molecules_global_calculated = density*volume_global/atoms_per_molecule;
-        int num_molecules_per_cpu_calculated = num_molecules_global_calculated/topology->num_processors;
+        unsigned long num_molecules_global_calculated = density*volume_global/atoms_per_molecule;
+        unsigned long num_molecules_per_cpu_calculated = num_molecules_global_calculated/topology->num_processors;
 
         cout << "Creating/loading " << num_molecules_global_calculated << " molecules (" << num_molecules_per_cpu_calculated << " per cpu)" << endl;
 
