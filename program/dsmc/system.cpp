@@ -369,7 +369,10 @@ void System::initialize(Settings *settings_, int myid_) {
         printf("Mean free path: %.4f \n",mean_free_path);
         printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
         printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-        printf("%ld molecules per active cell\n",num_molecules_global/active_cells.size());
+        double estimated_active_cells = num_cells_total*porosity;
+        double estimated_particles_per_active_cells = num_molecules_global/max(estimated_active_cells, 1.0);
+
+        printf("%.0f molecules per active cell\n", estimated_particles_per_active_cells);
 
         printf("dt = %f\n\n",dt);
         cout << endl;
