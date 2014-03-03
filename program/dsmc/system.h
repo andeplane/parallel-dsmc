@@ -134,6 +134,10 @@ inline int System::cell_index_from_ijk(const int &i, const int &j, const int &k)
 inline Cell *System::cell_that_should_contain_molecule(const int &molecule_index) {
     int global_cell_index = cell_index_from_position(molecule_index);
     int local_cell_index = cell_index_map.at(global_cell_index);
+    if(local_cell_index == -1) {
+        cerr << "Tried to put a particle in a cell that has no free volume, aborting!" << endl;
+        exit(1);
+    }
     return active_cells.at(local_cell_index);
 }
 

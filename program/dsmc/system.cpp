@@ -22,6 +22,7 @@
 void System::step() {
     for(int n=0; n<num_molecules_local; n++) steps_since_collision[n]++;
     steps += 1;
+//    cout << "Step: " << steps << endl;
     t += dt;
     string step_state = " accelerate()";
 
@@ -163,9 +164,10 @@ void System::add_molecule_to_cell(Cell *cell, const int &molecule_index) {
 void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_molecules) {
     for(int i=0; i<num_new_molecules; i++) {
         int node_id = topology->index_from_position(&data.at(6*i+0));
+
         if(node_id != myid) {
             if(node_id < 0 || node_id >= topology->num_processors) throw string("Moved new molecule to a node that doesn't exists");
-            node_id = topology->facet_id_to_node_id_list[topology->node_id_to_facet_id_list[node_id]];
+            node_id = topology->facet_id_to_node_id_list.at(topology->node_id_to_facet_id_list.at(node_id));
             node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 0) = data.at(6*i+0);
             node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 1) = data.at(6*i+1);
             node_molecule_data.at(node_id).at(6*node_num_new_molecules.at(node_id) + 2) = data.at(6*i+2);
@@ -175,7 +177,6 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
             node_num_new_molecules.at(node_id)++;
             continue;
         }
-
         int n = num_molecules_local;
         r.at(3*n+0) = data.at(6*i+0);
         r.at(3*n+1) = data.at(6*i+1);
@@ -183,6 +184,7 @@ void System::add_molecules_from_mpi(vector<data_type> &data, const int &num_new_
         v.at(3*n+0) = data.at(6*i+3);
         v.at(3*n+1) = data.at(6*i+4);
         v.at(3*n+2) = data.at(6*i+5);
+
         Cell *cell = cell_that_should_contain_molecule(n);
         cell->add_molecule(n,molecule_index_in_cell,molecule_cell_index);
         num_molecules_local++;
@@ -356,7 +358,6 @@ void System::initialize(Settings *settings_, int myid_) {
 
     if(myid==0) {
         double mean_free_path = volume_global/(sqrt(2.0)*M_PI*diam*diam*get_number_of_atoms_global());
-        int num_active_cells = num_cells_total* porosity_global;
         printf("done.\n\n");
         printf("%ld molecules (%ld per node)\n",num_molecules_global, num_molecules_global / topology->num_processors);
         printf("%d cells\n",num_cells_total);
@@ -368,7 +369,7 @@ void System::initialize(Settings *settings_, int myid_) {
         printf("Mean free path: %.4f \n",mean_free_path);
         printf("Mean free paths per cell: %.2f \n",min( min(length[0]/cells_x/mean_free_path,length[1]/cells_y/mean_free_path), length[2]/cells_z/mean_free_path));
         printf("%ld atoms per molecule\n",(unsigned long)atoms_per_molecule);
-        printf("%ld molecules per active cell\n",num_molecules_global/num_active_cells);
+        printf("%ld molecules per active cell\n",num_molecules_global/active_cells.size());
 
         printf("dt = %f\n\n",dt);
         cout << endl;

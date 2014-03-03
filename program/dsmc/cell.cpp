@@ -63,10 +63,6 @@ void Cell::collide_molecules(data_type *v0, data_type *v1, const data_type &v_re
     data_type vrely = v_rel*sin_th*cos(phi);
     data_type vrelz = v_rel*sin_th*sin(phi);
 
-    vrelx *= v_rel;
-    vrely *= v_rel;
-    vrelz *= v_rel;
-
     v0[0] = vcmx + 0.5*vrelx;
     v0[1] = vcmy + 0.5*vrely;
     v0[2] = vcmz + 0.5*vrelz;
