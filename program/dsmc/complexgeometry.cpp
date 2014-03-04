@@ -425,8 +425,6 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
     int ny_half = ny/2;
     int nz_half = nz/2;
 
-    unsigned long filled_vertices = 0;
-
     for(int i=0; i<num_vertices; i++) {
         vertices_unsigned_char[i] = !inverted;
         vertices[i] = !inverted;
@@ -436,6 +434,13 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
 
     Random *rnd = new Random(seed,0,0);
     bool is_finished = false;
+
+    ProgressBar *progress_bar;
+    if(spheres_type == 0) progress_bar = new ProgressBar(spheres_num, "Creating spheres");
+    else {
+        if(inverted) progress_bar = new ProgressBar(1000*(1-wanted_porosity), "Creating spheres");
+        else progress_bar = new ProgressBar(1000*wanted_porosity, "Creating spheres");
+    }
 
     while(!is_finished) {
         double x0 = rnd->next_double()*0.5;
@@ -491,11 +496,14 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
 
         if(spheres_type == 0) {
             is_finished = sphere_positions.size() >= spheres_num;
+            progress_bar->update(sphere_positions.size());
         } else {
             double porosity = (double)empty_voxels/(nx_half*ny_half*nz_half);
 
-            cout << "Now we have a porosity " << porosity << " whereas our goal is " << wanted_porosity << endl;
+            // cout << "Now we have a porosity " << porosity << " whereas our goal is " << wanted_porosity << endl;
             is_finished = inverted ? (porosity < wanted_porosity) : (porosity > wanted_porosity);
+            if(inverted) progress_bar->update(1000*(1-porosity));
+            else progress_bar->update(1000*porosity);
         }
     }
 
