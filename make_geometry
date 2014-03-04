@@ -18,7 +18,7 @@ FFLAGS = -framework GLUT -lglew -lGLFW -framework OpenGL -lmpi_cxx -lmpi
 
 PROJECT = geometry
 
-_obj 	= geometry.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o diamondsquare.o
+_obj 	= geometry.o mesh.o cvector.o cmath.o progressbar.o marchingcubes.o complexgeometry.o perlin.o random.o copengl.o camera.o cutil.o visualizer.o cisosurface.o cbitmap.o ctexture.o oglshader.o cshaders.o testshader.o diamondsquare.o lodepng.o
 
 obj_     = $(patsubst %,$(SOURCEDIR)/%, $(_obj))
 

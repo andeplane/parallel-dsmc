@@ -21,6 +21,8 @@ class DSMC_geometry:
 		self.inverted = True
 		self.spheres_num = 10
 		self.prevent_overlap = False
+		self.wanted_porosity = 0.5
+		self.spheres_type = 0
 
 		# Cylinder settings
 		self.num_cylinders_per_dimension = 1
@@ -77,9 +79,11 @@ class DSMC_geometry:
 		self.create_config_file()
 		self.run()
 
-	def create_packed_spheres(self, radius = 0.1, spheres_num = 10, prevent_overlap=False, inverted=True):
+	def create_packed_spheres(self, radius = 0.1, spheres_num = 10, prevent_overlap=False, inverted=True, spheres_type = 0, wanted_porosity = 0.5):
 		# Creates many randomly placed spheres that will act as the walls if inverted=True
 		self.inverted = inverted
+		self.spheres_type = spheres_type
+		self.wanted_porosity = wanted_porosity
 		self.radius = radius
 		self.prevent_overlap = prevent_overlap
 		self.spheres_num = spheres_num
@@ -164,6 +168,8 @@ class DSMC_geometry:
 			line = line.replace('__num_processors_z__',str(self.dsmc.nz) )
 			line = line.replace('__radius__', str(self.radius))
 			line = line.replace('__spheres_num__', str(self.spheres_num))
+			line = line.replace('__spheres_type__', str(self.spheres_type))
+			line = line.replace('__wanted_porosity__', str(self.wanted_porosity))
 			line = line.replace('__amplitude__',str(self.amplitude) )
 			line = line.replace('__displacement__',str(self.displacement) )
 			line = line.replace('__sinus_mode__', str(self.sinus_mode))

@@ -174,7 +174,7 @@ void ComplexGeometry::calculate_global_porosity() {
     int sum_wall_voxels = 0;
     for(int i=0; i<num_vertices; i++) sum_wall_voxels += vertices_unsigned_char[i] == voxel_type_empty;
 
-    global_porosity = (float)sum_wall_voxels / (nx*ny*nz);
+    global_porosity = (double)sum_wall_voxels / num_vertices;
 }
 
 void ComplexGeometry::load_from_binary_file_without_normals_and_tangents(string filename, bool do_calculate_normals_tangents_and_inner_points, int number_of_neighbor_averages) {
@@ -402,6 +402,8 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
     int ny_ = ini.getint("num_voxels_y");
     int nz_ = ini.getint("num_voxels_z");
     int spheres_num = ini.getint("spheres_num");
+    int spheres_type = ini.getint("spheres_type");
+    double wanted_porosity = ini.getdouble("wanted_porosity");
 
     int seed = -abs(ini.getint("seed"));
     double radius = ini.getdouble("radius");
@@ -411,13 +413,19 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
     double radius_squared = radius*radius;
 
     allocate(nx_, ny_, nz_);
-    cout << "Creating " << spheres_num << " randomly placed spheres with radius=" << radius << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    if(spheres_type == 0) {
+        cout << "Creating " << spheres_num << " randomly placed spheres with radius=" << radius << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    } else {
+        cout << "Creating randomly placed spheres with radius=" << radius << " giving porosity " << wanted_porosity << " on num_voxels=(" << nx << ", " << ny << ", " << nz << ")." << endl;
+    }
     float voxel_size_x = 1.0 / nx;
     float voxel_size_y = 1.0 / ny;
     float voxel_size_z = 1.0 / nz;
     int nx_half = nx/2;
     int ny_half = ny/2;
     int nz_half = nz/2;
+
+    unsigned long filled_vertices = 0;
 
     for(int i=0; i<num_vertices; i++) {
         vertices_unsigned_char[i] = !inverted;
@@ -427,7 +435,9 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
     vector<vector<double> > sphere_positions;
 
     Random *rnd = new Random(seed,0,0);
-    for(int sphere=0; sphere < spheres_num; sphere++) {
+    bool is_finished = false;
+
+    while(!is_finished) {
         double x0 = rnd->next_double()*0.5;
         double y0 = rnd->next_double()*0.5;
         double z0 = rnd->next_double()*0.5;
@@ -457,7 +467,7 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
         vector<double> pos(3,0);
         pos[0] = x0; pos[1] = y0; pos[2] = z0;
         sphere_positions.push_back(pos);
-
+        int empty_voxels = 0;
         for(int i=0;i<nx_half;i++) {
             for(int j=0;j<ny_half;j++) {
                 for(int k=0;k<nz_half;k++) {
@@ -473,8 +483,19 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
                         vertices_unsigned_char[index] = inverted;
                         vertices[index] = inverted;
                     }
+
+                    empty_voxels += vertices_unsigned_char[index] == voxel_type_empty;
                 }
             }
+        }
+
+        if(spheres_type == 0) {
+            is_finished = sphere_positions.size() >= spheres_num;
+        } else {
+            double porosity = (double)empty_voxels/(nx_half*ny_half*nz_half);
+
+            cout << "Now we have a porosity " << porosity << " whereas our goal is " << wanted_porosity << endl;
+            is_finished = inverted ? (porosity < wanted_porosity) : (porosity > wanted_porosity);
         }
     }
 
