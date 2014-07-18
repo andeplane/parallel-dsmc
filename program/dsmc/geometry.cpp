@@ -45,6 +45,8 @@ int main(int argc, char **argv)
         cg.create_random_walk(ini);
     } else if(type.compare("packed_spheres") == 0) {
         cg.create_packed_spheres(ini);
+    } else if(type.compare("distancetoatom") == 0) {
+        cg.create_from_binary_distancetoatom(ini);
     }
 
     if(ini.getbool("create_border")) cg.create_border();

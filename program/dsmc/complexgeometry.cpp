@@ -44,6 +44,7 @@ void ComplexGeometry::allocate(int nx_, int ny_, int nz_) {
     normals = new float[3*num_vertices];
     tangents1 = new float[3*num_vertices];
     tangents2 = new float[3*num_vertices];
+    cout << "Allocated " << nx << ", " << ny << "," << nz << " points." << endl;
 }
 
 void ComplexGeometry::load_text_files(string base_filename, CVector matrix_size, double threshold) {
@@ -508,6 +509,70 @@ void ComplexGeometry::create_packed_spheres(CIniFile &ini) {
     }
 
     make_periodic();
+    calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
+}
+
+void ComplexGeometry::create_from_binary_distancetoatom(CIniFile &ini)
+{
+    int number_of_neighbor_averages = ini.getint("number_of_neighbor_averages");
+    int numFilesX = ini.getint("nx");
+    int numFilesY = ini.getint("ny");
+    int numFilesZ = ini.getint("nz");
+    double threshold = ini.getdouble("distancetoatom_threshold");
+    string path = ini.getstring("distancetoatom_path");
+    char filename[1000];
+
+    vector<float> data;
+    for(int nodeX=0; nodeX<numFilesX; nodeX++) {
+        for(int nodeY=0; nodeY<numFilesY; nodeY++) {
+            for(int nodeZ=0; nodeZ<numFilesZ; nodeZ++) {
+                int index = nodeZ + numFilesZ*nodeY + numFilesZ*numFilesY*nodeX;
+                sprintf(filename, "%s/atomdist%06d", path.c_str(), index);
+                ifstream file(filename, ios::in | ios::binary);
+                if(!file.is_open()) {
+                    cout << "Could not open file " << filename << ". Aborting!" << endl;
+                    exit(1);
+                } else cout << "Opened file " << filename << endl;
+
+                float maxDistanceAngstroms = 0;
+                int numVoxelsX, numVoxelsY, numVoxelsZ;
+                file.read(reinterpret_cast<char*>(&maxDistanceAngstroms), sizeof(float));
+                file.read(reinterpret_cast<char*>(&numVoxelsX), sizeof(int));
+                file.read(reinterpret_cast<char*>(&numVoxelsY), sizeof(int));
+                file.read(reinterpret_cast<char*>(&numVoxelsZ), sizeof(int));
+                int numVoxelsThisCPU = numVoxelsX*numVoxelsY*numVoxelsZ;
+                data.resize(numVoxelsThisCPU,0);
+                if(index==0) {
+                    // First file
+                    allocate(numFilesX*numVoxelsX, numFilesY*numVoxelsY, numFilesZ*numVoxelsZ);
+                }
+                cout << "Reading shit: " << numVoxelsThisCPU << endl;
+                file.read(reinterpret_cast<char*>(&data[0]), numVoxelsThisCPU*sizeof(float));
+                cout << "Done reading shit" << endl;
+                file.close();
+                cout << "File closed." << endl;
+
+                int originX = nodeX*numVoxelsX;
+                int originY = nodeY*numVoxelsY;
+                int originZ = nodeZ*numVoxelsZ;
+
+                for(int localIndex = 0; localIndex<numVoxelsThisCPU; localIndex++) {
+                    int di = localIndex/(numVoxelsY*numVoxelsZ);
+                    int dj = (localIndex/numVoxelsZ)%numVoxelsY;
+                    int dk = localIndex%numVoxelsZ;
+
+                    int i = di + originX;
+                    int j = dj + originY;
+                    int k = dk + originZ;
+                    int index = i*ny*nz + j*nz + k;
+                    bool wall = data[localIndex] < threshold;
+                    vertices_unsigned_char[index] = wall;
+                    vertices[index] = wall;
+                }
+            }
+        }
+    }
+
     calculate_normals_tangents_and_inner_points(number_of_neighbor_averages);
 }
 

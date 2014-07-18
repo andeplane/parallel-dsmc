@@ -55,6 +55,8 @@ int main(int args, char* argv[]) {
         cg.create_random_walk(ini);
     } else if(type.compare("packed_spheres") == 0) {
         cg.create_packed_spheres(ini);
+    } else if(type.compare("distancetoatom") == 0) {
+        cg.create_from_binary_distancetoatom(ini);
     }
 
     if(ini.getbool("save_file")) cg.save_to_file(ini);

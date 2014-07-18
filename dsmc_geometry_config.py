@@ -24,6 +24,13 @@ class DSMC_geometry:
 		self.wanted_porosity = 0.5
 		self.spheres_type = 0
 
+		# distancetoatom input data
+		self.nx = 1
+		self.ny = 1
+		self.nz = 1
+		self.distancetoatom_threshold = 5
+		self.distancetoatom_path = "notinuse"
+
 		# Cylinder settings
 		self.num_cylinders_per_dimension = 1
 
@@ -76,6 +83,16 @@ class DSMC_geometry:
 		self.inverted = inverted
 		self.radius = radius
 		self.type = "sphere"
+		self.create_config_file()
+		self.run()
+
+	def create_from_distancetoatom(self, nx, ny, nz, threshold, path):
+		self.nx = nx
+		self.ny = ny
+		self.nz = nz
+		self.distancetoatom_threshold = threshold
+		self.distancetoatom_path = path
+		self.type = "distancetoatom"
 		self.create_config_file()
 		self.run()
 
@@ -152,6 +169,11 @@ class DSMC_geometry:
 			line = line.replace('__num_voxels_x__',str(self.num_voxels_x) )
 			line = line.replace('__num_voxels_y__',str(self.num_voxels_x) )
 			line = line.replace('__num_voxels_z__',str(self.num_voxels_x) )
+			line = line.replace('__nx__',str(self.nx) )
+			line = line.replace('__ny__',str(self.ny) )
+			line = line.replace('__nz__',str(self.nz) )
+			line = line.replace('__distancetoatom_threshold__',str(self.distancetoatom_threshold) )
+			line = line.replace('__distancetoatom_path__',str(self.distancetoatom_path) )
 			line = line.replace('__seed__',str(self.seed) )
 			line = line.replace('__walker_number__',str(self.walker_number) )
 			line = line.replace('__walker_steps__',str(self.walker_steps) )

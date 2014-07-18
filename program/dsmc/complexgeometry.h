@@ -45,6 +45,7 @@ public:
     void create_box(CIniFile &ini);
     void create_random_walk(CIniFile &ini);
     void create_packed_spheres(CIniFile &ini);
+    void create_from_binary_distancetoatom(CIniFile &ini);
     void make_periodic();
     void calculate_normals_tangents_and_inner_points(int number_of_neighbor_averages);
     void calculate_global_porosity();
