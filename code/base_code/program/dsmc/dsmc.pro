@@ -27,30 +27,14 @@ SOURCES += main.cpp \
     collidermaxwell.cpp \
     cvector.cpp \
     topology.cpp \
-    visualizer.cpp \
-    testshader.cpp \
     solver.cpp \
     progressbar.cpp \
     perlin.cpp \
-    oglshader.cpp \
-    moviedata.cpp \
-    movie.cpp \
-    mesh.cpp \
-    marchingcubes.cpp \
-    ctexture.cpp \
-    cshaders.cpp \
-    copengl.cpp \
     complexgeometry.cpp \
-    combined.cpp \
     cmath.cpp \
-    citmap.cpp \
-    cisosurface.cpp \
-    cbitmap.cpp \
-    camera.cpp \
     geometry.cpp \
     diamondsquare.cpp \
-    statisticalproperty.cpp \
-    lodepng.cpp
+    statisticalproperty.cpp
 
 HEADERS += \
     system.h \
@@ -72,30 +56,16 @@ HEADERS += \
     collidermaxwell.h \
     cvector.h \
     topology.h \
-    fpsmanager.hpp \
-    visualizer.h \
-    testshader.h \
     solver.h \
     progressbar.h \
     perlin.h \
-    oglshader.h \
-    moviedata.h \
-    mesh.h \
-    marchingcubes.h \
-    ctexture.h \
-    cshaders.h \
-    copengl.h \
     complexgeometry.h \
     cmatrix.h \
     cmath.h \
-    cisosurface.h \
-    cbitmap.h \
-    camera.h \
     diamondsquare.h \
     statisticalproperty.h \
     statisticalvalue.h \
-    defines.h \
-    lodepng.h
+    defines.h
 
 
 OTHER_FILES += \
@@ -107,7 +77,7 @@ mac {
     QMAKE_CXXFLAGS +=
     QMAKE_CXXFLAGS_RELEASE = $$QMAKE_CXXFLAGS
     QMAKE_CXXFLAGS_DEBUG = $$QMAKE_CXXFLAGS
-    QMAKE_CXX = icpc
+    QMAKE_CXX = mpic++
 
     QMAKE_LFLAGS +=
     QMAKE_CXXFLAGS_RELEASE += -fast
