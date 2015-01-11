@@ -1,12 +1,9 @@
-#ifndef GRID_H
-#define GRID_H
-
+#pragma once
 
 class Grid
 {
 public:
+    static Grid *createDefault();
     Grid();
     ~Grid();
 };
-
-#endif // GRID_H

@@ -1,4 +1,11 @@
 #include "state.h"
+#include <cstring>
+
+State *State::createDefault()
+{
+    State *state = new State();
+    return state;
+}
 
 State::State() :
     numberOfParticlesAllocatedMemory(0),

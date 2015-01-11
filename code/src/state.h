@@ -15,6 +15,7 @@ private:
     double *mass;
 
 public:
+    static State *createDefault();
     State();
     ~State();
     void resize(unsigned int maxNumberOfParticles);

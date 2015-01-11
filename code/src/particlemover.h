@@ -1,12 +1,9 @@
-#ifndef PARTICLEMOVER_H
-#define PARTICLEMOVER_H
-
+#pragma once
 
 class ParticleMover
 {
 public:
+    static ParticleMover *createDefault();
     ParticleMover();
     ~ParticleMover();
 };
-
-#endif // PARTICLEMOVER_H
