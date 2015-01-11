@@ -11,4 +11,5 @@ public:
     FileManager();
     ~FileManager();
     std::fstream &openFile(std::string filename, std::string key, std::ios_base::openmode mode);
+    void closeFile(std::string key);
 };

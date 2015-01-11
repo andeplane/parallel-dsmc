@@ -14,7 +14,29 @@ FileManager::FileManager()
 
 FileManager::~FileManager()
 {
+    for(auto it : m_openFiles) {
+        fstream* file = (fstream*)it.second;
+        if(file->is_open()) {
+            file->close();
+        } else {
+            cout << "Warning, file with key " << it.first << " was not open" << endl;
+        }
+    }
 
+    m_openFiles.clear();
+}
+
+void FileManager::closeFile(string key) {
+    auto it = m_openFiles.find(key);
+    if(it != m_openFiles.end()) {
+        fstream *file = (fstream *)it->second;
+        if(file->is_open()) {
+            file->close();
+        } else {
+            cout << "Warning, tried to close an non-open file with key " << key << endl;
+        }
+
+    }
 }
 
 fstream &FileManager::openFile(string filename, string key, std::ios_base::openmode mode)
